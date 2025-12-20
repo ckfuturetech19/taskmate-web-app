@@ -9,7 +9,7 @@ import {
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Sun, Moon, LogOut, User, Menu } from 'lucide-react';
+import { Sun, Moon, LogOut, User } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { NotificationBell } from './NotificationBell';
 
@@ -35,20 +35,13 @@ const AppHeader = ({ title, collapsed = false, onMenuClick }: AppHeaderProps) =>
   };
 
   return (
-    <header className={`fixed top-0 right-0 h-16 bg-background border-b border-border z-30 transition-all duration-300 left-0 lg:${collapsed ? 'left-16' : 'left-60'}`}>
-      <div className="h-full px-4 sm:px-6 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={onMenuClick}
-            className="lg:hidden h-9 w-9"
-          >
-            <Menu className="h-5 w-5" />
-          </Button>
-          <h1 className="text-lg sm:text-xl font-semibold text-foreground truncate">{title}</h1>
-        </div>
-        <div className="flex items-center gap-2 sm:gap-3">
+    <header className={`fixed top-0 right-0 h-14 sm:h-16 bg-background border-b border-border z-30 transition-all duration-300 left-0 lg:${collapsed ? 'left-16' : 'left-60'}`}>
+      <div className="h-full px-4 sm:px-6 flex items-center justify-between gap-4">
+        {/* Title/Spacer */}
+        <div className="flex-1" />
+
+        {/* Right Side Icons */}
+        <div className="flex items-center gap-3 shrink-0">
           <NotificationBell />
           <Button
             variant="ghost"
@@ -62,34 +55,40 @@ const AppHeader = ({ title, collapsed = false, onMenuClick }: AppHeaderProps) =>
               <Sun className="h-5 w-5" />
             )}
           </Button>
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="relative h-9 w-9 rounded-full">
-                <Avatar className="h-9 w-9">
-                  <AvatarImage src={user?.photoURL || undefined} alt={user?.displayName || 'User'} />
-                  <AvatarFallback className="bg-primary text-primary-foreground text-sm">
-                    {getInitials(user?.displayName)}
-                  </AvatarFallback>
-                </Avatar>
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="w-56">
-              <div className="px-2 py-1.5">
-                <p className="text-sm font-medium text-foreground">{user?.displayName}</p>
-                <p className="text-xs text-muted-foreground">{user?.email}</p>
-              </div>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={() => navigate('/settings')}>
-                <User className="h-4 w-4 mr-2" />
-                Settings
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
-                <LogOut className="h-4 w-4 mr-2" />
-                Sign out
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
+          <div className="flex items-center gap-2">
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" className="h-9 w-9 rounded-full p-0">
+                  <Avatar className="h-9 w-9">
+                    <AvatarImage src={user?.photoURL || undefined} alt={user?.displayName || 'User'} />
+                    <AvatarFallback className="bg-primary text-primary-foreground text-sm">
+                      {getInitials(user?.displayName)}
+                    </AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <div className="px-2 py-1.5">
+                  <p className="text-sm font-medium text-foreground">{user?.displayName || 'User'}</p>
+                  <p className="text-xs text-muted-foreground">{user?.email || ''}</p>
+                </div>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={() => navigate('/settings')}>
+                  <User className="h-4 w-4 mr-2" />
+                  Settings
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Sign out
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            <div className="hidden sm:block">
+              <p className="text-sm font-medium text-foreground">{user?.displayName || 'User'}</p>
+              <p className="text-xs text-muted-foreground">{user?.email || ''}</p>
+            </div>
+          </div>
         </div>
       </div>
     </header>

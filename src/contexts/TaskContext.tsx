@@ -1,19 +1,26 @@
-import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect, useMemo } from 'react';
 import { 
   collection, 
   addDoc, 
-  updateDoc, 
-  deleteDoc, 
-  doc, 
   onSnapshot,
   query,
   where,
   Timestamp,
-  getDocs
+  getDocs,
+  updateDoc,
+  doc,
+  deleteField,
+  getDoc
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
-import { Task, Group, Priority, RecurringType } from '@/types/task';
+import { Task, Group, PriorityLevel } from '@/types/task';
 import { useAuth } from './AuthContext';
+import { useTaskData } from '@/hooks/useTaskData';
+import { useGroupTasks } from '@/hooks/useGroupTasks';
+import { useTaskOperations } from '@/hooks/useTaskOperations';
+import { useRecurrence } from '@/hooks/useRecurrence';
+import { deduplicateTasks, getActiveTasks } from '@/lib/taskUtils';
+import { oneSignalService } from '@/services/oneSignalService';
 
 interface Category {
   id: string;
@@ -33,6 +40,7 @@ interface TaskContextType {
   toggleTaskComplete: (id: string) => Promise<void>;
   createGroup: (name: string) => Promise<Group>;
   joinGroup: (inviteCode: string) => Promise<boolean>;
+  leaveGroup: (groupId: string) => Promise<void>;
   getGroupTasks: (groupId: string) => Task[];
   getPersonalTasks: () => Task[];
 }
@@ -51,148 +59,48 @@ const generateInviteCode = () => Math.random().toString(36).substring(2, 8).toUp
 
 export const TaskProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useAuth();
-  const [tasks, setTasks] = useState<Task[]>([]);
   const [groups, setGroups] = useState<Group[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
-
-  // Real-time sync for tasks using userSyncData collection
-  useEffect(() => {
-    if (!user) {
-      setTasks([]);
-      return;
+  
+  // Use custom hooks for task data management
+  const { tasks: personalTasks } = useTaskData(user?.uid || null);
+  const { groupTasks } = useGroupTasks(user?.uid || null, groups);
+  const { addTask: addTaskOperation, updateTask: updateTaskOperation, deleteTask: deleteTaskOperation } = useTaskOperations();
+  const { createNextRecurrence } = useRecurrence(addTaskOperation);
+  
+  // Merge and deduplicate all tasks - ensure only active (non-deleted) tasks are shown
+  const tasks = useMemo(() => {
+    const allTasks = [...personalTasks, ...groupTasks];
+    
+    // First filter out deleted tasks explicitly
+    const active = allTasks.filter(task => {
+      const isDeleted = task.isDeleted === true;
+      if (isDeleted) {
+        console.log(`Filtering out deleted task: ${task.id} - ${task.title}`);
+      }
+      return !isDeleted;
+    });
+    
+    // Then deduplicate by ID (keep most recent version)
+    const deduplicated = deduplicateTasks(active);
+    
+    // Final safety check - filter deleted again (in case deduplication kept a deleted one)
+    const finalTasks = deduplicated.filter(task => !task.isDeleted);
+    
+    console.log('=== Combined Tasks (Web) ===');
+    console.log('Personal tasks (raw):', personalTasks.length);
+    console.log('Group tasks (raw):', groupTasks.length);
+    console.log('Total after merge:', allTasks.length);
+    console.log('Active (non-deleted):', active.length);
+    console.log('After deduplication:', deduplicated.length);
+    console.log('Final active tasks:', finalTasks.length);
+    if (finalTasks.length > 0) {
+      console.log('Active task IDs:', finalTasks.map(t => `${t.id}: ${t.title}`).slice(0, 10));
     }
+    
+    return finalTasks;
+  }, [personalTasks, groupTasks]);
 
-    try {
-      console.log('Setting up task listener for user:', user.uid);
-      const tasksRef = collection(db, 'userSyncData', user.uid, 'tasks');
-      
-      const unsubscribe = onSnapshot(
-        tasksRef, 
-        (snapshot) => {
-          try {
-            console.log('=== Tasks snapshot received ===');
-            console.log('Total tasks:', snapshot.docs.length);
-            console.log('Changes:', snapshot.docChanges().map(c => `${c.type}: ${c.doc.id}`));
-            
-            const fetchedTasks: Task[] = snapshot.docs.map(doc => {
-              const data = doc.data();
-              console.log('Processing task:', doc.id, 'groupId:', data.groupId);
-            
-            // Convert priorityLevel number to priority string
-            const getPriority = (level: any): Priority => {
-              if (level === 3 || level === 'high') return 'high';
-              if (level === 2 || level === 'medium') return 'medium';
-              if (level === 1 || level === 'low') return 'low';
-              return 'medium';
-            };
-            
-            // Parse date fields - handle both Timestamp and string formats
-            const parseDate = (field: any): string | undefined => {
-              if (!field) return undefined;
-              
-              try {
-                // Handle Firestore Timestamp
-                if (field.toDate && typeof field.toDate === 'function') {
-                  return field.toDate().toISOString();
-                }
-                
-                // Handle string dates
-                if (typeof field === 'string') {
-                  const date = new Date(field);
-                  if (!isNaN(date.getTime())) {
-                    return date.toISOString();
-                  }
-                  return undefined;
-                }
-                
-                // Handle number (timestamp in milliseconds)
-                if (typeof field === 'number') {
-                  const date = new Date(field);
-                  if (!isNaN(date.getTime())) {
-                    return date.toISOString();
-                  }
-                  return undefined;
-                }
-                
-                return undefined;
-              } catch (error) {
-                console.error('Error parsing date:', error, field);
-                return undefined;
-              }
-            };
-            
-            // Parse completed status - handle both boolean and number formats
-            const isCompleted = data.isCompleted === 1 || 
-                              data.isCompleted === true || 
-                              data.completed === 1 || 
-                              data.completed === true;
-            
-            // Check if task is deleted
-            const isDeleted = data.isDeleted === 1 || 
-                            data.isDeleted === true;
-            
-            return {
-              id: doc.id,
-              title: data.title || '',
-              description: data.description || undefined,
-              completed: isCompleted,
-              isCompletedToday: data.isCompletedToday === 1 || data.isCompletedToday === true,
-              userId: data.userId || user.uid,
-              createdAt: parseDate(data.createdAt) || new Date().toISOString(),
-              updatedAt: parseDate(data.updatedAt),
-              dueDate: parseDate(data.dueDate),
-              reminder: parseDate(data.reminder),
-              lastCompletedDate: parseDate(data.lastCompletedDate),
-              priority: getPriority(data.priorityLevel),
-              groupId: data.groupId || undefined,
-              recurring: (data.recurrenceType || data.recurring || 'none') as RecurringType,
-              subtasks: data.subtasks || undefined,
-              categoryId: data.categoryId || undefined,
-              tags: data.tags || undefined,
-              color: data.color || undefined,
-              colorIndex: data.colorIndex || 0,
-              recurrenceFrequency: data.recurrenceFrequency || undefined,
-              recurrenceType: data.recurrenceType || undefined,
-              isPaused: data.isPaused === 1 || data.isPaused === true,
-              completedCount: data.completedCount || 0,
-              isGroupTask: data.isGroupTask === 1 || data.isGroupTask === true,
-              groupMembers: data.groupMembers || undefined,
-              groupOwnerId: data.groupOwnerId || undefined,
-              isDeleted: isDeleted,
-            };
-          })
-          // Filter out deleted tasks
-          .filter(task => !task.isDeleted);
-          
-          console.log('Processed tasks:', fetchedTasks.length);
-          console.log('Completed tasks:', fetchedTasks.filter(t => t.completed).length);
-          console.log('Pending tasks:', fetchedTasks.filter(t => !t.completed).length);
-          console.log('Group tasks:', fetchedTasks.filter(t => t.groupId).length);
-          console.log('Personal tasks:', fetchedTasks.filter(t => !t.groupId).length);
-          
-          // Additional validation logging
-          const completedTasks = fetchedTasks.filter(t => t.completed);
-          if (completedTasks.length > 0) {
-            console.log('Completed task IDs:', completedTasks.map(t => `${t.id}: ${t.title}`).slice(0, 5));
-          }
-          
-          setTasks(fetchedTasks);
-          } catch (error) {
-            console.error('Error processing tasks snapshot:', error);
-            setTasks([]);
-          }
-        },
-        (error) => {
-          console.error('Error fetching tasks:', error);
-          setTasks([]);
-        }
-      );
-
-      return () => unsubscribe();
-    } catch (error) {
-      console.error('Error setting up task listener:', error);
-    }
-  }, [user]);
 
   // Real-time sync for categories (global read-only)
   useEffect(() => {
@@ -268,7 +176,13 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
               
               return {
                 id: doc.id,
-                ...data,
+                name: data.name || '',
+                description: data.description || undefined,
+                inviteCode: data.inviteCode || data.code || '',
+                code: data.code || data.inviteCode || '',
+                createdBy: data.createdBy || data.ownerId || '',
+                ownerId: data.ownerId || data.createdBy || '',
+                members: data.members || {},
                 createdAt,
               } as Group;
             });
@@ -290,224 +204,53 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
     }
   }, [user]);
 
-  // Real-time sync for group tasks from groups collection
-  useEffect(() => {
-    if (!user || groups.length === 0) {
-      return;
-    }
-
-    console.log('Setting up group task listeners for', groups.length, 'groups');
-    const unsubscribes: (() => void)[] = [];
-
-    groups.forEach(group => {
-      // Listen to tasks in groups/{groupId}/tasks
-      const groupTasksRef = collection(db, 'groups', group.id, 'tasks');
-
-      const unsubGroupTasks = onSnapshot(
-        groupTasksRef,
-        (tasksSnapshot) => {
-          try {
-            console.log(`Group ${group.id} tasks snapshot:`, tasksSnapshot.docs.length, 'tasks');
-            const groupTasksList: Task[] = tasksSnapshot.docs.map(doc => {
-              const data = doc.data();
-
-              const getPriority = (level: any): Priority => {
-                if (level === 3 || level === 'high') return 'high';
-                if (level === 2 || level === 'medium') return 'medium';
-                if (level === 1 || level === 'low') return 'low';
-                return 'medium';
-              };
-
-              const parseDate = (field: any): string | undefined => {
-                if (!field) return undefined;
-                
-                try {
-                  // Handle Firestore Timestamp
-                  if (field.toDate && typeof field.toDate === 'function') {
-                    return field.toDate().toISOString();
-                  }
-                  
-                  // Handle string dates
-                  if (typeof field === 'string') {
-                    const date = new Date(field);
-                    if (!isNaN(date.getTime())) {
-                      return date.toISOString();
-                    }
-                    return undefined;
-                  }
-                  
-                  // Handle number (timestamp in milliseconds)
-                  if (typeof field === 'number') {
-                    const date = new Date(field);
-                    if (!isNaN(date.getTime())) {
-                      return date.toISOString();
-                    }
-                    return undefined;
-                  }
-                  
-                  return undefined;
-                } catch (error) {
-                  console.error('Error parsing date:', error, field);
-                  return undefined;
-                }
-              };
-
-              return {
-                id: doc.id,
-                title: data.title || '',
-                description: data.description || undefined,
-                completed: data.isCompleted === 1 || data.completed === true,
-                isCompletedToday: data.isCompletedToday === 1 || data.isCompletedToday === true,
-                userId: data.userId || user.uid,
-                createdAt: parseDate(data.createdAt) || new Date().toISOString(),
-                updatedAt: parseDate(data.updatedAt),
-                dueDate: parseDate(data.dueDate),
-                reminder: parseDate(data.reminder),
-                lastCompletedDate: parseDate(data.lastCompletedDate),
-                priority: getPriority(data.priorityLevel),
-                groupId: data.groupId || undefined,
-                recurring: (data.recurrenceType || data.recurring || 'none') as RecurringType,
-                subtasks: data.subtasks || undefined,
-                categoryId: data.categoryId || undefined,
-                tags: data.tags || undefined,
-                color: data.color || undefined,
-                colorIndex: data.colorIndex || 0,
-                recurrenceFrequency: data.recurrenceFrequency || undefined,
-                recurrenceType: data.recurrenceType || undefined,
-                isPaused: data.isPaused === 1 || data.isPaused === true,
-                completedCount: data.completedCount || 0,
-                isGroupTask: data.isGroupTask === 1 || data.isGroupTask === true,
-                groupMembers: data.groupMembers || undefined,
-                groupOwnerId: data.groupOwnerId || undefined,
-              };
-            });
-
-            setTasks(prevTasks => {
-              // Remove old tasks for this group
-              const filtered = prevTasks.filter(t => t.groupId !== group.id);
-              // Add new group tasks
-              const updated = [...filtered, ...groupTasksList];
-              console.log(`Updated group ${group.id} tasks:`, groupTasksList.length, 'tasks');
-              return updated;
-            });
-          } catch (error) {
-            console.error('Error processing group tasks snapshot:', error);
-          }
-        },
-        (error) => {
-          console.error('Error fetching group tasks:', error);
-        }
-      );
-
-      unsubscribes.push(unsubGroupTasks);
-    });
-
-    return () => {
-      unsubscribes.forEach(unsub => unsub());
-    };
-  }, [user, groups]);
 
   const addTask = async (taskData: Omit<Task, 'id' | 'createdAt' | 'userId' | 'completed'>) => {
     if (!user) {
-      console.error('Cannot add task: user not logged in');
-      return;
+      throw new Error('User must be logged in');
     }
     
     try {
-      console.log('Adding task:', taskData);
+      const taskId = await addTaskOperation(taskData);
       
-      // For group tasks, create in groups/{groupId}/tasks
-      // For personal tasks, create in userSyncData/{userId}/tasks
-      const isGroupTask = !!taskData.groupId;
-      
-      // Convert priority string to number (0=none, 1=low, 2=medium, 3=high)
-      const getPriorityLevel = (priority: Priority): number => {
-        if (priority === 'high') return 3;
-        if (priority === 'medium') return 2;
-        if (priority === 'low') return 1;
-        return 0;
-      };
-      
-      let taskRef;
-      if (isGroupTask && taskData.groupId) {
-        // Create group task in groups/{groupId}/tasks
-        taskRef = collection(db, 'groups', taskData.groupId, 'tasks');
-          
-      } else {
-        // Create personal task in userSyncData/{userId}/tasks
-        taskRef = collection(db, 'userSyncData', user.uid, 'tasks');
-      }
-
-      const taskToAdd: any = {
-        title: taskData.title,
-        description: taskData.description || '',
-        userId: user.uid,
-        isCompleted: 0,
-        isCompletedToday: 0,
-        isPriority: 0,
-        isDeleted: 0,
-        isGroupTask: isGroupTask ? 1 : 0,
-        isPaused: 0,
-        isRecurrenceOrigin: 1,
-        focusTimerEnabled: 0,
-        focusTimerIsRunning: 0,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-        dueDate: taskData.dueDate || null,
-        reminder: taskData.reminder || null,
-        priorityLevel: getPriorityLevel(taskData.priority || 'medium'),
-        groupId: taskData.groupId || null,
-        recurrenceType: taskData.recurring || 'none',
-        subtasks: taskData.subtasks || null,
-        categoryId: taskData.categoryId || null,
-        tags: taskData.tags || null,
-        color: taskData.color || null,
-        colorIndex: taskData.colorIndex || 0,
-        recurrenceFrequency: taskData.recurrenceFrequency || null,
-        completedCount: 0,
-        groupMembers: taskData.groupMembers || [],
-        groupOwnerId: taskData.groupOwnerId || user.uid,
-        position: 0,
-        repeat: null,
-        deletedAt: null,
-        lastCompleted: null,
-        lastCompletedDate: null,
-        nextDueDate: null,
-        timeWindowStart: null,
-        timeWindowEnd: null,
-        focusDurationMinutes: null,
-        focusTimerStartTime: null,
-        focusTimerRemainingSeconds: null,
-      };
-      
-      const docRef = await addDoc(taskRef, taskToAdd);
-      console.log(`Task added with ID: ${docRef.id} (group: ${isGroupTask})`);
-      
-      // If it's a group task, notify all group members (except creator)
-      if (isGroupTask && taskData.groupId) {
+      // If it's a group task, notify all group members (including creator for consistency)
+      if (taskData.groupId) {
         const group = groups.find(g => g.id === taskData.groupId);
         if (group) {
-          // Notify all group members except the creator
-          const membersToNotify = Object.keys(group.members || {}).filter(id => id !== user.uid);
+          // Notify ALL group members (matching Flutter app behavior)
+          const allMembers = Object.keys(group.members || {});
+          const actorName = user.displayName || user.email || 'Unknown User';
           
+          // Save notifications to Firestore
           await Promise.all(
-            membersToNotify.map(async (memberId) => {
+            allMembers.map(async (memberId) => {
               const notificationRef = collection(db, 'users', memberId, 'notifications');
               await addDoc(notificationRef, {
-                type: 'task_assigned',
-                title: 'Task Assigned',
-                message: `${user.displayName || 'Someone'} assigned you a task: "${taskData.title}"`,
+                type: 'task_created',
+                title: 'New Task Created',
+                message: `${actorName} created "${taskData.title}" in ${group.name}`,
                 groupId: taskData.groupId,
                 groupName: group.name,
-                taskId: docRef.id,
+                taskId: taskId,
                 taskTitle: taskData.title,
-                fromUserId: user.uid,
-                fromUserName: user.displayName || 'Unknown User',
-                isRead: false,
+                actorUserId: user.uid,
+                actorName: actorName,
+                read: false, // Match Flutter app format
                 createdAt: Timestamp.now(),
+                timestamp: Timestamp.now(),
               });
             })
           );
+
+          // Send OneSignal push notifications
+          await oneSignalService.sendNotificationToGroup({
+            groupId: taskData.groupId,
+            title: 'New Task Created',
+            message: `${actorName} created "${taskData.title}" in ${group.name}`,
+            type: 'task_created',
+            taskId: taskId,
+            targetMemberIds: allMembers,
+          });
         }
       }
     } catch (error) {
@@ -519,89 +262,66 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
   const updateTask = async (id: string, updates: Partial<Task>) => {
     if (!user) return;
     
+    const task = tasks.find(t => t.id === id);
+    if (!task) {
+      console.error('Task not found:', id);
+      return;
+    }
+    
     try {
-      console.log('Updating task:', id, updates);
+      await updateTaskOperation(id, updates, task);
       
-      // Find the task to determine if it's a group task
-      const task = tasks.find(t => t.id === id);
-      if (!task) {
-        console.error('Task not found:', id);
-        return;
-      }
-      
-      // Determine the correct path based on whether it's a group task
-      let taskRef;
+      // If it's a group task, notify all group members about updates
       if (task.groupId) {
-        taskRef = doc(db, 'groups', task.groupId, 'tasks', id);
-      } else {
-        taskRef = doc(db, 'userSyncData', user.uid, 'tasks', id);
-      }
-      
-      // Convert priority string to number if needed
-      const getPriorityLevel = (priority: Priority): number => {
-        if (priority === 'high') return 3;
-        if (priority === 'medium') return 2;
-        if (priority === 'low') return 1;
-        return 0;
-      };
-      
-      const updateData: any = { 
-        updatedAt: new Date().toISOString(),
-      };
-      
-      // Handle each field with proper conversion
-      if (updates.title !== undefined) updateData.title = updates.title;
-      if (updates.description !== undefined) updateData.description = updates.description || '';
-      if (updates.dueDate !== undefined) updateData.dueDate = updates.dueDate;
-      if (updates.reminder !== undefined) updateData.reminder = updates.reminder;
-      if (updates.completed !== undefined) updateData.isCompleted = updates.completed ? 1 : 0;
-      if (updates.priority !== undefined) updateData.priorityLevel = getPriorityLevel(updates.priority);
-      if (updates.recurring !== undefined) updateData.recurrenceType = updates.recurring;
-      if (updates.subtasks !== undefined) updateData.subtasks = updates.subtasks;
-      if (updates.categoryId !== undefined) updateData.categoryId = updates.categoryId;
-      if (updates.tags !== undefined) updateData.tags = updates.tags;
-      if (updates.color !== undefined) updateData.color = updates.color;
-      if (updates.colorIndex !== undefined) updateData.colorIndex = updates.colorIndex;
-      if (updates.groupId !== undefined) updateData.groupId = updates.groupId;
-      if (updates.groupMembers !== undefined) updateData.groupMembers = updates.groupMembers;
-      if (updates.groupOwnerId !== undefined) updateData.groupOwnerId = updates.groupOwnerId;
-      if (updates.isGroupTask !== undefined) updateData.isGroupTask = updates.isGroupTask ? 1 : 0;
-      if (updates.isPaused !== undefined) updateData.isPaused = updates.isPaused ? 1 : 0;
-      if (updates.isCompletedToday !== undefined) updateData.isCompletedToday = updates.isCompletedToday ? 1 : 0;
-      if (updates.recurrenceFrequency !== undefined) updateData.recurrenceFrequency = updates.recurrenceFrequency;
-      if (updates.completedCount !== undefined) updateData.completedCount = updates.completedCount;
-      if (updates.lastCompletedDate !== undefined) updateData.lastCompletedDate = updates.lastCompletedDate;
-      
-      await updateDoc(taskRef, updateData);
-      console.log('Task updated successfully');
-      
-      // If it's a group task and it was completed, notify group members
-      if (task.groupId && updates.completed !== undefined) {
         const group = groups.find(g => g.id === task.groupId);
         if (group) {
-          const memberIds = Object.keys(group.members || {}).filter(memberId => memberId !== user.uid);
+          // Notify ALL group members (matching Flutter app behavior)
+          const allMembers = Object.keys(group.members || {});
+          const actorName = user.displayName || user.email || 'Unknown User';
           
-          // Create notifications for all group members
+          // Determine notification type and message
+          let notificationType = 'task_updated';
+          let notificationTitle = 'Task Updated';
+          let notificationMessage = `${actorName} updated "${task.title}" in ${group.name}`;
+          
+          if (updates.isCompleted !== undefined) {
+            notificationType = updates.isCompleted ? 'task_completed' : 'task_updated';
+            notificationTitle = updates.isCompleted ? 'Task Completed' : 'Task Updated';
+            notificationMessage = updates.isCompleted
+              ? `${actorName} completed "${task.title}" in ${group.name}`
+              : `${actorName} updated "${task.title}" in ${group.name}`;
+          }
+          
+          // Save notifications to Firestore
           await Promise.all(
-            memberIds.map(async (memberId) => {
+            allMembers.map(async (memberId) => {
               const notificationRef = collection(db, 'users', memberId, 'notifications');
               await addDoc(notificationRef, {
-                type: updates.completed ? 'task_completed' : 'task_updated',
-                title: updates.completed ? 'Task Completed' : 'Task Updated',
-                message: updates.completed 
-                  ? `${user.displayName || 'Someone'} completed task: "${task.title}"`
-                  : `${user.displayName || 'Someone'} updated task: "${task.title}"`,
+                type: notificationType,
+                title: notificationTitle,
+                message: notificationMessage,
                 groupId: task.groupId,
                 groupName: group.name,
                 taskId: id,
                 taskTitle: task.title,
-                fromUserId: user.uid,
-                fromUserName: user.displayName || 'Unknown User',
-                isRead: false,
+                actorUserId: user.uid,
+                actorName: actorName,
+                read: false, // Match Flutter app format
                 createdAt: Timestamp.now(),
+                timestamp: Timestamp.now(),
               });
             })
           );
+
+          // Send OneSignal push notifications
+          await oneSignalService.sendNotificationToGroup({
+            groupId: task.groupId,
+            title: notificationTitle,
+            message: notificationMessage,
+            type: notificationType,
+            taskId: id,
+            targetMemberIds: allMembers,
+          });
         }
       }
     } catch (error) {
@@ -613,27 +333,53 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
   const deleteTask = async (id: string) => {
     if (!user) return;
     
-    // Find the task to determine if it's a group task
     const task = tasks.find(t => t.id === id);
     if (!task) {
       console.error('Task not found:', id);
       return;
     }
     
-    // Determine the correct path based on whether it's a group task
-    let taskRef;
+    // If it's a group task, notify all group members before deleting
     if (task.groupId) {
-      taskRef = doc(db, 'groups', task.groupId, 'tasks', id);
-    } else {
-      taskRef = doc(db, 'userSyncData', user.uid, 'tasks', id);
+      const group = groups.find(g => g.id === task.groupId);
+      if (group) {
+        const allMembers = Object.keys(group.members || {});
+        const actorName = user.displayName || user.email || 'Unknown User';
+        
+        // Save notifications to Firestore
+        await Promise.all(
+          allMembers.map(async (memberId) => {
+            const notificationRef = collection(db, 'users', memberId, 'notifications');
+            await addDoc(notificationRef, {
+              type: 'task_deleted',
+              title: 'Task Deleted',
+              message: `${actorName} deleted "${task.title}" from ${group.name}`,
+              groupId: task.groupId,
+              groupName: group.name,
+              taskId: id,
+              taskTitle: task.title,
+              actorUserId: user.uid,
+              actorName: actorName,
+              read: false, // Match Flutter app format
+              createdAt: Timestamp.now(),
+              timestamp: Timestamp.now(),
+            });
+          })
+        );
+
+        // Send OneSignal push notifications
+        await oneSignalService.sendNotificationToGroup({
+          groupId: task.groupId,
+          title: 'Task Deleted',
+          message: `${actorName} deleted "${task.title}" from ${group.name}`,
+          type: 'task_deleted',
+          taskId: id,
+          targetMemberIds: allMembers,
+        });
+      }
     }
     
-    // Mark task as deleted instead of removing it (for sync purposes)
-    await updateDoc(taskRef, {
-      isDeleted: 1,
-      deletedAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    });
+    await deleteTaskOperation(task);
   };
 
   const toggleTaskComplete = async (id: string) => {
@@ -641,12 +387,17 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
     if (!task || !user) return;
     
     const updates: Partial<Task> = { 
-      completed: !task.completed,
+      isCompleted: !task.isCompleted,
     };
     
     // Set lastCompletedDate when marking as complete
-    if (!task.completed) {
+    if (!task.isCompleted) {
       updates.lastCompletedDate = new Date().toISOString();
+      
+      // Handle recurrence task completion
+      if (task.recurrenceType && task.recurrenceType !== 'none') {
+        await createNextRecurrence(task, tasks);
+      }
     }
     
     await updateTask(id, updates);
@@ -655,10 +406,13 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
   const createGroup = async (name: string): Promise<Group> => {
     if (!user) throw new Error('User must be logged in');
     
+    const inviteCode = generateInviteCode();
     const groupsRef = collection(db, 'groups');
     const newGroup = {
       name,
-      inviteCode: generateInviteCode(),
+      description: '', // Matching Flutter's Group model
+      inviteCode,
+      code: inviteCode, // Flutter uses 'code' field
       createdBy: user.uid,
       ownerId: user.uid,
       members: { [user.uid]: true },
@@ -669,7 +423,13 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
     
     return {
       id: docRef.id,
-      ...newGroup,
+      name,
+      description: '',
+      inviteCode,
+      code: inviteCode,
+      createdBy: user.uid,
+      ownerId: user.uid,
+      members: { [user.uid]: true },
       createdAt: new Date().toISOString(),
     };
   };
@@ -678,10 +438,19 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
     if (!user) return false;
     
     try {
-      // Query Firebase for the group with this invite code
+      // Query Firebase for the group with this invite code (check both 'code' and 'inviteCode' fields)
       const groupsRef = collection(db, 'groups');
-      const q = query(groupsRef, where('inviteCode', '==', inviteCode.toUpperCase()));
-      const querySnapshot = await getDocs(q);
+      const upperCode = inviteCode.toUpperCase();
+      
+      // Try inviteCode first (web format)
+      let q = query(groupsRef, where('inviteCode', '==', upperCode));
+      let querySnapshot = await getDocs(q);
+      
+      // If not found, try 'code' field (Flutter format)
+      if (querySnapshot.empty) {
+        q = query(groupsRef, where('code', '==', upperCode));
+        querySnapshot = await getDocs(q);
+      }
       
       if (querySnapshot.empty) {
         console.error('No group found with invite code:', inviteCode);
@@ -703,18 +472,36 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
         [`members.${user.uid}`]: true
       });
       
-      // Create notification for group owner
-      const notificationRef = collection(db, 'users', groupData.ownerId || groupData.createdBy, 'notifications');
-      await addDoc(notificationRef, {
-        type: 'group_joined',
-        title: 'New Group Member',
-        message: `${user.displayName || 'Someone'} joined your group "${groupData.name}"`,
+      // Notify all group members about new member joining
+      const allMembers = Object.keys(groupData.members || {});
+      const actorName = user.displayName || user.email || 'Unknown User';
+      
+      // Save notifications to Firestore
+      await Promise.all(
+        allMembers.map(async (memberId) => {
+          const notificationRef = collection(db, 'users', memberId, 'notifications');
+          await addDoc(notificationRef, {
+            type: 'member_joined',
+            title: 'New Member Joined',
+            message: `${actorName} joined ${groupData.name}`,
+            groupId: groupDoc.id,
+            groupName: groupData.name,
+            actorUserId: user.uid,
+            actorName: actorName,
+            read: false, // Match Flutter app format
+            createdAt: Timestamp.now(),
+            timestamp: Timestamp.now(),
+          });
+        })
+      );
+
+      // Send OneSignal push notifications
+      await oneSignalService.sendNotificationToGroup({
         groupId: groupDoc.id,
-        groupName: groupData.name,
-        fromUserId: user.uid,
-        fromUserName: user.displayName || 'Unknown User',
-        isRead: false,
-        createdAt: Timestamp.now(),
+        title: 'New Member Joined',
+        message: `${actorName} joined ${groupData.name}`,
+        type: 'member_joined',
+        targetMemberIds: allMembers,
       });
       
       console.log('Successfully joined group:', groupDoc.id);
@@ -735,6 +522,29 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
     return tasks.filter(task => !task.groupId);
   };
 
+  const leaveGroup = async (groupId: string): Promise<void> => {
+    if (!user) {
+      throw new Error('User must be logged in');
+    }
+
+    try {
+      const groupRef = doc(db, 'groups', groupId);
+      
+      // Remove user from group members (matching Flutter's FieldValue.delete())
+      await updateDoc(groupRef, {
+        [`members.${user.uid}`]: deleteField()
+      });
+
+      console.log(`User ${user.uid} left group ${groupId}`);
+      
+      // Optionally: Send notification to group members (similar to Flutter)
+      // This would require a notification service similar to Flutter's GroupNotificationService
+    } catch (error) {
+      console.error('Error leaving group:', error);
+      throw error;
+    }
+  };
+
   return (
     <TaskContext.Provider value={{
       tasks,
@@ -746,6 +556,7 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
       toggleTaskComplete,
       createGroup,
       joinGroup,
+      leaveGroup,
       getGroupTasks,
       getPersonalTasks,
     }}>

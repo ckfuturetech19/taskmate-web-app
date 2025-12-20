@@ -1,18 +1,11 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth, GoogleAuthProvider } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
+import { firebaseConfig } from './firebase-config';
 
 // Firebase configuration for TaskMate web app
 // Using the same Firebase project as the mobile app for real-time sync
-const firebaseConfig = {
-  apiKey: "AIzaSyBU1on-3Dn33IsUfdoHYi3kluC63FIA2bs",
-  authDomain: "taskmate-e7cc9.firebaseapp.com",
-  projectId: "taskmate-e7cc9",
-  storageBucket: "taskmate-e7cc9.firebasestorage.app",
-  messagingSenderId: "425325230785",
-  appId: "1:425325230785:web:5471398c240d7d8d46b240",
-  measurementId: "G-0921EG4E7W"
-};
+// Configuration is loaded from environment variables via firebase-config.ts
 
 // Initialize Firebase with error handling
 let app;

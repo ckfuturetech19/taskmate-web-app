@@ -3,37 +3,47 @@
 
 importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js');
 importScripts('https://www.gstatic.com/firebasejs/10.7.1/firebase-messaging-compat.js');
+// Load Firebase config from separate file
+// Note: In production, you should inject env vars during build
+importScripts('./firebase-config.js');
 
 // Initialize Firebase in the service worker
-firebase.initializeApp({
-  apiKey: "AIzaSyBU1on-3Dn33IsUfdoHYi3kluC63FIA2bs",
-  authDomain: "taskmate-e7cc9.firebaseapp.com",
-  projectId: "taskmate-e7cc9",
-  storageBucket: "taskmate-e7cc9.firebasestorage.app",
-  messagingSenderId: "425325230785",
-  appId: "1:425325230785:web:5471398c240d7d8d46b240",
-  measurementId: "G-0921EG4E7W"
-});
+// Using config from firebase-config.js which should be updated during build
+firebase.initializeApp(firebaseConfig);
 
 const messaging = firebase.messaging();
 
 // Handle background messages
 messaging.onBackgroundMessage((payload) => {
-  console.log('[firebase-messaging-sw.js] Received background message:', payload);
+  console.log('[SW] Received background message:', payload);
+  console.log('[SW] Notification payload:', payload.notification);
+  console.log('[SW] Data payload:', payload.data);
 
-  const notificationTitle = payload.notification?.title || payload.data?.title || 'TaskMate Reminder';
+  // Extract notification title and body from various possible locations
+  const notificationTitle = payload.notification?.title || 
+                           payload.data?.title || 
+                           'TaskMate Reminder';
+  const notificationBody = payload.notification?.body || 
+                          payload.data?.body || 
+                          payload.data?.description ||
+                          'You have a task reminder';
+
+  console.log('[SW] Notification title:', notificationTitle);
+  console.log('[SW] Notification body:', notificationBody);
+
   const notificationOptions = {
-    body: payload.notification?.body || payload.data?.body || 'You have a task reminder',
+    body: notificationBody,
     icon: '/logo.png',
     badge: '/badge.png',
     tag: payload.data?.taskId || 'task-reminder',
     data: {
-      url: payload.data?.url || '/',
+      url: payload.data?.url || payload.fcmOptions?.link || '/',
       taskId: payload.data?.taskId,
       userId: payload.data?.userId,
-      groupId: payload.data?.groupId,
-      isGroupTask: payload.data?.isGroupTask,
-      type: payload.data?.type || 'reminder'
+      groupId: payload.data?.groupId || '',
+      isGroupTask: payload.data?.isGroupTask || 'false',
+      type: payload.data?.type || 'reminder',
+      collection: payload.data?.collection || 'userSyncData'
     },
     vibrate: [200, 100, 200],
     requireInteraction: true,
@@ -49,7 +59,15 @@ messaging.onBackgroundMessage((payload) => {
     ]
   };
 
-  return self.registration.showNotification(notificationTitle, notificationOptions);
+  console.log('[SW] Showing notification with options:', notificationOptions);
+
+  return self.registration.showNotification(notificationTitle, notificationOptions)
+    .then(() => {
+      console.log('[SW] Notification shown successfully');
+    })
+    .catch((error) => {
+      console.error('[SW] Error showing notification:', error);
+    });
 });
 
 // Handle notification clicks and action buttons

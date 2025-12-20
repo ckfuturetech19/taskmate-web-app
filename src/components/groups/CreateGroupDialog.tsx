@@ -28,27 +28,28 @@ const CreateGroupDialog = ({ open, onOpenChange, onCreateGroup }: CreateGroupDia
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="w-[calc(100%-2rem)] sm:max-w-md mx-auto">
         <DialogHeader>
-          <DialogTitle>Create New Group</DialogTitle>
+          <DialogTitle className="text-lg sm:text-xl">Create New Group</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="groupName">Group Name</Label>
+            <Label htmlFor="groupName" className="text-sm sm:text-base">Group Name</Label>
             <Input
               id="groupName"
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="Enter group name"
               onKeyDown={(e) => e.key === 'Enter' && handleCreate()}
+              className="text-sm sm:text-base"
             />
           </div>
         </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+        <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
+          <Button variant="outline" onClick={() => onOpenChange(false)} className="w-full sm:w-auto text-sm sm:text-base">
             Cancel
           </Button>
-          <Button onClick={handleCreate} disabled={!name.trim()}>
+          <Button onClick={handleCreate} disabled={!name.trim()} className="w-full sm:w-auto text-sm sm:text-base">
             Create Group
           </Button>
         </DialogFooter>

@@ -40,13 +40,13 @@ const JoinGroupDialog = ({ open, onOpenChange, onJoinGroup }: JoinGroupDialogPro
       }
       onOpenChange(open);
     }}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="w-[calc(100%-2rem)] sm:max-w-md mx-auto">
         <DialogHeader>
-          <DialogTitle>Join a Group</DialogTitle>
+          <DialogTitle className="text-lg sm:text-xl">Join a Group</DialogTitle>
         </DialogHeader>
         <div className="space-y-4 py-4">
           <div className="space-y-2">
-            <Label htmlFor="inviteCode">Invite Code</Label>
+            <Label htmlFor="inviteCode" className="text-sm sm:text-base">Invite Code</Label>
             <Input
               id="inviteCode"
               value={code}
@@ -56,17 +56,17 @@ const JoinGroupDialog = ({ open, onOpenChange, onJoinGroup }: JoinGroupDialogPro
               }}
               placeholder="Enter 6-character code"
               maxLength={6}
-              className="font-mono uppercase"
+              className="font-mono uppercase text-sm sm:text-base"
               onKeyDown={(e) => e.key === 'Enter' && handleJoin()}
             />
-            {error && <p className="text-sm text-destructive">{error}</p>}
+            {error && <p className="text-xs sm:text-sm text-destructive">{error}</p>}
           </div>
         </div>
-        <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>
+        <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
+          <Button variant="outline" onClick={() => onOpenChange(false)} className="w-full sm:w-auto text-sm sm:text-base">
             Cancel
           </Button>
-          <Button onClick={handleJoin} disabled={code.length < 6}>
+          <Button onClick={handleJoin} disabled={code.length < 6} className="w-full sm:w-auto text-sm sm:text-base">
             Join Group
           </Button>
         </DialogFooter>

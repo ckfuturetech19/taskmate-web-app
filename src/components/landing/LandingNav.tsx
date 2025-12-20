@@ -6,29 +6,60 @@ import { useTheme } from '@/contexts/ThemeContext';
 const LandingNav = () => {
   const { theme, toggleTheme } = useTheme();
 
+  const scrollToSection = (id: string) => {
+    const element = document.getElementById(id);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-background/95 backdrop-blur-md border-b border-border/50 shadow-sm">
-      <div className="container mx-auto px-4 h-16 sm:h-18 flex items-center justify-between">
-        <Link to="/" className="flex items-center gap-2 group">
+      <div className="container mx-auto px-4 md:px-6 lg:px-8 h-16 md:h-18 flex items-center justify-between">
+        <Link to="/" className="flex items-center gap-2 group min-w-0">
           <img 
             src="../../assets/images/logo.png" 
             alt="TaskMate Logo" 
-            className="h-8 w-8 sm:h-10 sm:w-10 rounded-lg group-hover:scale-110 transition-transform duration-300"
+            className="h-8 w-8 md:h-10 md:w-10 rounded-lg group-hover:scale-110 transition-transform duration-300 shrink-0"
           />
-          <span className="text-xl sm:text-2xl font-bold bg-gradient-to-r from-foreground to-foreground/80 bg-clip-text">TaskMate</span>
+          <span className="text-xl md:text-2xl font-bold text-foreground truncate">TaskMate</span>
         </Link>
-        <div className="flex items-center gap-2 sm:gap-3">
-          <a 
-            href="https://play.google.com/store/apps/details?id=com.ckfuturetech.taskmate&hl=en_IN" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="hidden md:flex items-center gap-1 text-sm text-muted-foreground hover:text-primary transition-colors"
+        
+        {/* Navigation Links */}
+        <div className="hidden lg:flex items-center gap-6">
+          <button 
+            onClick={() => scrollToSection('home')}
+            className="text-sm font-medium text-foreground hover:text-primary transition-colors"
           >
-            <span className="text-yellow-500">★</span>
-            <span className="font-semibold">5.0</span>
-            <span className="text-xs">(30+)</span>
-          </a>
-          
+            Home
+          </button>
+          <button 
+            onClick={() => scrollToSection('features')}
+            className="text-sm font-medium text-foreground hover:text-primary transition-colors"
+          >
+            Features
+          </button>
+          <button 
+            onClick={() => scrollToSection('how-it-works')}
+            className="text-sm font-medium text-foreground hover:text-primary transition-colors"
+          >
+            How it works
+          </button>
+          <button 
+            onClick={() => scrollToSection('pricing')}
+            className="text-sm font-medium text-foreground hover:text-primary transition-colors"
+          >
+            Pricing
+          </button>
+          <Link 
+            to="/contact"
+            className="text-sm font-medium text-foreground hover:text-primary transition-colors"
+          >
+            Contacts
+          </Link>
+        </div>
+        
+        <div className="flex items-center gap-2 md:gap-3 shrink-0">
           <Button
             variant="ghost"
             size="icon"
@@ -43,16 +74,15 @@ const LandingNav = () => {
             )}
           </Button>
           
-          <Link to="/auth" className="hidden sm:block">
-            <Button variant="ghost" size="sm" className="text-base">
-              Sign In
+          <Link to="/auth" className="hidden md:block">
+            <Button variant="ghost" size="sm" className="text-sm">
+              Log in
             </Button>
           </Link>
           <Link to="/auth">
-            <Button variant="default" size="sm" className="gap-1 sm:gap-2 shadow-md hover:shadow-lg transition-all duration-300">
-              <span className="hidden sm:inline">Get Started</span>
-              <span className="sm:hidden">Start</span>
-              <ArrowRight className="h-3 w-3 sm:h-4 sm:w-4" />
+            <Button variant="default" size="sm" className="gap-2 shadow-md hover:shadow-lg transition-all duration-300 text-sm">
+              <span>Start Free Trial</span>
+              <ArrowRight className="h-4 w-4" />
             </Button>
           </Link>
         </div>

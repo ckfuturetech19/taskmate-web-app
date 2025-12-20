@@ -3,8 +3,8 @@ import { doc, setDoc, getDoc, updateDoc } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 
 // VAPID key from Firebase Console -> Project Settings -> Cloud Messaging
-// You need to generate this in Firebase Console
-const VAPID_KEY = 'BHrlSHy_rMLo1MTfY5AT7LITdy95mPQlyV7mMy85MKUNWQ_cr2eSxRUgJE1RCkSoKG1MPDKVLaWqQnoOn0OOk28'; // TODO: Replace with your actual VAPID key
+// Loaded from environment variable VITE_FIREBASE_VAPID_KEY
+const VAPID_KEY = import.meta.env.VITE_FIREBASE_VAPID_KEY;
 
 class FCMService {
   private messaging: any = null;
@@ -29,24 +29,12 @@ class FCMService {
       const registration = await navigator.serviceWorker.register('/firebase-messaging-sw.js');
       console.log('Service Worker registered:', registration);
 
-      // Get messaging instance
+      // Get messaging instance using the existing Firebase app
       const { getMessaging } = await import('firebase/messaging');
       const { default: firebaseApp } = await import('@/lib/firebase');
       
-      // We need to import the app instance
-      const { initializeApp } = await import('firebase/app');
-      const firebaseConfig = {
-        apiKey: "AIzaSyBU1on-3Dn33IsUfdoHYi3kluC63FIA2bs",
-        authDomain: "taskmate-e7cc9.firebaseapp.com",
-        projectId: "taskmate-e7cc9",
-        storageBucket: "taskmate-e7cc9.firebasestorage.app",
-        messagingSenderId: "425325230785",
-        appId: "1:425325230785:web:5471398c240d7d8d46b240",
-        measurementId: "G-0921EG4E7W"
-      };
-      
-      const app = initializeApp(firebaseConfig, 'messaging-app');
-      this.messaging = getMessaging(app);
+      // Use the existing Firebase app instance
+      this.messaging = getMessaging(firebaseApp);
 
       console.log('FCM Service initialized successfully');
       return true;
@@ -172,30 +160,87 @@ class FCMService {
 
   // Setup handler for foreground messages (when app is open)
   private setupForegroundMessageHandler() {
-    if (!this.messaging) return;
+    if (!this.messaging) {
+      console.warn('[FCM] Cannot setup foreground handler: messaging not initialized');
+      return;
+    }
 
-    onMessage(this.messaging, (payload) => {
-      console.log('Foreground message received:', payload);
+    try {
+      onMessage(this.messaging, (payload) => {
+        console.log('[FCM] Foreground message received:', payload);
+        console.log('[FCM] Notification data:', payload.notification);
+        console.log('[FCM] Data payload:', payload.data);
 
-      const notificationTitle = payload.notification?.title || 'TaskMate Reminder';
-      const notificationOptions = {
-        body: payload.notification?.body || 'You have a task reminder',
-        icon: '/logo.png',
-        badge: '/badge.png',
-        tag: payload.data?.taskId || 'task-reminder',
-        data: payload.data,
-        vibrate: [200, 100, 200],
-        requireInteraction: true
-      };
+        // Extract notification title and body
+        const notificationTitle = payload.notification?.title || 
+                                 payload.data?.title || 
+                                 'TaskMate Reminder';
+        const notificationBody = payload.notification?.body || 
+                                payload.data?.body || 
+                                payload.data?.description ||
+                                'You have a task reminder';
 
-      // Show notification even when app is in foreground
-      if (Notification.permission === 'granted') {
-        new Notification(notificationTitle, notificationOptions);
-      }
+        const notificationOptions: NotificationOptions & { vibrate?: number[] } = {
+          body: notificationBody,
+          icon: '/logo.png',
+          badge: '/badge.png',
+          tag: payload.data?.taskId || 'task-reminder',
+          data: {
+            ...payload.data,
+            url: payload.data?.url || payload.fcmOptions?.link || '/',
+          },
+          vibrate: [200, 100, 200],
+          requireInteraction: true,
+          // Add action buttons if available
+          ...(payload.data?.taskId && {
+            actions: [
+              {
+                action: 'complete',
+                title: '✓ Mark as Done',
+              },
+              {
+                action: 'snooze',
+                title: '⏰ Snooze 10 min',
+              }
+            ]
+          })
+        };
 
-      // You can also trigger a toast notification or custom UI here
-      // Example: showToast(notificationTitle, notificationOptions.body);
-    });
+        // Check notification permission
+        if (Notification.permission === 'granted') {
+          console.log('[FCM] Showing foreground notification:', notificationTitle);
+          const notification = new Notification(notificationTitle, notificationOptions);
+          
+          // Handle notification click
+          notification.onclick = (event) => {
+            event.preventDefault();
+            console.log('[FCM] Notification clicked:', payload.data);
+            // Focus or open the app window
+            window.focus();
+            // You can navigate to a specific route here if needed
+            if (payload.data?.taskId) {
+              // Navigate to task detail page if needed
+              console.log('[FCM] Task ID:', payload.data.taskId);
+            }
+          };
+        } else {
+          console.warn('[FCM] Notification permission not granted. Permission:', Notification.permission);
+          // Request permission if not granted
+          if (Notification.permission === 'default') {
+            console.log('[FCM] Requesting notification permission...');
+            Notification.requestPermission().then(permission => {
+              if (permission === 'granted') {
+                console.log('[FCM] Permission granted, showing notification');
+                new Notification(notificationTitle, notificationOptions);
+              }
+            });
+          }
+        }
+      });
+      console.log('[FCM] Foreground message handler setup complete');
+    } catch (error) {
+      console.error('[FCM] Error setting up foreground message handler:', error);
+    }
   }
 
   // Get current token

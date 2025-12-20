@@ -126,24 +126,21 @@ export const TimePicker = ({ open, onOpenChange, value, onSelect }: TimePickerPr
               <div className="space-y-2 w-full">
                 <Label className="text-sm text-muted-foreground">Minutes</Label>
                 <div className="flex flex-wrap gap-2 justify-center">
-                  {Array.from({ length: 12 }, (_, i) => {
-                    const minute = i * 5;
-                    return (
-                      <button
-                        key={minute}
-                        type="button"
-                        onClick={() => handleMinuteClick(minute)}
-                        className={cn(
-                          "w-14 h-11 rounded-full flex items-center justify-center text-sm font-semibold transition-all",
-                          minutes === minute 
-                            ? "bg-primary text-primary-foreground shadow-lg scale-110" 
-                            : "bg-primary/10 hover:bg-primary/20 hover:scale-105"
-                        )}
-                      >
-                        {minute.toString().padStart(2, '0')}
-                      </button>
-                    );
-                  })}
+                  {Array.from({ length: 60 }, (_, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => handleMinuteClick(i)}
+                      className={cn(
+                        "w-12 h-10 rounded-full flex items-center justify-center text-xs font-semibold transition-all",
+                        minutes === i 
+                          ? "bg-primary text-primary-foreground shadow-lg scale-110" 
+                          : "bg-primary/10 hover:bg-primary/20 hover:scale-105"
+                      )}
+                    >
+                      {i.toString().padStart(2, '0')}
+                    </button>
+                  ))}
                 </div>
               </div>
             </div>

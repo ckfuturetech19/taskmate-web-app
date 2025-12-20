@@ -8,12 +8,15 @@ import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useTaskContext } from '@/contexts/TaskContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { usePremium } from '@/contexts/PremiumContext';
 import { Plus, UserPlus, Users, CheckSquare } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { Task } from '@/types/task';
+import PremiumGate from '@/components/premium/PremiumGate';
 
 const Groups = () => {
   const { user } = useAuth();
+  const { isPremium } = usePremium();
   const { groups, tasks, createGroup, joinGroup, updateTask, deleteTask, toggleTaskComplete } = useTaskContext();
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [joinDialogOpen, setJoinDialogOpen] = useState(false);
@@ -51,27 +54,47 @@ const Groups = () => {
 
   return (
     <AppLayout title="Groups">
-      <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full sm:w-auto">
-            <TabsList className="grid w-full grid-cols-2 sm:w-auto">
-              <TabsTrigger value="groups" className="text-xs sm:text-sm">My Groups</TabsTrigger>
-              <TabsTrigger value="tasks" className="text-xs sm:text-sm">All Group Tasks</TabsTrigger>
-            </TabsList>
-          </Tabs>
-          <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
-            <Button variant="outline" onClick={() => setJoinDialogOpen(true)} className="gap-2 w-full sm:w-auto">
-              <UserPlus className="h-4 w-4" />
-              <span className="hidden sm:inline">Join Group</span>
-              <span className="sm:hidden">Join</span>
-            </Button>
-            <Button onClick={() => setCreateDialogOpen(true)} className="gap-2 w-full sm:w-auto">
-              <Plus className="h-4 w-4" />
-              <span className="hidden sm:inline">Create Group</span>
-              <span className="sm:hidden">Create</span>
-            </Button>
+      <PremiumGate 
+        feature="Team Collaboration" 
+        description="Create and join groups to collaborate with your team. This is a premium feature."
+        variant="dialog"
+      >
+        <div className="space-y-4 sm:space-y-5 md:space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full sm:w-auto">
+              <TabsList className="grid w-full grid-cols-2 sm:w-auto h-auto">
+                <TabsTrigger value="groups" className="text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2">My Groups</TabsTrigger>
+                <TabsTrigger value="tasks" className="text-xs sm:text-sm px-3 sm:px-4 py-1.5 sm:py-2">All Group Tasks</TabsTrigger>
+              </TabsList>
+            </Tabs>
+            <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
+              <Button 
+                variant="outline" 
+                onClick={() => {
+                  if (!isPremium) return;
+                  setJoinDialogOpen(true);
+                }}
+                disabled={!isPremium}
+                className="gap-2 w-full sm:w-auto text-sm sm:text-base"
+              >
+                <UserPlus className="h-4 w-4" />
+                <span className="hidden sm:inline">Join Group</span>
+                <span className="sm:hidden">Join</span>
+              </Button>
+              <Button 
+                onClick={() => {
+                  if (!isPremium) return;
+                  setCreateDialogOpen(true);
+                }}
+                disabled={!isPremium}
+                className="gap-2 w-full sm:w-auto text-sm sm:text-base"
+              >
+                <Plus className="h-4 w-4" />
+                <span className="hidden sm:inline">Create Group</span>
+                <span className="sm:hidden">Create</span>
+              </Button>
+            </div>
           </div>
-        </div>
 
         {activeTab === 'groups' ? (
           userGroups.length === 0 ? (
@@ -90,7 +113,7 @@ const Groups = () => {
               </div>
             </div>
           ) : (
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
               {userGroups.map(group => (
                 <GroupCard key={group.id} group={group} />
               ))}
@@ -121,19 +144,24 @@ const Groups = () => {
             </div>
           )
         )}
-      </div>
+        </div>
 
-      <CreateGroupDialog
-        open={createDialogOpen}
-        onOpenChange={setCreateDialogOpen}
-        onCreateGroup={handleCreateGroup}
-      />
+        {isPremium && (
+          <>
+            <CreateGroupDialog
+              open={createDialogOpen}
+              onOpenChange={setCreateDialogOpen}
+              onCreateGroup={handleCreateGroup}
+            />
 
-      <JoinGroupDialog
-        open={joinDialogOpen}
-        onOpenChange={setJoinDialogOpen}
-        onJoinGroup={handleJoinGroup}
-      />
+            <JoinGroupDialog
+              open={joinDialogOpen}
+              onOpenChange={setJoinDialogOpen}
+              onJoinGroup={handleJoinGroup}
+            />
+          </>
+        )}
+      </PremiumGate>
     </AppLayout>
   );
 };

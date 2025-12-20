@@ -145,62 +145,62 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Frost Blue Light Theme - Matching Flutter */
-    --background: 208 100% 97%;
-    --foreground: 208 51% 25%;
+    /* Green Light Theme - Matching Screenshot */
+    --background: 0 0% 98%;
+    --foreground: 0 0% 15%;
 
     --card: 0 0% 100%;
-    --card-foreground: 208 51% 25%;
+    --card-foreground: 0 0% 15%;
 
-    --popover: 206 100% 95%;
-    --popover-foreground: 208 51% 25%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 15%;
 
-    --primary: 207 81% 72%;
+    --primary: 142 65% 42%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 206 100% 95%;
-    --secondary-foreground: 208 51% 25%;
+    --secondary: 0 0% 96%;
+    --secondary-foreground: 0 0% 15%;
 
-    --muted: 208 100% 90%;
-    --muted-foreground: 208 35% 45%;
+    --muted: 0 0% 96%;
+    --muted-foreground: 0 0% 45%;
 
-    --accent: 208 67% 83%;
-    --accent-foreground: 209 54% 25%;
+    --accent: 142 40% 90%;
+    --accent-foreground: 142 71% 35%;
 
     --destructive: 0 72% 50%;
-    --destructive-foreground: 0 85% 97%;
+    --destructive-foreground: 0 0% 100%;
 
-    --border: 206 100% 95%;
-    --input: 206 100% 95%;
-    --ring: 207 81% 72%;
+    --border: 0 0% 90%;
+    --input: 0 0% 96%;
+    --ring: 142 71% 45%;
 
     --radius: 1.25rem;
 
     --sidebar-background: 0 0% 100%;
 
-    --sidebar-foreground: 208 51% 25%;
+    --sidebar-foreground: 0 0% 15%;
 
-    --sidebar-primary: 207 81% 72%;
+    --sidebar-primary: 142 71% 45%;
 
     --sidebar-primary-foreground: 0 0% 100%;
 
-    --sidebar-accent: 206 100% 95%;
+    --sidebar-accent: 142 40% 95%;
 
-    --sidebar-accent-foreground: 208 51% 25%;
+    --sidebar-accent-foreground: 142 71% 35%;
 
-    --sidebar-border: 206 100% 95%;
+    --sidebar-border: 0 0% 90%;
 
-    --sidebar-ring: 207 81% 72%;
+    --sidebar-ring: 142 71% 45%;
 
-    --chart-1: 207 81% 72%;
+    --chart-1: 142 71% 45%;
 
-    --chart-2: 208 67% 83%;
+    --chart-2: 142 60% 60%;
 
-    --chart-3: 208 100% 90%;
+    --chart-3: 142 40% 80%;
 
-    --chart-4: 208 35% 45%;
+    --chart-4: 0 0% 70%;
 
-    --chart-5: 209 54% 25%;
+    --chart-5: 0 0% 50%;
 
     --sidebar: 0 0% 100%;
 
@@ -232,48 +232,48 @@ All colors MUST be HSL.
   }
 
   .dark {
-    /* Midnight Blue Dark Theme - Matching Flutter */
-    --background: 211 40% 6%;
-    --foreground: 0 0% 100%;
+    /* Green Dark Theme - Matching Screenshot */
+    --background: 224 71% 4%;
+    --foreground: 0 0% 98%;
 
-    --card: 210 28% 12%;
-    --card-foreground: 0 0% 100%;
+    --card: 215 27.9% 16.9%;
+    --card-foreground: 0 0% 98%;
 
-    --popover: 209 54% 25%;
-    --popover-foreground: 0 0% 100%;
+    --popover: 215 27.9% 16.9%;
+    --popover-foreground: 0 0% 98%;
 
-    --primary: 207 63% 59%;
+    --primary: 142 65% 42%;
     --primary-foreground: 0 0% 100%;
 
-    --secondary: 209 54% 25%;
-    --secondary-foreground: 0 0% 100%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 0 0% 98%;
 
-    --muted: 208 51% 37%;
-    --muted-foreground: 0 0% 100%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
 
-    --accent: 211 40% 9%;
-    --accent-foreground: 0 0% 100%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 0 0% 98%;
 
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: 0 63.9% 50.6%;
+    --destructive-foreground: 0 0% 98%;
 
-    --border: 209 54% 25%;
-    --input: 209 54% 25%;
-    --ring: 207 63% 59%;
-    --sidebar-background: 210 28% 12%;
-    --sidebar-foreground: 0 0% 100%;
-    --sidebar-primary: 207 63% 59%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 142 65% 42%;
+    --sidebar-background: 215 27.9% 16.9%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 142 65% 42%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 208 51% 37%;
-    --sidebar-accent-foreground: 0 0% 100%;
-    --sidebar-border: 209 54% 25%;
-    --sidebar-ring: 207 63% 59%;
-    --chart-1: 207 63% 59%;
-    --chart-2: 208 51% 37%;
-    --chart-3: 209 54% 25%;
-    --chart-4: 210 28% 12%;
-    --chart-5: 211 40% 9%;
-    --sidebar: 210 28% 12%;
+    --sidebar-accent: 217.2 32.6% 17.5%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 217.2 32.6% 17.5%;
+    --sidebar-ring: 142 65% 42%;
+    --chart-1: 142 65% 42%;
+    --chart-2: 142 60% 55%;
+    --chart-3: 142 50% 65%;
+    --chart-4: 142 40% 75%;
+    --chart-5: 142 30% 85%;
+    --sidebar: 215 27.9% 16.9%;
     --shadow-2xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
     --shadow-xs: 0 1px 3px 0px hsl(0 0% 0% / 0.05);
     --shadow-sm: 0 1px 3px 0px hsl(0 0% 0% / 0.1), 0 1px 2px -1px hsl(0 0% 0% / 0.1);

@@ -12,6 +12,7 @@ import {
 } from 'firebase/auth';
 import { auth, googleProvider } from '@/lib/firebase';
 import { fcmService } from '@/services/fcmService';
+import { oneSignalService } from '@/services/oneSignalService';
 import { formatFirebaseError } from '@/lib/authErrors';
 
 interface User {
@@ -57,26 +58,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
             photoURL: firebaseUser.photoURL
           });
 
-          // Register FCM token after successful login
+          // Initialize OneSignal and save Player ID
           try {
-            // Initialize FCM
-            await fcmService.initialize();
-            
-            // Check if notification permission already granted
-            if ('Notification' in window) {
-              if (Notification.permission === 'granted') {
-                // Permission already granted, just register token
-                await fcmService.registerToken(firebaseUser.uid);
-              } else if (Notification.permission === 'default') {
-                // Ask for permission and register token
-                await fcmService.requestPermissionAndGetToken(firebaseUser.uid);
-              } else {
-                // Permission denied, but still register token for later use
-                await fcmService.registerToken(firebaseUser.uid);
-              }
-            }
+            await oneSignalService.initialize();
+            await oneSignalService.requestPermissionAndSavePlayerId(firebaseUser.uid);
           } catch (error) {
-            console.error('Error setting up FCM:', error);
+            console.error('Error setting up OneSignal:', error);
           }
         } else {
           setUser(null);

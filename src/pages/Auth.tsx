@@ -7,8 +7,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
-import { CheckSquare, Loader2 } from 'lucide-react';
+import { CheckSquare, Loader2, ClipboardList, CheckCircle, Users, Cloud, Sparkles } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import OnboardingSlides from '@/components/landing/OnboardingSlides';
 
 const Auth = () => {
   const { user, signInWithGoogle, signInWithEmail, signUpWithEmail } = useAuth();
@@ -140,64 +141,73 @@ const Auth = () => {
   );
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-3 sm:p-4">
-      <Card className="w-full max-w-md">
-        <CardHeader className="text-center space-y-2 sm:space-y-4">
-          <Link to="/" className="flex items-center justify-center gap-2 mb-2 sm:mb-4">
-            <CheckSquare className="h-7 w-7 sm:h-8 sm:w-8 text-primary" />
-            <span className="text-xl sm:text-2xl font-bold text-foreground">TaskMate</span>
-          </Link>
-          <CardTitle className="text-lg sm:text-xl">Welcome to TaskMate</CardTitle>
-          <CardDescription className="text-sm">Organize your tasks and collaborate with teams</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Tabs defaultValue="signin" className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="signin">Sign In</TabsTrigger>
-              <TabsTrigger value="signup">Sign Up</TabsTrigger>
+    <div className="min-h-screen flex items-center justify-center bg-[#E3D7FF] relative overflow-hidden">
+      {/* Floating background elements */}
+      <div className="absolute inset-0 pointer-events-none z-0">
+        <Cloud className="absolute top-10 left-10 text-indigo-200 opacity-40 w-32 h-32 animate-float-slow" />
+        <ClipboardList className="absolute bottom-10 right-10 text-purple-200 opacity-30 w-24 h-24 animate-float" />
+        <CheckCircle className="absolute top-1/2 left-1/4 text-blue-200 opacity-30 w-20 h-20 animate-float" />
+        <Sparkles className="absolute bottom-1/4 left-1/3 text-yellow-200 opacity-30 w-16 h-16 animate-float" />
+        <Users className="absolute top-1/4 right-1/3 text-pink-200 opacity-30 w-16 h-16 animate-float" />
+      </div>
+      <div className="relative z-10 w-full max-w-4xl bg-white rounded-2xl shadow-2xl flex flex-col md:flex-row overflow-hidden">
+        {/* Left: Login/Signup */}
+        <div className="flex-1 p-8 flex flex-col justify-center items-center bg-white">
+          <div className="mb-8 flex items-center gap-2 justify-center w-full">
+            <img src="/assets/images/logo.png" alt="TaskMate Logo" className="h-8 w-8" />
+            <span className="text-2xl font-bold text-[#5B3EFF]">TaskMate</span>
+          </div>
+          <h2 className="text-3xl font-bold mb-2 text-black text-center w-full">Welcome Back!</h2>
+          <p className="text-gray-500 mb-6 text-center w-full">Please enter login details below</p>
+          <Tabs defaultValue="signin" className="w-full max-w-sm mx-auto">
+            <TabsList className="grid w-full grid-cols-2 mb-4 bg-transparent">
+              <TabsTrigger value="signin" className="font-semibold text-black">Sign In</TabsTrigger>
+              <TabsTrigger value="signup" className="font-semibold text-black">Sign Up</TabsTrigger>
             </TabsList>
-            
-            <TabsContent value="signin" className="space-y-4 mt-4">
+            <TabsContent value="signin" className="space-y-4">
               <form onSubmit={handleEmailSignIn} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="signin-email">Email</Label>
+                  <Label htmlFor="signin-email" className="text-black">Email</Label>
                   <Input
                     id="signin-email"
                     type="email"
-                    placeholder="Enter your email"
+                    placeholder="Enter the email"
                     value={signInEmail}
                     onChange={(e) => setSignInEmail(e.target.value)}
                     disabled={loading}
+                    className="bg-white border border-gray-300 rounded-lg px-4 py-2 text-black focus:border-[#5B3EFF] focus:ring-2 focus:ring-[#5B3EFF]"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="signin-password">Password</Label>
+                  <Label htmlFor="signin-password" className="text-black">Password</Label>
                   <Input
                     id="signin-password"
                     type="password"
-                    placeholder="Enter your password"
+                    placeholder="Enter the Password"
                     value={signInPassword}
                     onChange={(e) => setSignInPassword(e.target.value)}
                     disabled={loading}
+                    className="bg-white border border-gray-300 rounded-lg px-4 py-2 text-black focus:border-[#5B3EFF] focus:ring-2 focus:ring-[#5B3EFF]"
                   />
                 </div>
-                <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Signing in...</> : 'Sign In'}
+                <div className="flex justify-end mb-2">
+                  <Link to="/forgot" className="text-xs text-[#5B3EFF] hover:underline">Forgot password?</Link>
+                </div>
+                <Button type="submit" className="w-full bg-[#5B3EFF] text-white font-semibold rounded-lg py-2" disabled={loading}>
+                  {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Signing in...</> : 'Sign in'}
                 </Button>
               </form>
-              
-              <div className="relative">
+              <div className="relative my-4">
                 <div className="absolute inset-0 flex items-center">
                   <Separator />
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
+                  <span className="bg-white px-2 text-gray-400">Or continue</span>
                 </div>
               </div>
-              
               <Button 
                 variant="outline" 
-                className="w-full gap-3"
+                className="w-full gap-3 bg-white border border-gray-300 text-black font-semibold rounded-lg py-2"
                 onClick={handleGoogleSignIn}
                 disabled={loading}
               >
@@ -209,20 +219,18 @@ const Auth = () => {
                 ) : (
                   <>
                     <GoogleIcon />
-                    Sign in with Google
+                    Log in with Google
                   </>
                 )}
               </Button>
-              
-              <p className="text-xs text-center text-muted-foreground mt-2">
-                If popup is blocked, please allow popups for this site
-              </p>
+              <div className="text-xs text-center text-gray-500 mt-2">
+                Don’t have an account? <Link to="#signup" className="text-[#5B3EFF] hover:underline">Sign Up</Link>
+              </div>
             </TabsContent>
-            
-            <TabsContent value="signup" className="space-y-4 mt-4">
+            <TabsContent value="signup" className="space-y-4">
               <form onSubmit={handleEmailSignUp} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="signup-name">Full Name</Label>
+                  <Label htmlFor="signup-name" className="text-black">Full Name</Label>
                   <Input
                     id="signup-name"
                     type="text"
@@ -230,10 +238,11 @@ const Auth = () => {
                     value={signUpName}
                     onChange={(e) => setSignUpName(e.target.value)}
                     disabled={loading}
+                    className="bg-white border border-gray-300 rounded-lg px-4 py-2 text-black focus:border-[#5B3EFF] focus:ring-2 focus:ring-[#5B3EFF]"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="signup-email">Email</Label>
+                  <Label htmlFor="signup-email" className="text-black">Email</Label>
                   <Input
                     id="signup-email"
                     type="email"
@@ -241,10 +250,11 @@ const Auth = () => {
                     value={signUpEmail}
                     onChange={(e) => setSignUpEmail(e.target.value)}
                     disabled={loading}
+                    className="bg-white border border-gray-300 rounded-lg px-4 py-2 text-black focus:border-[#5B3EFF] focus:ring-2 focus:ring-[#5B3EFF]"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="signup-password">Password</Label>
+                  <Label htmlFor="signup-password" className="text-black">Password</Label>
                   <Input
                     id="signup-password"
                     type="password"
@@ -252,10 +262,11 @@ const Auth = () => {
                     value={signUpPassword}
                     onChange={(e) => setSignUpPassword(e.target.value)}
                     disabled={loading}
+                    className="bg-white border border-gray-300 rounded-lg px-4 py-2 text-black focus:border-[#5B3EFF] focus:ring-2 focus:ring-[#5B3EFF]"
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="signup-confirm-password">Confirm Password</Label>
+                  <Label htmlFor="signup-confirm-password" className="text-black">Confirm Password</Label>
                   <Input
                     id="signup-confirm-password"
                     type="password"
@@ -263,25 +274,24 @@ const Auth = () => {
                     value={signUpConfirmPassword}
                     onChange={(e) => setSignUpConfirmPassword(e.target.value)}
                     disabled={loading}
+                    className="bg-white border border-gray-300 rounded-lg px-4 py-2 text-black focus:border-[#5B3EFF] focus:ring-2 focus:ring-[#5B3EFF]"
                   />
                 </div>
-                <Button type="submit" className="w-full" disabled={loading}>
+                <Button type="submit" className="w-full bg-[#5B3EFF] text-white font-semibold rounded-lg py-2" disabled={loading}>
                   {loading ? <><Loader2 className="mr-2 h-4 w-4 animate-spin" /> Creating account...</> : 'Create Account'}
                 </Button>
               </form>
-              
-              <div className="relative">
+              <div className="relative my-4">
                 <div className="absolute inset-0 flex items-center">
                   <Separator />
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-background px-2 text-muted-foreground">Or continue with</span>
+                  <span className="bg-white px-2 text-gray-400">Or continue</span>
                 </div>
               </div>
-              
               <Button 
                 variant="outline" 
-                className="w-full gap-3"
+                className="w-full gap-3 bg-white border border-gray-300 text-black font-semibold rounded-lg py-2"
                 onClick={handleGoogleSignIn}
                 disabled={loading}
               >
@@ -293,18 +303,23 @@ const Auth = () => {
                 ) : (
                   <>
                     <GoogleIcon />
-                    Sign in with Google
+                    Log in with Google
                   </>
                 )}
               </Button>
-              
-              <p className="text-xs text-center text-muted-foreground mt-2">
-                If popup is blocked, please allow popups for this site
-              </p>
+              <div className="text-xs text-center text-gray-500 mt-2">
+                Already have an account? <Link to="#signin" className="text-[#5B3EFF] hover:underline">Sign In</Link>
+              </div>
             </TabsContent>
           </Tabs>
-        </CardContent>
-      </Card>
+        </div>
+        {/* Right: Auto-looping onboarding slides */}
+        <div className="hidden md:flex flex-1 items-center justify-center bg-gradient-to-br from-indigo-200 via-purple-100 to-blue-100 relative">
+          <div className="absolute inset-0 flex items-center justify-center w-full h-full">
+            <OnboardingSlides fullScreen />
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

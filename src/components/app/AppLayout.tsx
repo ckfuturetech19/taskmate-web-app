@@ -20,8 +20,8 @@ const AppLayout = ({ children, title }: AppLayoutProps) => {
       <MobileAppDialog isAuthenticated={!!user} />
       <AppSidebar mobileMenuOpen={mobileMenuOpen} setMobileMenuOpen={setMobileMenuOpen} />
       <AppHeader title={title} onMenuClick={() => setMobileMenuOpen(true)} />
-      <main className="lg:ml-60 pt-16 min-h-screen transition-all duration-300">
-        <div className="p-4 sm:p-6">
+      <main className="lg:ml-60 pt-14 sm:pt-16 min-h-screen transition-all duration-300">
+        <div className="p-3 sm:p-4 md:p-5 lg:p-6 max-w-7xl mx-auto">
           {children}
         </div>
       </main>

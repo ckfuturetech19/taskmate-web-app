@@ -1,4 +1,4 @@
-import { Star, Quote } from 'lucide-react';
+import { Star } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 
 const testimonials = [
@@ -30,82 +30,62 @@ const testimonials = [
 
 const TestimonialsSection = () => {
   return (
-    <section className="py-16 sm:py-20 md:py-24 px-4 bg-card/30 relative overflow-hidden">
-      {/* Background decorations */}
-      <div className="absolute top-0 left-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl"></div>
-      <div className="absolute bottom-0 right-0 w-96 h-96 bg-accent/5 rounded-full blur-3xl"></div>
-      
-      <div className="container mx-auto max-w-6xl relative z-10">
-        <div className="text-center mb-12 sm:mb-16 md:mb-20 animate-fade-in">
-          <div className="inline-block px-4 py-2 rounded-full bg-primary/10 border border-primary/20 mb-4">
-            <span className="text-sm font-semibold text-primary">LOVED BY USERS</span>
+    <section className="py-16 md:py-24 px-4 bg-background">
+      <div className="container mx-auto max-w-7xl">
+        {/* Trusted Badge */}
+        <div className="flex items-center justify-center gap-2 mb-6">
+          <div className="flex -space-x-2">
+            <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary to-accent border-2 border-background"></div>
+            <div className="h-8 w-8 rounded-full bg-gradient-to-br from-accent to-primary border-2 border-background"></div>
+            <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary/80 to-accent/80 border-2 border-background"></div>
           </div>
-          <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold text-foreground mb-4 sm:mb-6 px-4">
-            What Our Users Say
-            <br />
-            <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">About TaskMate</span>
+          <span className="text-sm text-muted-foreground font-medium">30+ Reviews</span>
+        </div>
+
+        <div className="text-center mb-12 md:mb-16">
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4">
+            Loved by teams around the world
           </h2>
-          <p className="text-base sm:text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto px-4 leading-relaxed">
-            Join hundreds of satisfied users who have transformed their productivity with TaskMate.
+          <p className="text-lg md:text-xl text-muted-foreground max-w-3xl mx-auto">
+            Simplify project planning, Streamline collaboration, and boost productivity all with TaskMate management solution.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-5 sm:gap-6 md:gap-8 max-w-5xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
           {testimonials.map((testimonial, index) => (
             <Card 
-              key={testimonial.name} 
-              className="group bg-card/70 backdrop-blur-sm border-border/50 hover:border-primary/50 hover:shadow-xl hover:scale-105 transition-all duration-300 animate-fade-in"
-              style={{ animationDelay: `${index * 0.1}s` }}
+              key={testimonial.name}
+              className="group hover:shadow-xl transition-all duration-300 border-border/50"
             >
-              <CardContent className="p-6 sm:p-7 space-y-4">
-                {/* Quote icon */}
-                <Quote className="h-8 w-8 text-primary/30" />
-                
+              <CardContent className="p-6 md:p-8 space-y-4">
                 {/* Rating */}
                 <div className="flex gap-1">
                   {[...Array(testimonial.rating)].map((_, i) => (
-                    <Star key={i} className="h-4 w-4 fill-yellow-500 text-yellow-500" />
+                    <Star key={i} className="h-5 w-5 fill-yellow-500 text-yellow-500" />
                   ))}
                 </div>
                 
                 {/* Content */}
-                <p className="text-muted-foreground text-sm sm:text-base leading-relaxed">
+                <p className="text-muted-foreground text-sm leading-relaxed mb-4">
                   "{testimonial.content}"
                 </p>
                 
                 {/* Author */}
                 <div className="flex items-center gap-3 pt-4 border-t border-border/50">
-                  <div className="h-10 w-10 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-semibold">
+                  <div className="h-12 w-12 rounded-full bg-gradient-to-br from-primary to-accent flex items-center justify-center text-white font-semibold text-sm">
                     {testimonial.image}
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="font-semibold text-foreground truncate">{testimonial.name}</div>
-                    <div className="text-xs text-muted-foreground">{testimonial.date}</div>
+                  <div>
+                    <div className="font-semibold text-foreground">{testimonial.name}</div>
+                    <div className="text-sm text-muted-foreground">{testimonial.role}</div>
+                    {testimonial.date && (
+                      <div className="text-xs text-muted-foreground mt-1">{testimonial.date}</div>
+                    )}
                   </div>
                 </div>
               </CardContent>
             </Card>
           ))}
-        </div>
-
-        {/* Play Store rating showcase */}
-        <div className="mt-12 sm:mt-16 text-center animate-fade-in" style={{ animationDelay: '0.6s' }}>
-          <a 
-            href="https://play.google.com/store/apps/details?id=com.ckfuturetech.taskmate&hl=en_IN" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-3 px-6 py-4 rounded-2xl bg-gradient-to-r from-primary/10 to-accent/10 border border-primary/20 hover:border-primary/40 hover:shadow-lg transition-all duration-300 group"
-          >
-            <div className="flex gap-1">
-              {[...Array(5)].map((_, i) => (
-                <Star key={i} className="h-6 w-6 fill-yellow-500 text-yellow-500 group-hover:scale-110 transition-transform duration-300" />
-              ))}
-            </div>
-            <div className="text-left">
-              <div className="text-2xl font-bold text-foreground group-hover:text-primary transition-colors duration-300">5.0 Rating</div>
-              <div className="text-sm text-muted-foreground">30+ reviews • 1K+ installs</div>
-            </div>
-          </a>
         </div>
       </div>
     </section>

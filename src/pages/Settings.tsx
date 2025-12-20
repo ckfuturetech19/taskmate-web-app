@@ -26,7 +26,7 @@ const Settings = () => {
 
   return (
     <AppLayout title="Settings">
-      <div className="max-w-2xl space-y-4 sm:space-y-6">
+      <div className="max-w-2xl w-full space-y-3 sm:space-y-4 md:space-y-6">
         <Card>
           <CardHeader>
             <CardTitle>Profile</CardTitle>
