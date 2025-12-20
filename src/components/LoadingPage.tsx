@@ -22,7 +22,7 @@ const LoadingPage = () => {
           <div className="absolute inset-0 bg-gradient-to-r from-primary to-accent rounded-2xl blur-xl opacity-50 animate-pulse-glow"></div>
           <div className="relative bg-card/50 backdrop-blur-sm p-6 rounded-2xl border border-border/50 shadow-2xl">
             <img 
-              src="../assets/images/logo.png" 
+              src="/assets/logo.png" 
               alt="TaskMate Logo" 
               className="h-20 w-20 sm:h-24 sm:w-24 animate-bounce-subtle"
             />

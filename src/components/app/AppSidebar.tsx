@@ -178,7 +178,7 @@ const AppSidebar = ({ mobileMenuOpen, setMobileMenuOpen }: AppSidebarProps) => {
             <div className="flex items-center gap-2.5 min-w-0">
               <div className="h-10 w-10 rounded-full shrink-0 overflow-hidden bg-primary/10 flex items-center justify-center">
                 <img 
-                  src="/assets/images/logo.png" 
+                  src="/assets/logo.png" 
                   alt="TaskMate Logo" 
                   className="h-full w-full object-contain"
                   onError={(e) => {

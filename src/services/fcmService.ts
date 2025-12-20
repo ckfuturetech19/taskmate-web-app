@@ -182,7 +182,7 @@ class FCMService {
 
         const notificationOptions: NotificationOptions & { vibrate?: number[] } = {
           body: notificationBody,
-          icon: '/logo.png',
+          icon: '/assets/logo.png',
           badge: '/badge.png',
           tag: payload.data?.taskId || 'task-reminder',
           data: {

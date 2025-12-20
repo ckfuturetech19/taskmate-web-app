@@ -2,17 +2,17 @@ import React, { useEffect, useState } from 'react';
 
 const slides = [
   {
-    image: '/assets/images/welcome.png',
+    image: '/assets/welcome.png',
     title: 'Welcome to TaskMate',
     description: 'Get started and organize your day effortlessly.'
   },
   {
-    image: '/assets/images/task.png',
+    image: '/assets/task.png',
     title: 'Smart Task Management',
     description: 'Create, track, and complete tasks with ease.'
   },
   {
-    image: '/assets/images/cloudsync.png',
+    image: '/assets/cloudsync.png',
     title: 'Cloud Sync',
     description: 'Access your tasks anywhere, anytime.'
   }
