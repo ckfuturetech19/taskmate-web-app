@@ -1,3 +1,4 @@
+import logoImg from '../../assets/logo.png';
 const Footer = () => {
   const scrollToSection = (id: string) => {
     const element = document.getElementById(id);
@@ -16,7 +17,7 @@ const Footer = () => {
           <div className="space-y-4">
             <div className="flex items-center gap-2">
               <img 
-                src="../../assets/images/logo.png" 
+                src={logoImg}
                 alt="TaskMate Logo" 
                 className="h-8 w-8 rounded-lg"
               />

@@ -1,3 +1,4 @@
+import logoImg from '../../assets/logo.png';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Moon, Sun } from 'lucide-react';
@@ -18,7 +19,7 @@ const LandingNav = () => {
       <div className="container mx-auto px-4 md:px-6 lg:px-8 h-16 md:h-18 flex items-center justify-between">
         <Link to="/" className="flex items-center gap-2 group min-w-0">
           <img 
-            src="../../assets/images/logo.png" 
+            src={logoImg}
             alt="TaskMate Logo" 
             className="h-8 w-8 md:h-10 md:w-10 rounded-lg group-hover:scale-110 transition-transform duration-300 shrink-0"
           />

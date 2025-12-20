@@ -1,3 +1,4 @@
+import logoImg from '../../assets/logo.png';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, CheckSquare, BarChart3, Bell, Settings, ChevronLeft, ChevronRight, Menu, X, HelpCircle, LogOut, Smartphone, Timer, Users, ExternalLink, Share2, Copy, Check } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -178,7 +179,7 @@ const AppSidebar = ({ mobileMenuOpen, setMobileMenuOpen }: AppSidebarProps) => {
             <div className="flex items-center gap-2.5 min-w-0">
               <div className="h-10 w-10 rounded-full shrink-0 overflow-hidden bg-primary/10 flex items-center justify-center">
                 <img 
-                  src="/assets/logo.png" 
+                  src={logoImg}
                   alt="TaskMate Logo" 
                   className="h-full w-full object-contain"
                   onError={(e) => {
@@ -200,7 +201,7 @@ const AppSidebar = ({ mobileMenuOpen, setMobileMenuOpen }: AppSidebarProps) => {
           {collapsed && (
             <div className="h-10 w-10 rounded-full shrink-0 overflow-hidden bg-primary/10 flex items-center justify-center">
               <img 
-                src="/assets/images/logo.png" 
+                src={logoImg}
                 alt="TaskMate Logo" 
                 className="h-full w-full object-contain"
                 onError={(e) => {

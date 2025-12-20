@@ -1,18 +1,21 @@
 import React, { useEffect, useState } from 'react';
+import welcomeImg from '../../assets/welcome.png';
+import taskImg from '../../assets/task.png';
+import cloudsyncImg from '../../assets/cloudsync.png';
 
 const slides = [
   {
-    image: '/assets/welcome.png',
+    image: welcomeImg,
     title: 'Welcome to TaskMate',
     description: 'Get started and organize your day effortlessly.'
   },
   {
-    image: '/assets/task.png',
+    image: taskImg,
     title: 'Smart Task Management',
     description: 'Create, track, and complete tasks with ease.'
   },
   {
-    image: '/assets/cloudsync.png',
+    image: cloudsyncImg,
     title: 'Cloud Sync',
     description: 'Access your tasks anywhere, anytime.'
   }

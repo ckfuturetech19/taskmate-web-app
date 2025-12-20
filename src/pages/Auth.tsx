@@ -1,3 +1,4 @@
+import logoImg from '../assets/logo.png';
 import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
@@ -154,7 +155,7 @@ const Auth = () => {
         {/* Left: Login/Signup */}
         <div className="flex-1 p-8 flex flex-col justify-center items-center bg-white">
           <div className="mb-8 flex items-center gap-2 justify-center w-full">
-            <img src="/assets/logo.png" alt="TaskMate Logo" className="h-8 w-8" />
+            <img src={logoImg} alt="TaskMate Logo" className="h-8 w-8" />
             <span className="text-2xl font-bold text-[#5B3EFF]">TaskMate</span>
           </div>
           <h2 className="text-3xl font-bold mb-2 text-black text-center w-full">Welcome Back!</h2>

@@ -1,3 +1,5 @@
+import dashboardDarkImg from '../../assets/dashboardDark.png';
+import dashboardLightImg from '../../assets/dashboardLight.png';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowRight } from 'lucide-react';
@@ -6,8 +8,8 @@ import { useTheme } from '@/contexts/ThemeContext';
 const HeroSection = () => {
   const { theme } = useTheme();
   const dashboardImage = theme === 'dark' 
-    ? '../../assets/images/dashboardDark.png' 
-    : '../../assets/images/dashboardLight.png';
+    ? dashboardDarkImg
+    : dashboardLightImg;
 
   return (
     <section id="home" className="relative pt-24 md:pt-32 pb-16 md:pb-24 px-4 overflow-hidden">
