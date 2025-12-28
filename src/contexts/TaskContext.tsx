@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode, useEffect, useMemo } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useEffect, useMemo, useCallback } from 'react';
 import { 
   collection, 
   addDoc, 
@@ -21,6 +21,7 @@ import { useTaskOperations } from '@/hooks/useTaskOperations';
 import { useRecurrence } from '@/hooks/useRecurrence';
 import { deduplicateTasks, getActiveTasks } from '@/lib/taskUtils';
 import { oneSignalService } from '@/services/oneSignalService';
+import { analyticsService } from '@/services/analyticsService';
 
 interface Category {
   id: string;
@@ -205,6 +206,27 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
   }, [user]);
 
 
+  // Increment/decrement analytics using atomic Firestore operations
+  // Matches Flutter's increment/decrement logic for perfect sync
+  const updateAnalyticsOnTaskChange = useCallback(async (isCompleted: boolean, wasCompleted: boolean) => {
+    if (!user?.uid) return;
+    
+    try {
+      const today = new Date();
+      const todayStr = analyticsService.formatDate(today);
+      
+      if (isCompleted && !wasCompleted) {
+        // Task was just completed - increment
+        await analyticsService.incrementTaskCompletion(user.uid, todayStr);
+      } else if (!isCompleted && wasCompleted) {
+        // Task was just uncompleted - decrement
+        await analyticsService.decrementTaskCompletion(user.uid, todayStr);
+      }
+    } catch (error) {
+      console.error('Error updating analytics:', error);
+    }
+  }, [user?.uid]);
+
   const addTask = async (taskData: Omit<Task, 'id' | 'createdAt' | 'userId' | 'completed'>) => {
     if (!user) {
       throw new Error('User must be logged in');
@@ -212,6 +234,13 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
     
     try {
       const taskId = await addTaskOperation(taskData);
+      
+      // Increment task creation count (only for personal tasks)
+      if (!taskData.groupId) {
+        const today = new Date();
+        const todayStr = analyticsService.formatDate(today);
+        await analyticsService.incrementTaskCreation(user.uid, todayStr);
+      }
       
       // If it's a group task, notify all group members (including creator for consistency)
       if (taskData.groupId) {
@@ -400,7 +429,15 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
       }
     }
     
+    // Track completion status before update
+    const wasCompleted = task.isCompleted;
+    
     await updateTask(id, updates);
+    
+    // Update analytics if completion status changed (only for personal tasks)
+    if (!task.groupId && updates.isCompleted !== undefined) {
+      await updateAnalyticsOnTaskChange(updates.isCompleted, wasCompleted);
+    }
   };
 
   const createGroup = async (name: string): Promise<Group> => {

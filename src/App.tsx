@@ -9,6 +9,7 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import { TaskProvider } from "@/contexts/TaskContext";
 import { NotificationProvider } from "@/contexts/NotificationContext";
 import { PremiumProvider } from "@/contexts/PremiumContext";
+import { AnalyticsProvider } from "@/contexts/AnalyticsContext";
 import { initializeServiceWorkerHandler } from "@/lib/serviceWorkerHandler";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
@@ -39,7 +40,8 @@ const App = () => {
         <PremiumProvider>
           <NotificationProvider>
             <TaskProvider>
-              <TooltipProvider>
+              <AnalyticsProvider>
+                <TooltipProvider>
               <Toaster />
               <Sonner />
               <BrowserRouter>
@@ -74,7 +76,8 @@ const App = () => {
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </BrowserRouter>
-              </TooltipProvider>
+                </TooltipProvider>
+              </AnalyticsProvider>
             </TaskProvider>
           </NotificationProvider>
         </PremiumProvider>

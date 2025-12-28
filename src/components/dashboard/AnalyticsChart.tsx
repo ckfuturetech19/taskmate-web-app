@@ -3,7 +3,7 @@ import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContaine
 import { cn } from '@/lib/utils';
 
 interface AnalyticsChartProps {
-  data: { name: string; value: number; completed?: number; pending?: number }[];
+  data: { name: string; value: number; completed?: number }[];
   type?: 'bar' | 'pie';
   title?: string;
   className?: string;
@@ -44,13 +44,9 @@ const AnalyticsChart = ({ data, type = 'bar', title, className }: AnalyticsChart
                   borderRadius: '8px'
                 }}
               />
-              {data[0]?.completed !== undefined && (
-                <>
-                  <Bar dataKey="completed" fill="hsl(142 71% 45%)" radius={[8, 8, 0, 0]} />
-                  <Bar dataKey="pending" fill="hsl(142 40% 80%)" radius={[8, 8, 0, 0]} />
-                </>
-              )}
-              {data[0]?.completed === undefined && (
+              {data[0]?.completed !== undefined ? (
+                <Bar dataKey="completed" fill="hsl(142 71% 45%)" radius={[8, 8, 0, 0]} />
+              ) : (
                 <Bar dataKey="value" fill="hsl(142 71% 45%)" radius={[8, 8, 0, 0]} />
               )}
             </BarChart>
