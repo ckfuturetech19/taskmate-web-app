@@ -9,9 +9,10 @@ import {
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Sun, Moon, LogOut, User } from 'lucide-react';
+import { Sun, Moon, LogOut, User, Menu } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { NotificationBell } from './NotificationBell';
+import { cn } from '@/lib/utils';
 
 interface AppHeaderProps {
   title: string;
@@ -35,10 +36,62 @@ const AppHeader = ({ title, collapsed = false, onMenuClick }: AppHeaderProps) =>
   };
 
   return (
-    <header className={`fixed top-0 right-0 h-14 sm:h-16 bg-background border-b border-border z-30 transition-all duration-300 left-0 lg:${collapsed ? 'left-16' : 'left-60'}`}>
-      <div className="h-full px-4 sm:px-6 flex items-center justify-between gap-4">
-        {/* Title/Spacer */}
-        <div className="flex-1" />
+    <header 
+      className={cn(
+        "fixed top-0 right-0 h-14 sm:h-16 bg-background border-b border-border z-[60] transition-all duration-300",
+        "left-0",
+        // Desktop: Adjust left based on sidebar state
+        collapsed ? "lg:left-16" : "lg:left-64"
+      )}
+      style={{ pointerEvents: 'auto' }}
+    >
+      <div className="h-full px-4 sm:px-6 flex items-center justify-between gap-4" style={{ pointerEvents: 'auto' }}>
+        {/* Left Side - Hamburger Menu (Mobile/Tablet) + Title */}
+        <div className="flex items-center gap-3 flex-1 min-w-0" style={{ pointerEvents: 'auto' }}>
+          {/* Hamburger Menu Button - Only visible on mobile/tablet */}
+          <button
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              console.log('Hamburger menu clicked!', { onMenuClick: !!onMenuClick });
+              if (onMenuClick) {
+                console.log('Calling onMenuClick handler');
+                onMenuClick();
+              } else {
+                console.warn('onMenuClick handler is not defined!');
+              }
+            }}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Hamburger menu activated via keyboard');
+                if (onMenuClick) {
+                  onMenuClick();
+                }
+              }
+            }}
+            className={cn(
+              "lg:hidden h-9 w-9 shrink-0 z-[60] relative",
+              "flex items-center justify-center",
+              "rounded-md hover:bg-accent hover:text-accent-foreground",
+              "transition-colors cursor-pointer",
+              "focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+              "bg-transparent border-none outline-none"
+            )}
+            style={{ pointerEvents: 'auto' }}
+            aria-label="Open navigation menu"
+            aria-expanded="false"
+            type="button"
+          >
+            <Menu className="h-5 w-5 pointer-events-none" />
+          </button>
+          
+          {/* Page Title - Always visible */}
+          <h1 className="text-lg sm:text-xl font-semibold text-foreground truncate">
+            {title}
+          </h1>
+        </div>
 
         {/* Right Side Icons */}
         <div className="flex items-center gap-3 shrink-0">
