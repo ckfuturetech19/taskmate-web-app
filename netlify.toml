@@ -1,0 +1,11 @@
+[build]
+  publish = "dist"
+  command = "npm run build"
+
+# Handle client-side routing - redirect all non-file requests to index.html
+# Netlify automatically serves actual files first, so this only affects routes
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
