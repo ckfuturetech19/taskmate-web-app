@@ -273,199 +273,197 @@ const Clock = () => {
         description="Focus timer and task-based timers are premium features. Upgrade to unlock."
         variant="dialog"
       >
-        <div className="space-y-6">
+        <div className="w-full max-w-full space-y-4 sm:space-y-6">
           {/* Mode Selection Tabs */}
           <Tabs value={mode} onValueChange={(v) => setMode(v as TimerMode)} className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="direct" className="gap-2">
-              <Timer className="h-4 w-4" />
-              Direct Timer
+          <TabsList className="grid w-full grid-cols-3 h-auto p-1 bg-muted/50">
+            <TabsTrigger value="direct" className="gap-1.5 sm:gap-2 text-xs sm:text-sm py-2.5 sm:py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+              <Timer className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Direct Timer</span>
+              <span className="sm:hidden">Direct</span>
             </TabsTrigger>
-            <TabsTrigger value="task" className="gap-2">
-              <Timer className="h-4 w-4" />
-              Task Timer
+            <TabsTrigger value="task" className="gap-1.5 sm:gap-2 text-xs sm:text-sm py-2.5 sm:py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+              <Timer className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">Task Timer</span>
+              <span className="sm:hidden">Task</span>
             </TabsTrigger>
-            <TabsTrigger value="clock" className="gap-2">
-              <ClockIcon className="h-4 w-4" />
-              System Clock
+            <TabsTrigger value="clock" className="gap-1.5 sm:gap-2 text-xs sm:text-sm py-2.5 sm:py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
+              <ClockIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
+              <span className="hidden sm:inline">System Clock</span>
+              <span className="sm:hidden">Clock</span>
             </TabsTrigger>
           </TabsList>
 
           {/* Direct Timer Mode */}
-          <TabsContent value="direct" className="mt-6">
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <div className="lg:col-span-2">
-                <Card className="p-8 bg-gradient-to-br from-primary/5 via-primary/10 to-background border-primary/20">
-                  <div className="space-y-6">
-                    <div className="text-center">
-                      <h2 className="text-2xl font-bold mb-2 bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-                        Direct Timer
-                      </h2>
-                      <p className="text-muted-foreground">Casual timer that counts up from 0</p>
-                    </div>
+          <TabsContent value="direct" className="mt-4 sm:mt-6">
+            <div className="w-full">
+              <Card className="w-full p-4 sm:p-6 md:p-8 lg:p-10 bg-gradient-to-br from-primary/10 via-primary/5 to-background border-primary/30 shadow-lg">
+                <div className="space-y-6 sm:space-y-8 md:space-y-10 max-w-4xl mx-auto">
+                  <div className="text-center space-y-2">
+                    <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-primary">
+                      Direct Timer
+                    </h2>
+                    <p className="text-sm sm:text-base text-muted-foreground">Casual timer that counts up from 0</p>
+                  </div>
 
-                    <div className="flex items-center justify-center">
-                      <div className="relative">
-                        <div className={cn(
-                          "text-7xl md:text-8xl font-mono font-bold transition-all duration-300",
-                          isDirectTimerRunning
-                            ? "bg-gradient-to-r from-primary via-primary/80 to-primary bg-clip-text text-transparent"
-                            : "text-foreground"
-                        )}>
-                          {formatTime(directTimerSeconds)}
-                        </div>
-                        {isDirectTimerRunning && (
-                          <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                            <div className="h-32 w-32 border-4 border-primary border-t-transparent rounded-full animate-spin opacity-30" />
-                          </div>
-                        )}
+                  <div className="flex items-center justify-center py-4 sm:py-6 md:py-8">
+                    <div className="relative w-full flex items-center justify-center">
+                      <div className={cn(
+                        "text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl font-mono font-bold transition-all duration-300 text-center",
+                        isDirectTimerRunning
+                          ? "text-primary drop-shadow-lg"
+                          : "text-foreground"
+                      )}>
+                        {formatTime(directTimerSeconds)}
                       </div>
-                    </div>
-
-                    <div className="flex justify-center gap-4 text-sm">
-                      <div className="text-center p-3 rounded-lg bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20">
-                        <div className="text-2xl font-semibold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-                          {directHours}
+                      {isDirectTimerRunning && (
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                          <div className="h-24 w-24 sm:h-32 sm:w-32 md:h-40 md:w-40 border-4 border-primary border-t-transparent rounded-full animate-spin opacity-20" />
                         </div>
-                        <div className="text-muted-foreground">Hours</div>
-                      </div>
-                      <div className="text-center p-3 rounded-lg bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20">
-                        <div className="text-2xl font-semibold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-                          {directMinutes}
-                        </div>
-                        <div className="text-muted-foreground">Minutes</div>
-                      </div>
-                      <div className="text-center p-3 rounded-lg bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20">
-                        <div className="text-2xl font-semibold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
-                          {directSecs}
-                        </div>
-                        <div className="text-muted-foreground">Seconds</div>
-                      </div>
-                    </div>
-
-                    <div className="flex justify-center gap-3 flex-wrap">
-                      <Button
-                        size="lg"
-                        onClick={toggleDirectTimer}
-                        className="gap-2 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg shadow-primary/20 transition-all duration-300 hover:scale-105"
-                        style={{ background: 'linear-gradient(135deg, #1E6F43, #2FAE72)' }}
-                      >
-                        {isDirectTimerRunning ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5" />}
-                        {isDirectTimerRunning ? 'Pause' : 'Start'}
-                      </Button>
-                      <Button
-                        size="lg"
-                        variant="outline"
-                        onClick={stopDirectTimer}
-                        className="gap-2 border-primary/30 hover:bg-primary/10 hover:border-primary/50 transition-all duration-300"
-                      >
-                        <Square className="h-5 w-5" />
-                        Stop
-                      </Button>
-                      <Button
-                        size="lg"
-                        variant="outline"
-                        onClick={resetDirectTimer}
-                        className="gap-2 border-primary/30 hover:bg-primary/10 hover:border-primary/50 transition-all duration-300"
-                      >
-                        <RotateCcw className="h-5 w-5" />
-                        Reset
-                      </Button>
+                      )}
                     </div>
                   </div>
-                </Card>
-              </div>
+
+                  <div className="flex justify-center gap-3 sm:gap-4 md:gap-6 flex-wrap">
+                    <div className="text-center p-3 sm:p-4 rounded-xl bg-card border border-primary/20 shadow-sm min-w-[80px] sm:min-w-[100px]">
+                      <div className="text-xl sm:text-2xl md:text-3xl font-bold text-primary mb-1">
+                        {directHours}
+                      </div>
+                      <div className="text-xs sm:text-sm text-muted-foreground">Hours</div>
+                    </div>
+                    <div className="text-center p-3 sm:p-4 rounded-xl bg-card border border-primary/20 shadow-sm min-w-[80px] sm:min-w-[100px]">
+                      <div className="text-xl sm:text-2xl md:text-3xl font-bold text-primary mb-1">
+                        {directMinutes}
+                      </div>
+                      <div className="text-xs sm:text-sm text-muted-foreground">Minutes</div>
+                    </div>
+                    <div className="text-center p-3 sm:p-4 rounded-xl bg-card border border-primary/20 shadow-sm min-w-[80px] sm:min-w-[100px]">
+                      <div className="text-xl sm:text-2xl md:text-3xl font-bold text-primary mb-1">
+                        {directSecs}
+                      </div>
+                      <div className="text-xs sm:text-sm text-muted-foreground">Seconds</div>
+                    </div>
+                  </div>
+
+                  <div className="flex justify-center gap-2 sm:gap-3 flex-wrap pt-2">
+                    <Button
+                      size="lg"
+                      onClick={toggleDirectTimer}
+                      className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 transition-all duration-300 hover:scale-105 min-w-[120px] sm:min-w-[140px]"
+                    >
+                      {isDirectTimerRunning ? <Pause className="h-4 w-4 sm:h-5 sm:w-5" /> : <Play className="h-4 w-4 sm:h-5 sm:w-5" />}
+                      {isDirectTimerRunning ? 'Pause' : 'Start'}
+                    </Button>
+                    <Button
+                      size="lg"
+                      variant="outline"
+                      onClick={stopDirectTimer}
+                      className="gap-2 border-primary/30 hover:bg-primary/10 hover:border-primary/50 transition-all duration-300 min-w-[100px] sm:min-w-[120px]"
+                    >
+                      <Square className="h-4 w-4 sm:h-5 sm:w-5" />
+                      Stop
+                    </Button>
+                    <Button
+                      size="lg"
+                      variant="outline"
+                      onClick={resetDirectTimer}
+                      className="gap-2 border-primary/30 hover:bg-primary/10 hover:border-primary/50 transition-all duration-300 min-w-[100px] sm:min-w-[120px]"
+                    >
+                      <RotateCcw className="h-4 w-4 sm:h-5 sm:w-5" />
+                      Reset
+                    </Button>
+                  </div>
+                </div>
+              </Card>
             </div>
           </TabsContent>
 
           {/* Task Timer Mode */}
-          <TabsContent value="task" className="mt-6">
+          <TabsContent value="task" className="mt-4 sm:mt-6">
             {tasksWithTimers.length === 0 ? (
-              <Card className="p-12 text-center bg-gradient-to-br from-primary/5 via-primary/10 to-background border-primary/20">
-                <div className="relative inline-block mb-4">
-                  <Timer className="h-16 w-16 mx-auto text-primary/50" />
+              <Card className="p-8 sm:p-12 text-center bg-gradient-to-br from-primary/10 via-primary/5 to-background border-primary/30 shadow-lg">
+                <div className="relative inline-block mb-4 sm:mb-6">
+                  <Timer className="h-12 w-12 sm:h-16 sm:w-16 mx-auto text-primary/50" />
                   <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-transparent rounded-full blur-xl" />
                 </div>
-                <h3 className="text-xl font-semibold mb-2 bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+                <h3 className="text-lg sm:text-xl md:text-2xl font-semibold mb-2 text-primary">
                   No Focus Timers
                 </h3>
-                <p className="text-muted-foreground mb-6">
+                <p className="text-sm sm:text-base text-muted-foreground mb-6 max-w-md mx-auto">
                   Enable focus timer when creating a task to use this feature.
                 </p>
                 <Button 
                   onClick={() => navigate('/tasks')}
-                  className="bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg shadow-primary/20 transition-all duration-300 hover:scale-105"
-                  style={{ background: 'linear-gradient(135deg, #1E6F43, #2FAE72)' }}
+                  className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 transition-all duration-300 hover:scale-105"
                 >
                   Go to Tasks
                 </Button>
               </Card>
             ) : (
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
                 <div className="lg:col-span-2">
-                  <Card className="p-8 bg-gradient-to-br from-primary/5 via-primary/10 to-background border-primary/20">
+                  <Card className="w-full p-4 sm:p-6 md:p-8 lg:p-10 bg-gradient-to-br from-primary/10 via-primary/5 to-background border-primary/30 shadow-lg">
                     {selectedTask ? (
-                      <div className="space-y-6">
-                        <div className="text-center">
-                          <h2 className="text-2xl font-bold mb-2 bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+                      <div className="space-y-6 sm:space-y-8 md:space-y-10 max-w-4xl mx-auto">
+                        <div className="text-center space-y-2">
+                          <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-primary break-words">
                             {selectedTask.title}
                           </h2>
-                          <p className="text-muted-foreground">
+                          <p className="text-sm sm:text-base text-muted-foreground">
                             Focus Duration: {selectedTask.focusDurationMinutes || 25} minutes
                           </p>
                         </div>
 
-                        <div className="flex items-center justify-center">
-                          <div className="relative">
+                        <div className="flex items-center justify-center py-4 sm:py-6 md:py-8">
+                          <div className="relative w-full flex items-center justify-center">
                             <div className={cn(
-                              "text-7xl md:text-8xl font-mono font-bold transition-all duration-300",
+                              "text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl font-mono font-bold transition-all duration-300 text-center",
                               remainingSeconds === 0 
                                 ? "text-destructive" 
                                 : isRunning 
-                                ? "bg-gradient-to-r from-primary via-primary/80 to-primary bg-clip-text text-transparent"
+                                ? "text-primary drop-shadow-lg"
                                 : "text-foreground"
                             )}>
                               {formatTime(remainingSeconds)}
                             </div>
                             {isRunning && (
                               <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                <div className="h-32 w-32 border-4 border-primary border-t-transparent rounded-full animate-spin opacity-30" />
+                                <div className="h-24 w-24 sm:h-32 sm:w-32 md:h-40 md:w-40 border-4 border-primary border-t-transparent rounded-full animate-spin opacity-20" />
                               </div>
                             )}
                           </div>
                         </div>
 
-                        <div className="flex justify-center gap-4 text-sm">
-                          <div className="text-center p-3 rounded-lg bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20">
-                            <div className="text-2xl font-semibold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+                        <div className="flex justify-center gap-3 sm:gap-4 md:gap-6 flex-wrap">
+                          <div className="text-center p-3 sm:p-4 rounded-xl bg-card border border-primary/20 shadow-sm min-w-[80px] sm:min-w-[100px]">
+                            <div className="text-xl sm:text-2xl md:text-3xl font-bold text-primary mb-1">
                               {hours}
                             </div>
-                            <div className="text-muted-foreground">Hours</div>
+                            <div className="text-xs sm:text-sm text-muted-foreground">Hours</div>
                           </div>
-                          <div className="text-center p-3 rounded-lg bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20">
-                            <div className="text-2xl font-semibold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+                          <div className="text-center p-3 sm:p-4 rounded-xl bg-card border border-primary/20 shadow-sm min-w-[80px] sm:min-w-[100px]">
+                            <div className="text-xl sm:text-2xl md:text-3xl font-bold text-primary mb-1">
                               {minutes}
                             </div>
-                            <div className="text-muted-foreground">Minutes</div>
+                            <div className="text-xs sm:text-sm text-muted-foreground">Minutes</div>
                           </div>
-                          <div className="text-center p-3 rounded-lg bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20">
-                            <div className="text-2xl font-semibold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+                          <div className="text-center p-3 sm:p-4 rounded-xl bg-card border border-primary/20 shadow-sm min-w-[80px] sm:min-w-[100px]">
+                            <div className="text-xl sm:text-2xl md:text-3xl font-bold text-primary mb-1">
                               {secs}
                             </div>
-                            <div className="text-muted-foreground">Seconds</div>
+                            <div className="text-xs sm:text-sm text-muted-foreground">Seconds</div>
                           </div>
                         </div>
 
-                        <div className="flex justify-center gap-3 flex-wrap">
+                        <div className="flex justify-center gap-2 sm:gap-3 flex-wrap pt-2">
                           {!isRunning && !isPaused && (
                             <Button
                               size="lg"
                               onClick={handleStart}
                               disabled={remainingSeconds === 0}
-                              className="gap-2 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg shadow-primary/20 transition-all duration-300 hover:scale-105"
-                              style={{ background: 'linear-gradient(135deg, #1E6F43, #2FAE72)' }}
+                              className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 transition-all duration-300 hover:scale-105 min-w-[120px] sm:min-w-[140px]"
                             >
-                              <Play className="h-5 w-5" />
+                              <Play className="h-4 w-4 sm:h-5 sm:w-5" />
                               Start
                             </Button>
                           )}
@@ -474,9 +472,9 @@ const Clock = () => {
                               size="lg"
                               variant="outline"
                               onClick={handlePause}
-                              className="gap-2 border-primary/30 hover:bg-primary/10 hover:border-primary/50 transition-all duration-300"
+                              className="gap-2 border-primary/30 hover:bg-primary/10 hover:border-primary/50 transition-all duration-300 min-w-[100px] sm:min-w-[120px]"
                             >
-                              <Pause className="h-5 w-5" />
+                              <Pause className="h-4 w-4 sm:h-5 sm:w-5" />
                               Pause
                             </Button>
                           )}
@@ -484,10 +482,9 @@ const Clock = () => {
                             <Button
                               size="lg"
                               onClick={handleResume}
-                              className="gap-2 bg-gradient-to-r from-primary to-primary/80 hover:from-primary/90 hover:to-primary/70 shadow-lg shadow-primary/20 transition-all duration-300 hover:scale-105"
-                              style={{ background: 'linear-gradient(135deg, #1E6F43, #2FAE72)' }}
+                              className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 transition-all duration-300 hover:scale-105 min-w-[120px] sm:min-w-[140px]"
                             >
-                              <Play className="h-5 w-5" />
+                              <Play className="h-4 w-4 sm:h-5 sm:w-5" />
                               Resume
                             </Button>
                           )}
@@ -497,18 +494,18 @@ const Clock = () => {
                                 size="lg"
                                 variant="outline"
                                 onClick={handleStop}
-                                className="gap-2 border-primary/30 hover:bg-primary/10 hover:border-primary/50 transition-all duration-300"
+                                className="gap-2 border-primary/30 hover:bg-primary/10 hover:border-primary/50 transition-all duration-300 min-w-[100px] sm:min-w-[120px]"
                               >
-                                <Square className="h-5 w-5" />
+                                <Square className="h-4 w-4 sm:h-5 sm:w-5" />
                                 Stop
                               </Button>
                               <Button
                                 size="lg"
                                 variant="outline"
                                 onClick={handleReset}
-                                className="gap-2 border-primary/30 hover:bg-primary/10 hover:border-primary/50 transition-all duration-300"
+                                className="gap-2 border-primary/30 hover:bg-primary/10 hover:border-primary/50 transition-all duration-300 min-w-[100px] sm:min-w-[120px]"
                               >
-                                <RotateCcw className="h-5 w-5" />
+                                <RotateCcw className="h-4 w-4 sm:h-5 sm:w-5" />
                                 Reset
                               </Button>
                             </>
@@ -517,29 +514,29 @@ const Clock = () => {
                             size="lg"
                             variant="outline"
                             onClick={handleCompleteTask}
-                            className="gap-2 border-primary/30 hover:bg-primary/10 hover:border-primary/50 transition-all duration-300"
+                            className="gap-2 border-primary/30 hover:bg-primary/10 hover:border-primary/50 transition-all duration-300 min-w-[100px] sm:min-w-[120px]"
                           >
-                            <Check className="h-5 w-5" />
+                            <Check className="h-4 w-4 sm:h-5 sm:w-5" />
                             Complete
                           </Button>
                         </div>
                       </div>
                     ) : (
-                      <div className="text-center py-12">
-                        <Timer className="h-16 w-16 mx-auto mb-4 text-muted-foreground opacity-50" />
-                        <p className="text-muted-foreground">Select a task to start timer</p>
+                      <div className="text-center py-12 sm:py-16">
+                        <Timer className="h-12 w-12 sm:h-16 sm:w-16 mx-auto mb-4 text-muted-foreground opacity-50" />
+                        <p className="text-sm sm:text-base text-muted-foreground">Select a task to start timer</p>
                       </div>
                     )}
                   </Card>
                 </div>
 
                 <div className="lg:col-span-1">
-                  <Card className="bg-gradient-to-br from-primary/5 via-background to-primary/5 border-primary/20">
-                    <CardContent className="p-4">
-                      <h3 className="font-semibold mb-4 bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+                  <Card className="h-full bg-gradient-to-br from-primary/10 via-background to-primary/5 border-primary/30 shadow-lg">
+                    <CardContent className="p-4 sm:p-6">
+                      <h3 className="font-semibold mb-4 text-primary text-base sm:text-lg">
                         Tasks with Focus Timer
                       </h3>
-                      <div className="space-y-2 max-h-[600px] overflow-y-auto">
+                      <div className="space-y-2 max-h-[400px] sm:max-h-[500px] lg:max-h-[600px] overflow-y-auto">
                         {tasksWithTimers.map((task) => (
                           <div
                             key={task.id}
@@ -552,33 +549,33 @@ const Clock = () => {
                               }
                             }}
                             className={cn(
-                              "p-3 rounded-lg border cursor-pointer transition-all duration-300",
+                              "p-3 sm:p-4 rounded-lg border cursor-pointer transition-all duration-300",
                               selectedTask?.id === task.id
-                                ? "bg-gradient-to-r from-primary/20 via-primary/10 to-primary/20 border-primary shadow-md shadow-primary/10"
-                                : "hover:bg-gradient-to-r hover:from-primary/10 hover:via-primary/5 hover:to-primary/10 border-primary/20 hover:border-primary/40 hover:shadow-sm",
+                                ? "bg-primary/20 border-primary shadow-md shadow-primary/10"
+                                : "hover:bg-primary/10 border-primary/20 hover:border-primary/40 hover:shadow-sm bg-card",
                               isRunning && selectedTask?.id !== task.id && "opacity-50 cursor-not-allowed"
                             )}
                           >
                             <div className="flex items-start justify-between gap-2">
                               <div className="flex-1 min-w-0">
                                 <p className={cn(
-                                  "font-medium text-sm truncate",
-                                  selectedTask?.id === task.id && "bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent"
+                                  "font-medium text-sm sm:text-base truncate",
+                                  selectedTask?.id === task.id ? "text-primary" : "text-foreground"
                                 )}>
                                   {task.title}
                                 </p>
                                 <div className="flex items-center gap-2 mt-1">
                                   <Timer className={cn(
-                                    "h-3.5 w-3.5",
+                                    "h-3.5 w-3.5 sm:h-4 sm:w-4",
                                     selectedTask?.id === task.id ? "text-primary" : "text-muted-foreground"
                                   )} />
-                                  <p className="text-xs text-muted-foreground">
+                                  <p className="text-xs sm:text-sm text-muted-foreground">
                                     {task.focusDurationMinutes || 25} min
                                   </p>
                                 </div>
                               </div>
                               {task.focusTimerIsRunning && (
-                                <div className="h-2 w-2 rounded-full bg-primary animate-pulse shadow-lg shadow-primary/50" />
+                                <div className="h-2 w-2 rounded-full bg-primary animate-pulse shadow-lg shadow-primary/50 flex-shrink-0 mt-1" />
                               )}
                             </div>
                           </div>
@@ -592,45 +589,45 @@ const Clock = () => {
           </TabsContent>
 
           {/* System Clock Mode */}
-          <TabsContent value="clock" className="mt-6">
-            <Card className="p-8 bg-gradient-to-br from-primary/5 via-primary/10 to-background border-primary/20">
-              <div className="space-y-6">
-                <div className="text-center">
-                  <h2 className="text-2xl font-bold mb-2 bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+          <TabsContent value="clock" className="mt-4 sm:mt-6">
+            <Card className="w-full p-4 sm:p-6 md:p-8 lg:p-10 bg-gradient-to-br from-primary/10 via-primary/5 to-background border-primary/30 shadow-lg">
+              <div className="space-y-6 sm:space-y-8 md:space-y-10 max-w-4xl mx-auto">
+                <div className="text-center space-y-2">
+                  <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-primary">
                     System Clock
                   </h2>
-                  <p className="text-muted-foreground">Current time</p>
+                  <p className="text-sm sm:text-base text-muted-foreground">Current time</p>
                 </div>
 
-                <div className="flex items-center justify-center">
-                  <div className="text-7xl md:text-8xl font-mono font-bold text-foreground">
+                <div className="flex items-center justify-center py-4 sm:py-6 md:py-8">
+                  <div className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl font-mono font-bold text-foreground text-center">
                     {format(currentTime, 'HH:mm:ss')}
                   </div>
                 </div>
 
-                <div className="flex justify-center gap-4 text-sm">
-                  <div className="text-center p-3 rounded-lg bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20">
-                    <div className="text-2xl font-semibold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+                <div className="flex justify-center gap-3 sm:gap-4 md:gap-6 flex-wrap">
+                  <div className="text-center p-3 sm:p-4 rounded-xl bg-card border border-primary/20 shadow-sm min-w-[80px] sm:min-w-[100px]">
+                    <div className="text-xl sm:text-2xl md:text-3xl font-bold text-primary mb-1">
                       {format(currentTime, 'HH')}
                     </div>
-                    <div className="text-muted-foreground">Hours</div>
+                    <div className="text-xs sm:text-sm text-muted-foreground">Hours</div>
                   </div>
-                  <div className="text-center p-3 rounded-lg bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20">
-                    <div className="text-2xl font-semibold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+                  <div className="text-center p-3 sm:p-4 rounded-xl bg-card border border-primary/20 shadow-sm min-w-[80px] sm:min-w-[100px]">
+                    <div className="text-xl sm:text-2xl md:text-3xl font-bold text-primary mb-1">
                       {format(currentTime, 'mm')}
                     </div>
-                    <div className="text-muted-foreground">Minutes</div>
+                    <div className="text-xs sm:text-sm text-muted-foreground">Minutes</div>
                   </div>
-                  <div className="text-center p-3 rounded-lg bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20">
-                    <div className="text-2xl font-semibold bg-gradient-to-r from-primary to-primary/70 bg-clip-text text-transparent">
+                  <div className="text-center p-3 sm:p-4 rounded-xl bg-card border border-primary/20 shadow-sm min-w-[80px] sm:min-w-[100px]">
+                    <div className="text-xl sm:text-2xl md:text-3xl font-bold text-primary mb-1">
                       {format(currentTime, 'ss')}
                     </div>
-                    <div className="text-muted-foreground">Seconds</div>
+                    <div className="text-xs sm:text-sm text-muted-foreground">Seconds</div>
                   </div>
                 </div>
 
-                <div className="text-center text-muted-foreground">
-                  <p className="text-lg">{format(currentTime, 'EEEE, MMMM d, yyyy')}</p>
+                <div className="text-center pt-2">
+                  <p className="text-base sm:text-lg md:text-xl text-muted-foreground">{format(currentTime, 'EEEE, MMMM d, yyyy')}</p>
                 </div>
               </div>
             </Card>
