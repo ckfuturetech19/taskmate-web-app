@@ -21,25 +21,28 @@ const StatCard = ({ title, value, icon: Icon, className, trend, trendValue, tren
   
   const variantStyles = {
     primary: {
-      card: 'text-primary-foreground border-primary',
-      iconBg: 'bg-primary-foreground/20',
+      card: 'text-primary-foreground border-primary/20 bg-primary shadow-primary/20',
+      iconBg: 'bg-white/20',
       iconColor: 'text-primary-foreground',
       value: 'text-primary-foreground',
       title: 'text-primary-foreground/90',
+      gradient: 'linear-gradient(135deg, #1E6F43, #2FAE72)',
     },
     default: {
-      card: 'bg-card border-border',
+      card: 'bg-card/50 backdrop-blur-md border-border/50 hover:border-primary/50 shadow-sm',
       iconBg: 'bg-primary/10',
       iconColor: 'text-primary',
       value: 'text-foreground',
       title: 'text-muted-foreground',
+      gradient: 'none',
     },
     destructive: {
-      card: 'bg-card border-border',
+      card: 'bg-card/50 backdrop-blur-md border-border/50 hover:border-destructive/50 shadow-sm',
       iconBg: 'bg-destructive/10',
       iconColor: 'text-destructive',
       value: 'text-destructive',
       title: 'text-muted-foreground',
+      gradient: 'none',
     },
   };
 
@@ -48,60 +51,64 @@ const StatCard = ({ title, value, icon: Icon, className, trend, trendValue, tren
   return (
     <Card 
       className={cn(
-        "relative overflow-hidden group cursor-pointer transition-all duration-300",
-        "hover:shadow-lg hover:-translate-y-0.5",
-        "animate-slide-in-up rounded-xl border-2",
+        "relative overflow-hidden group cursor-pointer transition-all duration-500",
+        "hover:shadow-2xl hover:-translate-y-1.5",
+        "animate-slide-in-up rounded-2xl border",
         styles.card,
-        variant === 'primary' ? '' : 'bg-card',
         className
       )}
       style={{ 
         animationDelay: `${delay}ms`,
         animationFillMode: 'both',
-        ...(variant === 'primary' ? { background: 'linear-gradient(135deg, #1E6F43, #2FAE72)' } : {})
+        background: styles.gradient !== 'none' ? styles.gradient : undefined
       }}
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
-      <CardContent className="p-4 sm:p-5">
+      {/* Decorative background glow */}
+      {isHovered && variant !== 'primary' && (
+        <div className="absolute -right-4 -top-4 w-24 h-24 bg-primary/5 blur-3xl rounded-full transition-all duration-1000 animate-pulse" />
+      )}
+
+      <CardContent className="p-5 sm:p-6 relative z-10">
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1 min-w-0">
             <p className={cn(
-              "text-xs sm:text-sm font-medium mb-2",
+              "text-xs sm:text-sm font-semibold uppercase tracking-wider mb-2",
               styles.title
             )}>
               {title}
             </p>
-            <div className="flex items-baseline gap-2 flex-wrap mb-2">
+            <div className="flex items-baseline gap-2 flex-wrap mb-1">
               <p className={cn(
-                "text-3xl sm:text-4xl font-bold transition-all duration-300",
-                isHovered && "scale-105",
+                "text-3xl sm:text-4xl font-black transition-all duration-500",
+                isHovered && "scale-105 origin-left",
                 styles.value
               )}>
-                {value}
+                {typeof value === 'number' ? value.toLocaleString() : value}
               </p>
             </div>
             {trend && (
-              <div className="flex items-center gap-2 mt-2">
+              <div className="flex items-center gap-2 mt-3">
                 <div className={cn(
-                  "flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium",
+                  "flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase",
                   variant === 'primary'
-                    ? "bg-primary-foreground/20 text-primary-foreground"
+                    ? "bg-white/20 text-primary-foreground"
                     : trend === 'up'
-                      ? "bg-green-500 text-white"
-                      : "bg-red-500 text-white"
+                      ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20"
+                      : "bg-rose-500/10 text-rose-500 border border-rose-500/20"
                 )}>
                   {trend === 'up' ? (
                     <TrendingUp className="h-3 w-3" />
                   ) : (
                     <TrendingDown className="h-3 w-3" />
                   )}
-                  {trendValue && <span>{trendValue}</span>}
+                  {trendValue && <span>{trendValue}%</span>}
                 </div>
                 {trendText && (
                   <p className={cn(
-                    "text-xs",
-                    variant === 'primary' ? "text-primary-foreground/80" : "text-muted-foreground"
+                    "text-[10px] font-medium uppercase tracking-tight",
+                    variant === 'primary' ? "text-primary-foreground/70" : "text-muted-foreground/70"
                   )}>
                     {trendText}
                   </p>
@@ -110,7 +117,7 @@ const StatCard = ({ title, value, icon: Icon, className, trend, trendValue, tren
             )}
             {subtitle && !trend && (
               <p className={cn(
-                "text-xs mt-2",
+                "text-xs mt-3 font-medium opacity-80",
                 variant === 'primary' ? "text-primary-foreground/80" : "text-muted-foreground"
               )}>
                 {subtitle}
@@ -118,12 +125,12 @@ const StatCard = ({ title, value, icon: Icon, className, trend, trendValue, tren
             )}
           </div>
           <div className={cn(
-            "h-12 w-12 sm:h-14 sm:w-14 rounded-xl flex items-center justify-center shrink-0",
-            "transition-all duration-300 group-hover:scale-110",
+            "h-12 w-12 sm:h-14 sm:w-14 rounded-2xl flex items-center justify-center shrink-0 shadow-inner",
+            "transition-all duration-500 group-hover:rotate-6 group-hover:scale-110",
             styles.iconBg
           )}>
             <Icon className={cn(
-              "h-6 w-6 sm:h-7 sm:w-7 transition-all duration-300",
+              "h-6 w-6 sm:h-7 sm:w-7 transition-all duration-500",
               isHovered && "scale-110",
               styles.iconColor
             )} />

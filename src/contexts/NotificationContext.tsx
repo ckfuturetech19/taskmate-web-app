@@ -1,22 +1,15 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect } from 'react';
-import { 
-  collection, 
-  onSnapshot,
-  query,
-  orderBy,
-  updateDoc,
-  doc,
-  where
-} from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 import { Notification } from '@/types/task';
 import { useAuth } from './AuthContext';
+import api from '@/services/apiService';
+import { pusherService } from '@/services/pusherService';
 
 interface NotificationContextType {
   notifications: Notification[];
   unreadCount: number;
   markAsRead: (notificationId: string) => Promise<void>;
   markAllAsRead: () => Promise<void>;
+  refreshNotifications: () => Promise<void>;
 }
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
@@ -33,69 +26,61 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
 
-  // Real-time sync for notifications
+  const fetchNotifications = async () => {
+    if (!user) return;
+    try {
+      const response = await api.get('/notifications');
+      const data = response.data;
+      
+      const fetchedNotifications: Notification[] = data.map((n: any) => ({
+        ...n,
+        isRead: n.read, // Map 'read' from backend to 'isRead' used in frontend
+        createdAt: n.timestamp, // Map 'timestamp' to 'createdAt'
+      }));
+      
+      setNotifications(fetchedNotifications);
+    } catch (error) {
+      console.error('Error fetching notifications:', error);
+    }
+  };
+
   useEffect(() => {
     if (!user) {
       setNotifications([]);
       return;
     }
 
-    try {
-      const notificationsRef = collection(db, 'users', user.uid, 'notifications');
-      
-      const unsubscribe = onSnapshot(
-        notificationsRef, 
-        (snapshot) => {
-          try {
-            console.log('=== Notifications snapshot received ===');
-            console.log('Total notifications:', snapshot.docs.length);
-            console.log('Changes:', snapshot.docChanges().map(c => `${c.type}: ${c.doc.id}`));
-            
-            const fetchedNotifications: Notification[] = snapshot.docs.map(doc => {
-              const data = doc.data();
-              
-              // Convert Firestore Timestamp to ISO string
-              let createdAt = new Date().toISOString();
-              if (data.createdAt) {
-                if (data.createdAt.toDate && typeof data.createdAt.toDate === 'function') {
-                  createdAt = data.createdAt.toDate().toISOString();
-                } else if (typeof data.createdAt === 'string') {
-                  createdAt = data.createdAt;
-                }
-              }
-              
-              return {
-                id: doc.id,
-                ...data,
-                createdAt,
-              } as Notification;
-            });
-            
-            // Sort by createdAt on client side
-            fetchedNotifications.sort((a, b) => {
-              const dateA = new Date(a.createdAt).getTime();
-              const dateB = new Date(b.createdAt).getTime();
-              return dateB - dateA; // desc order
-            });
-            
-            console.log('Notifications updated:', fetchedNotifications.length);
-            console.log('Unread:', fetchedNotifications.filter(n => !n.isRead).length);
-            setNotifications(fetchedNotifications);
-          } catch (error) {
-            console.error('Error processing notifications:', error);
-          }
-        },
-        (error) => {
-          console.error('Error fetching notifications:', error);
-          // If orderBy fails, try without it
-          console.log('Fetching notifications without orderBy due to error');
-        }
-      );
+    fetchNotifications();
 
-      return () => unsubscribe();
-    } catch (error) {
-      console.error('Error setting up notifications listener:', error);
-    }
+    // Setup Pusher real-time notifications
+    const channel = pusherService.subscribeToUser(user.id);
+    
+    channel.bind('notification-received', (data: any) => {
+      console.log('🔔 New notification received via Pusher:', data);
+      setNotifications(prev => [
+        {
+          ...data,
+          isRead: data.read || false,
+          createdAt: data.timestamp || new Date().toISOString(),
+        },
+        ...prev
+      ]);
+    });
+
+    channel.bind('pro-status-changed', (data: any) => {
+      console.log('💎 Pro status changed via Pusher:', data);
+      // Trigger a profile refresh in AuthContext
+      // Note: Since we don't have direct access to refreshProfile here,
+      // we can use a window event or just wait for the user to navigate.
+      // But a better way is to handle this in AuthContext or a common parent.
+      // For now, I'll just reload the page or show a toast.
+      window.dispatchEvent(new CustomEvent('auth-refresh-required'));
+    });
+
+    return () => {
+      channel.unbind('notification-received');
+      channel.unbind('pro-status-changed');
+    };
   }, [user]);
 
   const unreadCount = notifications.filter(n => !n.isRead).length;
@@ -104,10 +89,10 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
     if (!user) return;
     
     try {
-      const notificationRef = doc(db, 'users', user.uid, 'notifications', notificationId);
-      await updateDoc(notificationRef, {
-        isRead: true,
-      });
+      await api.put(`/notifications/${notificationId}/read`);
+      setNotifications(prev => prev.map(n => 
+        n.id === notificationId ? { ...n, isRead: true } : n
+      ));
     } catch (error) {
       console.error('Error marking notification as read:', error);
     }
@@ -117,12 +102,8 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
     if (!user) return;
     
     try {
-      const unreadNotifications = notifications.filter(n => !n.isRead);
-      await Promise.all(
-        unreadNotifications.map(notification => 
-          markAsRead(notification.id)
-        )
-      );
+      await api.put('/notifications/read-all');
+      setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
     } catch (error) {
       console.error('Error marking all notifications as read:', error);
     }
@@ -134,8 +115,11 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
       unreadCount,
       markAsRead,
       markAllAsRead,
+      refreshNotifications: fetchNotifications,
     }}>
       {children}
     </NotificationContext.Provider>
   );
 };
+
+export default NotificationProvider;

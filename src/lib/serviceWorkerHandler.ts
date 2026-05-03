@@ -1,7 +1,4 @@
-import { auth } from '@/lib/firebase';
-import { getFunctions, httpsCallable } from 'firebase/functions';
-
-const functions = getFunctions();
+import api from '@/services/apiService';
 
 // Initialize service worker message handler
 export const initializeServiceWorkerHandler = () => {
@@ -14,40 +11,25 @@ export const initializeServiceWorkerHandler = () => {
         const { taskId, userId, isGroupTask, groupId, snoozeMinutes } = event.data;
 
         try {
-          // Get current user auth token
-          const currentUser = auth.currentUser;
-          if (!currentUser) {
+          // Get token from localStorage since we are in the main thread
+          const token = localStorage.getItem('token');
+          if (!token) {
             event.ports[0].postMessage({ success: false, error: 'Not authenticated' });
             return;
           }
 
-          const token = await currentUser.getIdToken();
-
           if (action === 'complete') {
-            // Call cloud function to mark task as complete
-            const markComplete = httpsCallable(functions, 'markTaskComplete');
-            const result = await markComplete({
-              taskId,
-              userId,
-              isGroupTask,
-              groupId,
-            });
-
-            event.ports[0].postMessage({ success: true, result: result.data });
+            // Call API to mark task as complete
+            const response = await api.put(`/tasks/${taskId}`, { isCompleted: true });
+            event.ports[0].postMessage({ success: true, result: response.data });
           } else if (action === 'snooze') {
-            // Call cloud function to snooze reminder
-            const snoozeReminder = httpsCallable(functions, 'snoozeTaskReminder');
-            const result = await snoozeReminder({
-              taskId,
-              userId,
-              isGroupTask,
-              groupId,
-              snoozeMinutes: snoozeMinutes || 10,
+            // Call API to snooze reminder
+            const response = await api.put(`/tasks/${taskId}/snooze`, { 
+              minutes: snoozeMinutes || 10 
             });
-
-            event.ports[0].postMessage({ success: true, result: result.data });
+            event.ports[0].postMessage({ success: true, result: response.data });
           }
-        } catch (error) {
+        } catch (error: any) {
           console.error('Error handling service worker message:', error);
           event.ports[0].postMessage({ success: false, error: error.message });
         }

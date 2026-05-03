@@ -71,6 +71,13 @@ export interface Task {
   systemEventId?: string;
 }
 
+export interface GroupMemberProfile {
+  id: string;
+  name?: string;
+  email?: string;
+  photoURL?: string;
+}
+
 export interface Group {
   id: string;
   name: string;
@@ -79,11 +86,11 @@ export interface Group {
   code?: string; // Alias for inviteCode (matching Flutter)
   createdBy?: string;
   ownerId: string;
-  members: Record<string, boolean>;
+  members: GroupMemberProfile[];
   createdAt: string;
 }
 
-export type NotificationType = 'task_assigned' | 'task_completed' | 'task_updated' | 'group_joined' | 'group_task_added';
+export type NotificationType = 'task_assigned' | 'task_completed' | 'task_updated' | 'group_joined' | 'group_task_added' | 'member_left' | 'group_task_updated' | 'group_task_deleted';
 
 export interface Notification {
   id: string;

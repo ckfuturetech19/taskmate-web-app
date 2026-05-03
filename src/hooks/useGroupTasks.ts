@@ -1,85 +1,65 @@
-import { useState, useEffect } from 'react';
-import { collection, onSnapshot } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
+import { useState, useEffect, useCallback } from 'react';
+import api from '@/services/apiService';
 import { Task, Group } from '@/types/task';
-import { parseTaskFromFirebase, getActiveTasks } from '@/lib/taskUtils';
+import { pusherService } from '@/services/pusherService';
 
-/**
- * Hook for managing group task data
- * Handles real-time sync from groups collection
- */
 export const useGroupTasks = (userId: string | null, groups: Group[]) => {
   const [groupTasks, setGroupTasks] = useState<Task[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<Error | null>(null);
 
-  useEffect(() => {
+  const fetchAllGroupTasks = useCallback(async () => {
     if (!userId || groups.length === 0) {
       setGroupTasks([]);
       setIsLoading(false);
       return;
     }
 
-    console.log('Setting up group task listeners for', groups.length, 'groups');
-    const unsubscribes: (() => void)[] = [];
-
-    groups.forEach(group => {
-      const groupTasksRef = collection(db, 'groups', group.id, 'tasks');
-
-      const unsubGroupTasks = onSnapshot(
-        groupTasksRef,
-        (tasksSnapshot) => {
+    try {
+      const allTasks: Task[] = [];
+      await Promise.all(
+        groups.map(async (group) => {
           try {
-            console.log(`Group ${group.id} tasks snapshot:`, tasksSnapshot.docs.length, 'tasks');
-            
-            const fetchedGroupTasks: Task[] = tasksSnapshot.docs.map(doc => {
-              const data = doc.data();
-              // Group tasks - explicitly mark as from group collection
-              return parseTaskFromFirebase(doc.id, data, userId, true);
-            });
-
-            // Filter out deleted tasks
-            const activeGroupTasks = getActiveTasks(fetchedGroupTasks);
-
-            setGroupTasks(prevTasks => {
-              // Remove old tasks for this group
-              const filtered = prevTasks.filter(t => t.groupId !== group.id);
-              // Add new active group tasks (already filtered for deleted)
-              const updated = [...filtered, ...activeGroupTasks];
-              
-              // Final deduplication and filter deleted tasks across all groups
-              const uniqueTasks = updated
-                .filter((task, index, self) =>
-                  index === self.findIndex(t => t.id === task.id)
-                )
-                .filter(task => !task.isDeleted); // Extra safety check
-              
-              console.log(`Updated group ${group.id} tasks:`, activeGroupTasks.length, 'active tasks');
-              console.log(`Total unique group tasks after deduplication:`, uniqueTasks.length);
-              return uniqueTasks;
-            });
-            
-            setError(null);
-            setIsLoading(false);
+            const response = await api.get(`/groups/${group.id}/tasks`);
+            allTasks.push(...response.data);
           } catch (err) {
-            console.error('Error processing group tasks snapshot:', err);
-            setError(err as Error);
+            console.error(`Error fetching tasks for group ${group.id}:`, err);
           }
-        },
-        (err) => {
-          console.error('Error fetching group tasks:', err);
-          setError(err as Error);
-        }
+        })
       );
-
-      unsubscribes.push(unsubGroupTasks);
-    });
-
-    return () => {
-      unsubscribes.forEach(unsub => unsub());
-    };
+      setGroupTasks(allTasks);
+      setError(null);
+    } catch (err) {
+      console.error('Error fetching group tasks:', err);
+      setError(err as Error);
+    } finally {
+      setIsLoading(false);
+    }
   }, [userId, groups]);
 
-  return { groupTasks, isLoading, error };
+  useEffect(() => {
+    fetchAllGroupTasks();
+
+    if (userId) {
+      const userChannel = pusherService.subscribeToUser(userId);
+      userChannel.bind('task-added', (data: any) => {
+        if (data.groupId) fetchAllGroupTasks();
+      });
+      userChannel.bind('task-updated', (data: any) => {
+        if (data.groupId) fetchAllGroupTasks();
+      });
+      userChannel.bind('task-deleted', (data: any) => {
+        if (data.groupId) fetchAllGroupTasks();
+      });
+
+      return () => {
+        userChannel.unbind('task-added');
+        userChannel.unbind('task-updated');
+        userChannel.unbind('task-deleted');
+      };
+    }
+  }, [userId, fetchAllGroupTasks]);
+
+  return { groupTasks, isLoading, error, refresh: fetchAllGroupTasks };
 };
 

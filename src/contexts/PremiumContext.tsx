@@ -1,36 +1,15 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { useAuth } from './AuthContext';
-import { revenueCatService } from '@/services/revenueCatService';
 
 interface PremiumContextType {
   isPremium: boolean;
   isLoading: boolean;
   refreshPremiumStatus: () => Promise<void>;
-  pricing: {
-    monthly?: {
-      identifier: string;
-      price: number;
-      currency: string;
-      period: string;
-      displayPrice: string;
-    };
-    yearly?: {
-      identifier: string;
-      price: number;
-      currency: string;
-      period: string;
-      displayPrice: string;
-    };
-    lifetime?: {
-      identifier: string;
-      price: number;
-      currency: string;
-      period: string;
-      displayPrice: string;
-    };
-  } | null;
-  isLoadingPricing: boolean;
-  refreshPricing: () => Promise<void>;
+  plans: {
+    id: string;
+    name: string;
+    tag?: string;
+  }[];
 }
 
 const PremiumContext = createContext<PremiumContextType | undefined>(undefined);
@@ -46,73 +25,26 @@ export const usePremium = () => {
 export const PremiumProvider = ({ children }: { children: ReactNode }) => {
   const { user } = useAuth();
   const [isPremium, setIsPremium] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-  const [pricing, setPricing] = useState<PremiumContextType['pricing']>(null);
-  const [isLoadingPricing, setIsLoadingPricing] = useState(true);
-
-  const checkPremiumStatus = async () => {
-    if (!user) {
-      setIsPremium(false);
-      setIsLoading(false);
-      return;
-    }
-
-    try {
-      setIsLoading(true);
-      const premium = await revenueCatService.checkEntitlement();
-      setIsPremium(premium);
-    } catch (error) {
-      console.error('Error checking premium status:', error);
-      setIsPremium(false);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const loadPricing = async () => {
-    try {
-      setIsLoadingPricing(true);
-      const pricingData = await revenueCatService.getPricing();
-      setPricing(pricingData.offerings);
-    } catch (error) {
-      console.error('Error loading pricing:', error);
-    } finally {
-      setIsLoadingPricing(false);
-    }
-  };
-
-  const refreshPremiumStatus = async () => {
-    revenueCatService.clearEntitlementCache();
-    await checkPremiumStatus();
-  };
-
-  const refreshPricing = async () => {
-    revenueCatService.clearPricingCache();
-    await loadPricing();
-  };
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     if (user) {
-      checkPremiumStatus();
-      loadPricing();
+      setIsPremium(user.isPro);
     } else {
       setIsPremium(false);
-      setIsLoading(false);
-      setPricing(null);
-      setIsLoadingPricing(false);
     }
   }, [user]);
 
-  // Refresh premium status periodically (every 5 minutes)
-  useEffect(() => {
-    if (!user) return;
+  const plans = [
+    { id: 'free', name: 'Free', tag: 'forever' },
+    { id: 'monthly', name: 'Premium Monthly', tag: 'Best for trying' },
+    { id: 'yearly', name: 'Premium Yearly', tag: 'Save more with annual' },
+    { id: 'lifetime', name: 'Premium Lifetime', tag: 'One-time payment' },
+  ];
 
-    const interval = setInterval(() => {
-      checkPremiumStatus();
-    }, 5 * 60 * 1000); // 5 minutes
-
-    return () => clearInterval(interval);
-  }, [user]);
+  const refreshPremiumStatus = async () => {
+    // AuthContext handles profile refresh which includes isPro status
+  };
 
   return (
     <PremiumContext.Provider
@@ -120,9 +52,7 @@ export const PremiumProvider = ({ children }: { children: ReactNode }) => {
         isPremium,
         isLoading,
         refreshPremiumStatus,
-        pricing,
-        isLoadingPricing,
-        refreshPricing
+        plans,
       }}
     >
       {children}

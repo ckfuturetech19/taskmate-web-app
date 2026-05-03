@@ -22,6 +22,7 @@ const menuItems = [
   { icon: Users, label: 'Team', path: '/groups' },
   { icon: BarChart3, label: 'Analytics', path: '/analytics' },
   { icon: Timer, label: 'Focus Timer', path: '/clock' },
+  { icon: Shield, label: 'Admin', path: '/admin', adminOnly: true },
 ];
 
 const generalItems = [
@@ -38,7 +39,7 @@ interface AppSidebarProps {
 
 const AppSidebar = ({ mobileMenuOpen, onClose, collapsed: collapsedProp, setCollapsed: setCollapsedProp }: AppSidebarProps) => {
   const { unreadCount } = useNotifications();
-  const { signOut } = useAuth();
+  const { user, signOut } = useAuth();
   const { getPersonalTasks } = useTaskContext();
   const navigate = useNavigate();
   const [internalCollapsed, setInternalCollapsed] = useState(false);
@@ -412,7 +413,9 @@ const AppSidebar = ({ mobileMenuOpen, onClose, collapsed: collapsedProp, setColl
                   </p>
                 )}
                 <div className="space-y-0.5">
-                  {menuItems.map((item) => {
+                  {menuItems
+                    .filter(item => !item.adminOnly || (user && user.isAdmin))
+                    .map((item) => {
                     const taskCount = item.path === '/tasks' ? pendingTaskCount : 0;
                     const isActive = location.pathname === item.path || 
                       (item.path !== '/dashboard' && location.pathname.startsWith(item.path));

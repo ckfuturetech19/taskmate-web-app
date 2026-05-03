@@ -15,63 +15,70 @@ export const useAnalyticsSync = () => {
   const { updateDailyStats, dailyStats } = useAnalytics();
   const lastSyncRef = useRef<number>(0);
 
-  // DISABLED: Commented out to prevent web app from overwriting mobile updates
-  // The mobile app (Flutter) is the primary source for analytics calculations
-  // Web app should only display Firebase data, not calculate and upload
-  
-  // useEffect(() => {
-  //   if (!user?.uid || tasks.length === 0) return;
-  //   
-  //   // Skip if we just received data from Firebase (within last 5 seconds)
-  //   const now = Date.now();
-  //   if (now - lastSyncRef.current < 5000) {
-  //     return;
-  //   }
-  //
-  //   // Only sync if Firebase data is stale or missing
-  //   if (dailyStats && dailyStats.updatedAt) {
-  //     const firebaseUpdateTime = dailyStats.updatedAt.toMillis();
-  //     const timeSinceUpdate = now - firebaseUpdateTime;
-  //     
-  //     // If Firebase was updated in last 30 seconds, don't overwrite
-  //     if (timeSinceUpdate < 30000) {
-  //       return;
-  //     }
-  //   }
-  //
-  //   // Calculate today's stats from tasks
-  //   const today = new Date();
-  //   const todayStr = analyticsService.formatDate(today);
-  //
-  //   const todayTasks = tasks.filter((task) => {
-  //     if (!task.dueDate) return false;
-  //     const taskDate = new Date(task.dueDate);
-  //     return (
-  //       taskDate.getDate() === today.getDate() &&
-  //       taskDate.getMonth() === today.getMonth() &&
-  //       taskDate.getFullYear() === today.getFullYear()
-  //     );
-  //   });
-  //
-  //   const completedToday = todayTasks.filter((t) => t.isCompleted).length;
-  //   const createdToday = todayTasks.length;
-  //
-  //   // Update analytics only if significantly different
-  //   if (dailyStats) {
-  //     const diff = Math.abs(dailyStats.tasksCompleted - completedToday) + 
-  //                  Math.abs(dailyStats.tasksCreated - createdToday);
-  //     if (diff === 0) {
-  //       return; // No change
-  //     }
-  //   }
-  //
-  //   lastSyncRef.current = now;
-  //   updateDailyStats({
-  //     tasksCompleted: completedToday,
-  //     tasksCreated: createdToday,
-  //   }).catch((err) => {
-  //     console.error('Error updating analytics:', err);
-  //   });
-  // }, [user?.uid, tasks, updateDailyStats, dailyStats]);
+  useEffect(() => {
+    if (!user?.id || tasks.length === 0) return;
+    
+    // Skip if we just received data from Firebase/Backend (within last 5 seconds)
+    const now = Date.now();
+    if (now - lastSyncRef.current < 5000) {
+      return;
+    }
+
+    // Only sync if backend data is stale or missing
+    if (dailyStats && dailyStats.lastSyncedAt) {
+      const backendUpdateTime = new Date(dailyStats.lastSyncedAt).getTime();
+      const timeSinceUpdate = now - backendUpdateTime;
+      
+      // If Backend was updated in last 30 seconds by another device, don't overwrite immediately
+      if (timeSinceUpdate < 30000) {
+        return;
+      }
+    }
+
+    // Calculate today's stats from tasks
+    const today = new Date();
+
+    const todayTasks = tasks.filter((task) => {
+      if (!task.dueDate) return false;
+      const taskDate = new Date(task.dueDate);
+      return (
+        taskDate.getDate() === today.getDate() &&
+        taskDate.getMonth() === today.getMonth() &&
+        taskDate.getFullYear() === today.getFullYear()
+      );
+    });
+
+    const completedToday = todayTasks.filter((t) => t.isCompleted).length;
+    const createdToday = todayTasks.length;
+    
+    let currentCompletionRate = dailyStats?.completionRate ?? 0;
+    let currentProductivityScore = dailyStats?.productivityScore ?? 0;
+    
+    if (createdToday > 0) {
+      currentCompletionRate = (completedToday / createdToday) * 100;
+      // Simple productivity formula for web fallback
+      currentProductivityScore = Math.min(100, (currentCompletionRate * 0.8) + (completedToday * 2));
+    }
+
+    // Update analytics only if significantly different
+    if (dailyStats) {
+      const diff = Math.abs((dailyStats.tasksCompleted ?? 0) - completedToday) + 
+                   Math.abs((dailyStats.tasksCreated ?? 0) - createdToday);
+      if (diff === 0) {
+        return; // No change
+      }
+    }
+
+    lastSyncRef.current = now;
+    
+    updateDailyStats({
+      tasksCompleted: completedToday,
+      tasksCreated: createdToday,
+      completionRate: currentCompletionRate,
+      productivityScore: currentProductivityScore,
+    }).catch((err) => {
+      console.error('Error updating analytics:', err);
+    });
+  }, [user?.id, tasks, updateDailyStats, dailyStats]);
 };
 

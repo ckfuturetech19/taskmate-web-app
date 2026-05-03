@@ -37,17 +37,8 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
-import { collection, doc, getDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebase';
 import { fcmService } from '@/services/fcmService';
-
-interface UserProfile {
-  uid: string;
-  displayName?: string;
-  email?: string;
-  photoURL?: string;
-  username?: string;
-}
+import { GroupMemberProfile } from '@/types/task';
 
 interface TaskDialogProps {
   open: boolean;
@@ -79,7 +70,6 @@ const TaskDialog = ({ open, onOpenChange, task, groupId, onSave }: TaskDialogPro
   const [skipCustomDays, setSkipCustomDays] = useState<number[]>([]);
   const [priorityLevel, setPriorityLevel] = useState<PriorityLevel>('none');
   const [assignedTo, setAssignedTo] = useState<string[]>([]);
-  const [userProfiles, setUserProfiles] = useState<Map<string, UserProfile>>(new Map());
   const [showMemberList, setShowMemberList] = useState(false);
   const [categoryId, setCategoryId] = useState<string>('');
   const [tags, setTags] = useState<string>('');
@@ -180,154 +170,19 @@ const TaskDialog = ({ open, onOpenChange, task, groupId, onSave }: TaskDialogPro
   };
 
   const currentGroup = groupId ? groups.find(g => g.id === groupId) : null;
-  const groupMembers = currentGroup ? Object.keys(currentGroup.members || {}) : [];
+  const groupMembers = currentGroup?.members || [];
 
-  // Fetch user profiles
-  useEffect(() => {
-    const fetchUserProfiles = async () => {
-      if (!groupMembers.length) return;
-
-      const profiles = new Map<string, UserProfile>();
-      await Promise.all(
-        groupMembers.map(async (memberId) => {
-          try {
-            const profileDoc = await getDoc(doc(db, 'user_profiles', memberId));
-            if (profileDoc.exists()) {
-              profiles.set(memberId, { uid: memberId, ...profileDoc.data() } as UserProfile);
-            } else {
-              profiles.set(memberId, { uid: memberId });
-            }
-          } catch (error) {
-            console.error('Error fetching profile:', error);
-            profiles.set(memberId, { uid: memberId });
-          }
-        })
-      );
-      setUserProfiles(profiles);
-    };
-
-    if (open && groupMembers.length > 0) {
-      fetchUserProfiles();
-    }
-  }, [open, groupMembers.length]);
-
-  useEffect(() => {
-    if (task) {
-      setTitle(task.title);
-      setDescription(task.description || '');
-      setDueDate(task.dueDate ? new Date(task.dueDate) : undefined);
-      setRecurrenceType(task.recurrenceType || 'none');
-      setRecurrenceFrequency(task.recurrenceFrequency);
-      setRecurrence(task.recurrence);
-      // Load recurrence sub-features
-      if (task.recurrence) {
-        setSelectedWeekdays(task.recurrence.daysOfWeek || []);
-        if (task.recurrence.endDate) {
-          setRecurrenceEndType('date');
-          setRecurrenceEndDate(new Date(task.recurrence.endDate));
-        } else if (task.recurrence.repeatCount) {
-          setRecurrenceEndType('count');
-          setRecurrenceEndCount(task.recurrence.repeatCount);
-        } else {
-          setRecurrenceEndType('never');
-        }
-        setUseTimeWindow(!!(task.timeWindowStart && task.timeWindowEnd));
-        if (task.timeWindowStart) {
-          const [hours, minutes] = task.timeWindowStart.split(':');
-          setTimeWindowStart(`${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}`);
-        }
-        if (task.timeWindowEnd) {
-          const [hours, minutes] = task.timeWindowEnd.split(':');
-          setTimeWindowEnd(`${hours.padStart(2, '0')}:${minutes.padStart(2, '0')}`);
-        }
-        setSkipCustomDays(task.recurrence.skipDays || []);
-        setSkipWeekends((task.recurrence.skipDays || []).includes(0) && (task.recurrence.skipDays || []).includes(6));
-      } else {
-        setSelectedWeekdays([]);
-        setRecurrenceEndType('never');
-        setRecurrenceEndDate(undefined);
-        setRecurrenceEndCount(10);
-        setUseTimeWindow(false);
-        setTimeWindowStart('09:00');
-        setTimeWindowEnd('17:00');
-        setSkipWeekends(false);
-        setSkipCustomDays([]);
-      }
-      setPriorityLevel(task.priorityLevel || 'none');
-      // Load assigned members from groupMembers array, or default to userId for backwards compatibility
-      setAssignedTo(task.groupMembers && task.groupMembers.length > 0 ? task.groupMembers : []);
-      setColorIndex(task.colorIndex || 0);
-      setCategoryId(task.categoryId || '');
-      setTags(task.tags?.join(', ') || '');
-      setSubtasks(task.subtasks || []);
-      setReminder(task.reminder ? new Date(task.reminder) : undefined);
-      setFocusTimerEnabled(task.focusTimerEnabled || false);
-      setFocusDurationMinutes(task.focusDurationMinutes || 25);
-      // ✅ Load existing task's colorIndex (matching Flutter sync)
-      const taskColorIndex = task.colorIndex || 0;
-      setColorIndex(taskColorIndex);
-    } else {
-      setTitle('');
-      setDescription('');
-      setDueDate(undefined);
-      setRecurrenceType('none');
-      setRecurrenceFrequency(undefined);
-      setRecurrence(undefined);
-      setSelectedWeekdays([]);
-      setRecurrenceEndType('never');
-      setRecurrenceEndDate(undefined);
-      setRecurrenceEndCount(10);
-      setUseTimeWindow(false);
-      setTimeWindowStart('09:00');
-      setTimeWindowEnd('17:00');
-      setSkipWeekends(false);
-      setSkipCustomDays([]);
-      setPriorityLevel('none');
-      setAssignedTo(user?.uid ? [user.uid] : []);
-      // ✅ Auto-calculate colorIndex based on task count (matching Flutter)
-      // Flutter: selectedColorIndex.value = taskCount % colorCount;
-      const currentPaletteIndex = getPaletteIndex();
-      const palette = colorPalettes[currentPaletteIndex] || colorPalettes[0];
-      const colorCount = theme === 'dark' ? palette.darkColors.length : palette.colors.length;
-      const taskCount = tasks?.length || 0; // Total tasks (matching Flutter's logic)
-      const localColorIndex = taskCount % colorCount; // 0-11 within current palette
-      
-      // Calculate global colorIndex for storage (0-35)
-      const globalColorIndex = calculateGlobalColorIndex(currentPaletteIndex, localColorIndex);
-      setColorIndex(globalColorIndex);
-      setCategoryId('');
-      setTags('');
-      setSubtasks([]);
-      setNewSubtaskTitle('');
-      setReminder(undefined);
-      setFocusTimerEnabled(false);
-      setFocusDurationMinutes(25);
-    }
-  }, [task, open, user]);
-
-  const toggleMember = (memberId: string) => {
-    setAssignedTo(prev =>
-      prev.includes(memberId)
-        ? prev.filter(id => id !== memberId)
-        : [...prev, memberId]
-    );
-  };
-
-  const removeMember = (memberId: string) => {
-    setAssignedTo(prev => prev.filter(id => id !== memberId));
-  };
-
-  const getUserDisplay = (profile: UserProfile | undefined, memberId: string) => {
+  const getUserDisplay = (profile: GroupMemberProfile | undefined, memberId: string) => {
     if (!profile) return memberId.substring(0, 8);
-    if (profile.displayName) return profile.displayName;
+    if (profile.name) return profile.name;
     if (profile.email) return profile.email.split('@')[0];
     if (currentGroup?.ownerId === memberId) return 'Owner';
     return 'Member';
   };
 
-  const getUserInitials = (profile: UserProfile | undefined) => {
-    if (profile?.displayName) {
-      const parts = profile.displayName.split(' ');
+  const getUserInitials = (profile: GroupMemberProfile | undefined) => {
+    if (profile?.name) {
+      const parts = profile.name.split(' ');
       return parts.length > 1
         ? `${parts[0][0]}${parts[1][0]}`.toUpperCase()
         : parts[0].substring(0, 2).toUpperCase();
@@ -649,7 +504,7 @@ const TaskDialog = ({ open, onOpenChange, task, groupId, onSave }: TaskDialogPro
 
                         if (permission === 'granted') {
                           // Register FCM token for push notifications
-                          await fcmService.requestPermissionAndGetToken(user.uid);
+                          await fcmService.requestPermissionAndGetToken(user.id);
                           setShowDatePicker(true);
                         }
                       } catch (error) {
@@ -659,7 +514,7 @@ const TaskDialog = ({ open, onOpenChange, task, groupId, onSave }: TaskDialogPro
                       // Ensure FCM token is registered
                       const token = fcmService.getCurrentToken();
                       if (!token) {
-                        await fcmService.requestPermissionAndGetToken(user.uid);
+                        await fcmService.requestPermissionAndGetToken(user.id);
                       }
                       setShowDatePicker(true);
                     }
@@ -1090,19 +945,19 @@ const TaskDialog = ({ open, onOpenChange, task, groupId, onSave }: TaskDialogPro
                 <Users className="h-4 w-4" />
                 Assign To ({assignedTo.length} selected)
               </Label>
-
+              
               {/* Selected members badges */}
               {assignedTo.length > 0 && (
                 <div className="flex flex-wrap gap-2 p-2 border rounded-md bg-muted/50">
                   {assignedTo.map(memberId => {
-                    const profile = userProfiles.get(memberId);
+                    const profile = groupMembers.find(m => m.id === memberId);
                     return (
                       <Badge key={memberId} variant="secondary" className="gap-1.5 pr-1">
                         <Avatar className="h-4 w-4">
                           {profile?.photoURL && <AvatarImage src={profile.photoURL} />}
                           <AvatarFallback className="text-[10px]">{getUserInitials(profile)}</AvatarFallback>
                         </Avatar>
-                        <span>{memberId === user?.uid ? 'Me' : getUserDisplay(profile, memberId)}</span>
+                        <span>{memberId === user?.id ? 'Me' : getUserDisplay(profile, memberId)}</span>
                         <button
                           onClick={() => removeMember(memberId)}
                           className="ml-1 hover:bg-background rounded-full p-0.5"
@@ -1117,19 +972,18 @@ const TaskDialog = ({ open, onOpenChange, task, groupId, onSave }: TaskDialogPro
 
               {/* Member selection list */}
               <div className="border rounded-md max-h-48 overflow-y-auto">
-                {groupMembers.map(memberId => {
-                  const profile = userProfiles.get(memberId);
-                  const isSelected = assignedTo.includes(memberId);
-                  const isOwner = currentGroup?.ownerId === memberId;
+                {groupMembers.map(profile => {
+                  const isSelected = assignedTo.includes(profile.id);
+                  const isOwner = currentGroup?.ownerId === profile.id;
 
                   return (
                     <div
-                      key={memberId}
+                      key={profile.id}
                       className={cn(
                         "flex items-center gap-3 p-3 hover:bg-muted/50 cursor-pointer border-b last:border-b-0",
                         isSelected && "bg-primary/5"
                       )}
-                      onClick={() => toggleMember(memberId)}
+                      onClick={() => toggleMember(profile.id)}
                     >
                       <Checkbox checked={isSelected} />
                       <Avatar className="h-8 w-8">
@@ -1138,10 +992,10 @@ const TaskDialog = ({ open, onOpenChange, task, groupId, onSave }: TaskDialogPro
                       </Avatar>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-medium truncate">
-                          {memberId === user?.uid ? 'Me' : getUserDisplay(profile, memberId)}
+                          {profile.id === user?.id ? 'Me' : getUserDisplay(profile, profile.id)}
                           {isOwner && <Badge variant="outline" className="ml-2 text-xs">Owner</Badge>}
                         </p>
-                        {profile?.email && profile.displayName && (
+                        {profile?.email && profile.name && (
                           <p className="text-xs text-muted-foreground truncate">{profile.email}</p>
                         )}
                       </div>

@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useNotifications } from '@/contexts/NotificationContext';
 import { Notification, NotificationType } from '@/types/task';
-import { Bell, BellOff, CheckCheck, Trash2, Users, CheckSquare, UserPlus, Clock } from 'lucide-react';
+import { Bell, BellOff, CheckCheck, Trash2, Users, CheckSquare, UserPlus, Clock, UserMinus, Edit } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatDistanceToNow } from 'date-fns';
 import { toast } from '@/hooks/use-toast';
@@ -17,6 +17,9 @@ const notificationIcons: Record<NotificationType, React.ElementType> = {
   task_updated: Clock,
   group_joined: UserPlus,
   group_task_added: Users,
+  member_left: UserMinus,
+  group_task_updated: Edit,
+  group_task_deleted: Trash2,
 };
 
 const notificationColors: Record<NotificationType, string> = {
@@ -25,6 +28,9 @@ const notificationColors: Record<NotificationType, string> = {
   task_updated: 'text-yellow-500',
   group_joined: 'text-purple-500',
   group_task_added: 'text-indigo-500',
+  member_left: 'text-orange-500',
+  group_task_updated: 'text-blue-500',
+  group_task_deleted: 'text-red-500',
 };
 
 const Notifications = () => {

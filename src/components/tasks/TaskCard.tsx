@@ -78,7 +78,8 @@ const TaskCard = ({ task, onToggleComplete, onEdit, onDelete, readOnly = false }
   const { groups, categories } = useTaskContext();
   const { theme } = useTheme();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const priority = priorityConfig[task.priorityLevel || 'none'];
+  const priorityLevel = task.priorityLevel || 'none';
+  const priority = priorityConfig[priorityLevel as PriorityLevel] || priorityConfig.none;
   const dueDate = safeParseDate(task.dueDate);
   const isOverdue = dueDate && safeIsPast(dueDate) && !safeIsToday(dueDate) && !task.isCompleted;
   const taskGroup = task.groupId ? groups.find(g => g.id === task.groupId) : null;

@@ -57,7 +57,7 @@ const GroupCard = ({ group }: GroupCardProps) => {
     }
   };
 
-  const isOwner = user?.uid === group.ownerId;
+  const isOwner = user?.id === group.ownerId;
 
   return (
     <>

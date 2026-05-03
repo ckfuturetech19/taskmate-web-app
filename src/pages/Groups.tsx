@@ -22,7 +22,7 @@ const Groups = () => {
   const [joinDialogOpen, setJoinDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('groups');
 
-  const userGroups = groups.filter(g => user && g.members[user.uid] === true);
+  const userGroups = groups.filter(g => user && g.members[user.id] === true);
   const groupTasks = tasks.filter(task => task.groupId && userGroups.some(g => g.id === task.groupId));
 
   const handleEdit = (task: Task) => {

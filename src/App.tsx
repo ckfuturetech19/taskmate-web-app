@@ -9,7 +9,7 @@ import { ThemeProvider } from "@/contexts/ThemeContext";
 import { TaskProvider } from "@/contexts/TaskContext";
 import { NotificationProvider } from "@/contexts/NotificationContext";
 import { PremiumProvider } from "@/contexts/PremiumContext";
-import { AnalyticsProvider } from "@/contexts/AnalyticsContext";
+import AnalyticsProvider from "@/contexts/AnalyticsContext";
 import { initializeServiceWorkerHandler } from "@/lib/serviceWorkerHandler";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import Index from "./pages/Index";
@@ -22,6 +22,7 @@ import GroupDetail from "./pages/GroupDetail";
 import Settings from "./pages/Settings";
 import Notifications from "./pages/Notifications";
 import Clock from "./pages/Clock";
+import AdminUsers from "./pages/AdminUsers";
 import NotFound from "./pages/NotFound";
 import Contact from "./pages/Contact";
 
@@ -72,6 +73,9 @@ const App = () => {
                 } />
                 <Route path="/clock" element={
                   <ProtectedRoute><Clock /></ProtectedRoute>
+                } />
+                <Route path="/admin" element={
+                  <ProtectedRoute><AdminUsers /></ProtectedRoute>
                 } />
                 <Route path="*" element={<NotFound />} />
               </Routes>

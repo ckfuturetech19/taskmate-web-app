@@ -1,25 +1,15 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { 
-  signInWithPopup,
-  signInWithRedirect,
-  getRedirectResult,
-  signOut as firebaseSignOut, 
-  onAuthStateChanged, 
-  User as FirebaseUser,
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  updateProfile
-} from 'firebase/auth';
-import { auth, googleProvider } from '@/lib/firebase';
+import api from '@/services/apiService';
 import { fcmService } from '@/services/fcmService';
-import { oneSignalService } from '@/services/oneSignalService';
-import { formatFirebaseError } from '@/lib/authErrors';
 
 interface User {
-  uid: string;
-  email: string | null;
-  displayName: string | null;
-  photoURL: string | null;
+  id: string;
+  email: string;
+  name: string;
+  isPro: boolean;
+  isAdmin: boolean;
+  proStartDate?: string;
+  proEndDate?: string;
 }
 
 interface AuthContextType {
@@ -27,7 +17,7 @@ interface AuthContextType {
   loading: boolean;
   signInWithGoogle: () => Promise<void>;
   signInWithEmail: (email: string, password: string) => Promise<void>;
-  signUpWithEmail: (email: string, password: string, displayName: string) => Promise<void>;
+  signUpWithEmail: (email: string, password: string, name: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -46,110 +36,112 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // Listen to Firebase auth state changes
-    const unsubscribe = onAuthStateChanged(
-      auth, 
-      async (firebaseUser: FirebaseUser | null) => {
-        if (firebaseUser) {
-          setUser({
-            uid: firebaseUser.uid,
-            email: firebaseUser.email,
-            displayName: firebaseUser.displayName,
-            photoURL: firebaseUser.photoURL
-          });
-
-          // Initialize OneSignal and save Player ID
-          try {
-            await oneSignalService.initialize();
-            await oneSignalService.requestPermissionAndSavePlayerId(firebaseUser.uid);
-          } catch (error) {
-            console.error('Error setting up OneSignal:', error);
-          }
-        } else {
-          setUser(null);
-        }
-        setLoading(false);
-      },
-      (error) => {
-        console.error('Auth state change error:', error);
-        setLoading(false);
+    // Check for stored user on mount
+    const storedUser = localStorage.getItem('user');
+    const token = localStorage.getItem('token');
+    
+    if (storedUser && token) {
+      try {
+        const parsedUser = JSON.parse(storedUser);
+        setUser(parsedUser);
+        
+        // Optionally refresh user profile from server
+        refreshProfile();
+      } catch (e) {
+        console.error('Error parsing stored user:', e);
+        localStorage.removeItem('user');
+        localStorage.removeItem('token');
       }
-    );
-
-    return () => unsubscribe();
+    }
+    setLoading(false);
   }, []);
 
-  // Check for redirect result on mount
   useEffect(() => {
-    const checkRedirectResult = async () => {
-      try {
-        const result = await getRedirectResult(auth);
-        if (result) {
-          console.log('Redirect sign-in successful');
-        }
-      } catch (error: any) {
-        console.error('Redirect result error:', error);
-        // Show error to user if needed
-      }
+    const handleRefresh = () => {
+      console.log('🔄 Refreshing profile due to external request...');
+      refreshProfile();
     };
     
-    checkRedirectResult();
+    window.addEventListener('auth-refresh-required', handleRefresh);
+    return () => window.removeEventListener('auth-refresh-required', handleRefresh);
   }, []);
 
-  const signInWithGoogle = async () => {
+  const refreshProfile = async () => {
     try {
-      // Try popup first
-      await signInWithPopup(auth, googleProvider);
-    } catch (error: any) {
-      console.error('Error signing in with Google:', error);
-      
-      // If popup is blocked, try redirect as fallback
-      if (error.code === 'auth/popup-blocked') {
-        try {
-          console.log('Popup blocked, trying redirect...');
-          await signInWithRedirect(auth, googleProvider);
-          return; // Redirect will reload the page
-        } catch (redirectError: any) {
-          console.error('Redirect also failed:', redirectError);
-          throw new Error('Unable to sign in. Please allow pop-ups for this site or try a different browser.');
+      const response = await api.get('/auth/me');
+      if (response.data) {
+        const updatedUser = response.data;
+        setUser(updatedUser);
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        
+        // Initialize FCM if user is logged in
+        if (updatedUser.id) {
+          fcmService.initialize().then(() => {
+            fcmService.requestPermissionAndSaveToken(updatedUser.id);
+          });
         }
       }
-      
-      throw new Error(formatFirebaseError(error));
+    } catch (error) {
+      console.error('Error refreshing profile:', error);
     }
+  };
+
+  const signInWithGoogle = async () => {
+    // Note: Google Sign-in on Web usually needs a redirect or popup that returns a credential
+    // which is then sent to our backend. For now, we'll throw an error if not implemented on backend.
+    throw new Error('Google Sign-in not yet implemented on backend. Please use Email/Password.');
   };
 
   const signInWithEmail = async (email: string, password: string) => {
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const response = await api.post('/auth/login', { email, password });
+      const { token, user } = response.data;
+      
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(user));
+      setUser(user);
+
+      // Initialize FCM
+      fcmService.initialize().then(() => {
+        fcmService.requestPermissionAndSaveToken(user.id);
+      });
     } catch (error: any) {
       console.error('Error signing in with email:', error);
-      throw new Error(formatFirebaseError(error));
+      throw new Error(error.response?.data?.error || 'Failed to sign in');
     }
   };
 
-  const signUpWithEmail = async (email: string, password: string, displayName: string) => {
+  const signUpWithEmail = async (email: string, password: string, name: string) => {
     try {
-      const result = await createUserWithEmailAndPassword(auth, email, password);
-      if (result.user && displayName) {
-        await updateProfile(result.user, { displayName });
-      }
+      const response = await api.post('/auth/register', { email, password, name });
+      const { token, user } = response.data;
+      
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(user));
+      setUser(user);
+
+      // Initialize FCM
+      fcmService.initialize().then(() => {
+        fcmService.requestPermissionAndSaveToken(user.id);
+      });
     } catch (error: any) {
       console.error('Error signing up with email:', error);
-      throw new Error(formatFirebaseError(error));
+      throw new Error(error.response?.data?.error || 'Failed to sign up');
     }
   };
 
   const signOut = async () => {
     try {
-      // Delete FCM token before signing out
+      // Delete FCM token from backend if possible
       if (user) {
-        await fcmService.deleteToken(user.uid);
+        await api.post('/auth/logout');
       }
-      await firebaseSignOut(auth);
-    } catch (error: any) {
-      console.error('Error signing out:', error);
-      throw new Error(formatFirebaseError(error));
+    } catch (error) {
+      console.error('Error during backend logout:', error);
+    } finally {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+      setUser(null);
     }
   };
 

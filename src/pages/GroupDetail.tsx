@@ -34,7 +34,7 @@ const GroupDetail = () => {
 
   const group = groups.find(g => g.id === groupId);
   const groupTasks = groupId ? getGroupTasks(groupId) : [];
-  const isOwner = user && group && user.uid === group.ownerId;
+  const isOwner = user && group && user.id === group.ownerId;
 
   if (!group) {
     return (
