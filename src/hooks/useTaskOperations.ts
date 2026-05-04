@@ -25,9 +25,12 @@ export const useTaskOperations = () => {
       isGroupTask: taskData.isGroupTask ? 1 : 0,
       focusTimerEnabled: taskData.focusTimerEnabled ? 1 : 0,
       priorityLevel: getPriorityLevel(taskData.priorityLevel || 'none'),
+      reminderUtc: taskData.reminder ? new Date(taskData.reminder).toISOString() : undefined,
     };
 
-    const response = await api.post('/tasks', payload);
+    // Use group task endpoint if groupId is present
+    const endpoint = taskData.groupId ? '/groups/tasks' : '/tasks';
+    const response = await api.post(endpoint, payload);
     return response.data.id;
   }, [user, getPriorityLevel]);
 
@@ -46,13 +49,21 @@ export const useTaskOperations = () => {
     if (updates.focusTimerEnabled !== undefined) payload.focusTimerEnabled = updates.focusTimerEnabled ? 1 : 0;
     if (updates.focusTimerIsRunning !== undefined) payload.focusTimerIsRunning = updates.focusTimerIsRunning ? 1 : 0;
     if (updates.priorityLevel !== undefined) payload.priorityLevel = getPriorityLevel(updates.priorityLevel);
+    if (updates.reminder !== undefined) {
+      payload.reminderUtc = updates.reminder ? new Date(updates.reminder).toISOString() : null;
+    }
 
-    await api.put(`/tasks/${id}`, payload);
+    // Use group task endpoint if it's a group task
+    const endpoint = task.groupId ? `/groups/tasks/${id}` : `/tasks/${id}`;
+    await api.put(endpoint, payload);
   }, [user, getPriorityLevel]);
 
   const deleteTask = useCallback(async (task: Task) => {
     if (!user || !task.id) return;
-    await api.delete(`/tasks/${task.id}`);
+    
+    // Use group task endpoint if it's a group task
+    const endpoint = task.groupId ? `/groups/tasks/${task.id}` : `/tasks/${task.id}`;
+    await api.delete(endpoint);
   }, [user]);
 
   return {

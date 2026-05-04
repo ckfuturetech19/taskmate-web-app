@@ -69,7 +69,7 @@ const GroupCard = ({ group }: GroupCardProps) => {
                 <h3 className="font-semibold text-foreground text-sm sm:text-base md:text-lg mb-1 break-words">{group.name}</h3>
                 <div className="flex items-center gap-1.5 text-xs sm:text-sm text-muted-foreground">
                   <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4 shrink-0" />
-                  <span>{Object.keys(group.members || {}).length} member{Object.keys(group.members || {}).length !== 1 ? 's' : ''}</span>
+                  <span>{(group.members?.length || 0)} member{(group.members?.length || 0) !== 1 ? 's' : ''}</span>
                   {isOwner && (
                     <span className="ml-1.5 px-1.5 py-0.5 bg-primary/10 text-primary text-[10px] rounded">Owner</span>
                   )}

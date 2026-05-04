@@ -27,7 +27,7 @@ const Tasks = () => {
   const [showCompleted, setShowCompleted] = useState<boolean>(false);
 
   const personalTasks = getPersonalTasks();
-  const userGroups = groups.filter(g => user && g.members[user.id] === true);
+  const userGroups = groups.filter(g => user && g.members.some(m => m.id === user.id));
   const groupTasks = tasks.filter(task => task.groupId && userGroups.some(g => g.id === task.groupId));
 
   console.log('=== Tasks Page Rendering ===');

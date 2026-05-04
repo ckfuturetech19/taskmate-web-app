@@ -1,5 +1,5 @@
 import api from '@/services/apiService';
-import { pusherService } from '@/services/pusherService';
+import { socketService } from '@/services/socketService';
 
 export interface DailyStats {
   date: string;
@@ -60,15 +60,11 @@ class AnalyticsService {
   }
 
   subscribeToAnalytics(userId: string, callback: (stats: UserAnalytics) => void): () => void {
-    const channel = pusherService.subscribeToUser(userId);
-    
-    channel.bind('stats-updated', (data: any) => {
-      console.log('Real-time stats update received:', data);
-      callback(data);
-    });
+    socketService.joinUserRoom(userId);
+    socketService.on('stats-updated', callback);
 
     return () => {
-      channel.unbind('stats-updated');
+      socketService.off('stats-updated', callback);
     };
   }
 

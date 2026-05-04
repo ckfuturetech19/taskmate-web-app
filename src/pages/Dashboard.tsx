@@ -14,6 +14,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useTaskContext } from '@/contexts/TaskContext';
 import { useAuth } from '@/contexts/AuthContext';
+import { useAnalytics } from '@/contexts/AnalyticsContext';
+import { useAnalyticsSync } from '@/hooks/useAnalyticsSync';
 import { Task } from '@/types/task';
 import { CalendarDays, Clock, CheckCircle2, Plus, TrendingUp, AlertCircle, FileDown, Upload, CheckCircle, XCircle } from 'lucide-react';
 import { safeIsToday, safeParseDate, safeIsPast } from '@/lib/dateUtils';
@@ -22,6 +24,8 @@ import { toast } from '@/hooks/use-toast';
 const Dashboard = () => {
   const { user } = useAuth();
   const { tasks, addTask, updateTask, deleteTask, toggleTaskComplete, getPersonalTasks } = useTaskContext();
+  const { tasksCompleted, tasksCreated, currentStreak, completionRate: analyticsCompletionRate } = useAnalytics();
+  
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [importDialogOpen, setImportDialogOpen] = useState(false);
@@ -29,37 +33,40 @@ const Dashboard = () => {
   const [importResult, setImportResult] = useState<{ success: number; failed: number } | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  useAnalyticsSync();
+
   const personalTasks = getPersonalTasks();
   
   const todaysTasks = personalTasks.filter(task => {
-    if (task.completed || !task.dueDate) return false;
+    if (task.isCompleted || !task.dueDate) return false;
     const dueDate = safeParseDate(task.dueDate);
     return dueDate && safeIsToday(dueDate);
   });
   
   const overdueTasks = personalTasks.filter(task => {
-    if (task.completed || !task.dueDate) return false;
+    if (task.isCompleted || !task.dueDate) return false;
     const dueDate = safeParseDate(task.dueDate);
     return dueDate && safeIsPast(dueDate) && !safeIsToday(dueDate);
   });
   
   const upcomingTasks = personalTasks.filter(task => {
-    if (task.completed || !task.dueDate) return false;
+    if (task.isCompleted || !task.dueDate) return false;
     const dueDate = safeParseDate(task.dueDate);
     return dueDate && !safeIsPast(dueDate) && !safeIsToday(dueDate);
   }).slice(0, 5);
   
-  const pendingTasks = personalTasks.filter(task => !task.completed);
+  const pendingTasks = personalTasks.filter(task => !task.isCompleted);
   
-  const completedToday = personalTasks.filter(task => {
-    if (!task.completed || !task.lastCompletedDate) return false;
+  const localCompletedToday = personalTasks.filter(task => {
+    if (!task.isCompleted || !task.lastCompletedDate) return false;
     const completedDate = safeParseDate(task.lastCompletedDate);
     return completedDate && safeIsToday(completedDate);
   });
   
-  const completionRate = pendingTasks.length > 0 
-    ? Math.round((completedToday.length / (completedToday.length + pendingTasks.length)) * 100)
-    : 100;
+  // Merge local and analytics data for consistency
+  const totalCompleted = Math.max(tasksCompleted, personalTasks.filter(t => t.isCompleted).length);
+  const totalCreated = Math.max(tasksCreated, personalTasks.length);
+  const displayCompletionRate = Math.max(analyticsCompletionRate, totalCreated > 0 ? (totalCompleted / totalCreated) * 100 : 0);
 
   const handleSaveTask = (data: Omit<Task, 'id' | 'createdAt' | 'userId' | 'completed'>) => {
     if (editingTask) {
@@ -219,12 +226,12 @@ const Dashboard = () => {
         {/* Stats Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           <StatCard
-            title="Today's Tasks"
-            value={todaysTasks.length}
+            title="Total Tasks"
+            value={totalCreated}
             icon={CalendarDays}
             trend="up"
             trendValue={5}
-            trendText="Increased from last month"
+            trendText="Lifetime created"
             variant="primary"
             delay={0}
           />
@@ -236,19 +243,19 @@ const Dashboard = () => {
             delay={100}
           />
           <StatCard
-            title="Completed Today"
-            value={completedToday.length}
+            title="Completed Total"
+            value={totalCompleted}
             icon={CheckCircle2}
             trend="up"
-            subtitle={`${completedToday.length} tasks done`}
+            subtitle={`${Math.round(displayCompletionRate)}% completion rate`}
             delay={200}
           />
           <StatCard
-            title="Overdue"
-            value={overdueTasks.length}
-            icon={AlertCircle}
-            variant={overdueTasks.length > 0 ? 'destructive' : undefined}
-            subtitle={overdueTasks.length > 0 ? "Needs attention" : "All on track"}
+            title="Current Streak"
+            value={currentStreak}
+            icon={TrendingUp}
+            variant={currentStreak > 0 ? 'default' : undefined}
+            subtitle={currentStreak > 0 ? `${currentStreak} day streak!` : "Start a streak today"}
             delay={300}
           />
         </div>

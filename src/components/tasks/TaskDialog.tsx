@@ -33,6 +33,7 @@ import { format } from 'date-fns';
 import { CalendarIcon, Users, X, Bell } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
+import { safeParseDate } from '@/lib/dateUtils';
 // Removed MUI TimePicker imports
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -78,7 +79,7 @@ const TaskDialog = ({ open, onOpenChange, task, groupId, onSave }: TaskDialogPro
   const [reminder, setReminder] = useState<Date | undefined>();
   const [focusTimerEnabled, setFocusTimerEnabled] = useState<boolean>(false);
   const [focusDurationMinutes, setFocusDurationMinutes] = useState<number>(25);
-  const [reminderDate, setReminderDate] = useState<Date | null>(null);
+  const [reminderDate, setReminderDate] = useState<Date | undefined>();
   const [reminderHour, setReminderHour] = useState<string>('12');
   const [reminderMinute, setReminderMinute] = useState<string>('00');
   const [reminderPeriod, setReminderPeriod] = useState<'AM' | 'PM'>('AM');
@@ -98,6 +99,89 @@ const TaskDialog = ({ open, onOpenChange, task, groupId, onSave }: TaskDialogPro
       setNotificationPermission(Notification.permission);
     }
   }, []);
+
+  // Load task data into form when editing
+  useEffect(() => {
+    if (open) {
+      if (task) {
+        setTitle(task.title || '');
+        setDescription(task.description || '');
+        setDueDate(task.dueDate ? safeParseDate(task.dueDate) || undefined : undefined);
+        setRecurrenceType(task.recurrenceType || 'none');
+        setRecurrenceFrequency(task.recurrenceFrequency || 1);
+        setPriorityLevel(task.priorityLevel || 'none');
+        setCategoryId(task.categoryId || '');
+        setTags(task.tags ? task.tags.join(', ') : '');
+        setSubtasks(task.subtasks || []);
+        setFocusTimerEnabled(task.focusTimerEnabled || false);
+        setFocusDurationMinutes(task.focusDurationMinutes || 25);
+        setColorIndex(task.colorIndex || 0);
+        setAssignedTo(task.groupMembers || []);
+        
+        // Handle recurrence sub-features
+        if (task.recurrence) {
+          setSelectedWeekdays(task.recurrence.daysOfWeek || []);
+          if (task.recurrence.endDate) {
+            setRecurrenceEndType('date');
+            setRecurrenceEndDate(safeParseDate(task.recurrence.endDate) || undefined);
+          } else if (task.recurrence.repeatCount) {
+            setRecurrenceEndType('count');
+            setRecurrenceEndCount(task.recurrence.repeatCount);
+          } else {
+            setRecurrenceEndType('never');
+          }
+          setSkipCustomDays(task.recurrence.skipDays || []);
+        }
+
+        // Handle time window
+        if (task.timeWindowStart || task.timeWindowEnd) {
+          setUseTimeWindow(true);
+          setTimeWindowStart(task.timeWindowStart || '09:00');
+          setTimeWindowEnd(task.timeWindowEnd || '17:00');
+        } else {
+          setUseTimeWindow(false);
+        }
+
+        // Handle reminder
+        const reminderDateObj = task.reminder ? safeParseDate(task.reminder) : undefined;
+        if (reminderDateObj) {
+          setReminder(reminderDateObj);
+          setReminderDate(reminderDateObj);
+          setReminderHour(reminderDateObj.getHours() > 12 ? (reminderDateObj.getHours() - 12).toString().padStart(2, '0') : (reminderDateObj.getHours() || 12).toString().padStart(2, '0'));
+          setReminderMinute(reminderDateObj.getMinutes().toString().padStart(2, '0'));
+          setReminderPeriod(reminderDateObj.getHours() >= 12 ? 'PM' : 'AM');
+        } else {
+          setReminder(undefined);
+          setReminderDate(undefined);
+        }
+      } else {
+        // Reset for new task
+        setTitle('');
+        setDescription('');
+        setDueDate(undefined);
+        setRecurrenceType('none');
+        setRecurrenceFrequency(1);
+        setPriorityLevel('none');
+        setCategoryId('');
+        setTags('');
+        setSubtasks([]);
+        setFocusTimerEnabled(false);
+        setFocusDurationMinutes(25);
+        setReminder(undefined);
+        setReminderDate(undefined);
+        setAssignedTo([]);
+        setUseTimeWindow(false);
+        setSelectedWeekdays([]);
+        setRecurrenceEndType('never');
+        setSkipCustomDays([]);
+        
+        // Auto-calculate next colorIndex
+        const paletteIndices = getPaletteIndices(getPaletteIndex());
+        const taskCount = tasks.length;
+        setColorIndex(taskCount % paletteIndices.length);
+      }
+    }
+  }, [open, task, tasks.length]);
 
   // Request notification permission
   const requestNotificationPermission = async () => {
@@ -145,7 +229,7 @@ const TaskDialog = ({ open, onOpenChange, task, groupId, onSave }: TaskDialogPro
       }
       setShowTimePicker(true);
     } else {
-      setReminderDate(null);
+      setReminderDate(undefined);
       setReminder(undefined);
     }
   };
@@ -262,7 +346,7 @@ const TaskDialog = ({ open, onOpenChange, task, groupId, onSave }: TaskDialogPro
       categoryId: categoryId.trim() || undefined,
       tags: tagsArray,
       subtasks: subtasks.length > 0 ? subtasks : undefined,
-      reminder: reminderString,
+      reminder: reminderUtc,
       reminderUtc: reminderUtc,
       focusTimerEnabled: focusTimerEnabled,
       focusDurationMinutes: focusTimerEnabled ? focusDurationMinutes : null,
@@ -491,36 +575,27 @@ const TaskDialog = ({ open, onOpenChange, task, groupId, onSave }: TaskDialogPro
                   !reminder && "text-muted-foreground"
                 )}
                 onClick={async () => {
-                  // Check notification permission directly in click handler
-                  if ('Notification' in window && user) {
-                    console.log('Current permission:', Notification.permission);
+                  // Open picker first for better UX
+                  setShowDatePicker(true);
 
+                  // Then handle permissions/token registration in background
+                  if ('Notification' in window && user) {
                     if (Notification.permission === 'default') {
-                      // Request permission and register FCM token
                       try {
                         const permission = await Notification.requestPermission();
-                        console.log('Permission result:', permission);
                         setNotificationPermission(permission);
-
                         if (permission === 'granted') {
-                          // Register FCM token for push notifications
                           await fcmService.requestPermissionAndGetToken(user.id);
-                          setShowDatePicker(true);
                         }
                       } catch (error) {
                         console.error('Error requesting permission:', error);
                       }
                     } else if (Notification.permission === 'granted') {
-                      // Ensure FCM token is registered
                       const token = fcmService.getCurrentToken();
                       if (!token) {
                         await fcmService.requestPermissionAndGetToken(user.id);
                       }
-                      setShowDatePicker(true);
                     }
-                    // If denied, the UI will show instructions
-                  } else {
-                    setShowDatePicker(true);
                   }
                 }}
               >
@@ -559,85 +634,6 @@ const TaskDialog = ({ open, onOpenChange, task, groupId, onSave }: TaskDialogPro
           </div>
 
 
-          {/* Reminder Date Picker Dialog */}
-          <Dialog open={showDatePicker} onOpenChange={setShowDatePicker}>
-            <DialogContent className="sm:max-w-md">
-              <DialogHeader>
-                <DialogTitle>Select Reminder Date</DialogTitle>
-              </DialogHeader>
-              <Calendar
-                mode="single"
-                selected={reminderDate}
-                onSelect={handleReminderDateChange}
-                initialFocus
-                className="rounded-md border"
-              />
-            </DialogContent>
-          </Dialog>
-
-          {/* Time Picker Dialog
-<LocalizationProvider dateAdapter={AdapterDateFns}>
-  <TimePicker
-    open={showTimePicker}
-    onClose={() => setShowTimePicker(false)}
-    value={reminder}
-    onChange={(time) => {
-      if (reminder && time) {
-        const newReminder = new Date(reminder);
-        newReminder.setHours(time.getHours(), time.getMinutes(), 0, 0);
-        setReminder(newReminder);
-      }
-    }}
-    ampm
-    // renderInput={(params) => <Input {...params} />}
-  />
-</LocalizationProvider> */}
-
-
-
-          {/* Custom Time Picker Dialog */}
-          <Dialog open={showTimePicker} onOpenChange={setShowTimePicker}>
-            <DialogContent className="sm:max-w-xs">
-              <DialogHeader>
-                <DialogTitle>Select Reminder Time</DialogTitle>
-              </DialogHeader>
-              <div className="flex gap-2 items-center justify-center py-4">
-                <select
-                  className="rounded-md border bg-background text-foreground px-2 py-1"
-                  value={reminderHour}
-                  onChange={e => setReminderHour(e.target.value)}
-                >
-                  {Array.from({ length: 12 }, (_, i) => {
-                    const val = (i + 1).toString().padStart(2, '0');
-                    return <option key={val} value={val}>{val}</option>;
-                  })}
-                </select>
-                :
-                <select
-                  className="rounded-md border bg-background text-foreground px-2 py-1"
-                  value={reminderMinute}
-                  onChange={e => setReminderMinute(e.target.value)}
-                >
-                  {Array.from({ length: 60 }, (_, i) => {
-                    const min = i.toString().padStart(2, '0');
-                    return <option key={min} value={min}>{min}</option>;
-                  })}
-                </select>
-                <select
-                  className="rounded-md border bg-background text-foreground px-2 py-1"
-                  value={reminderPeriod}
-                  onChange={e => setReminderPeriod(e.target.value as 'AM' | 'PM')}
-                >
-                  <option value="AM">AM</option>
-                  <option value="PM">PM</option>
-                </select>
-              </div>
-              <div className="flex justify-end gap-2 mt-4">
-                <Button variant="outline" onClick={handleTimeCancel}>Cancel</Button>
-                <Button onClick={handleTimeConfirm}>OK</Button>
-              </div>
-            </DialogContent>
-          </Dialog>
 
 
           {/* Priority - Matching Flutter order */}
@@ -1083,6 +1079,66 @@ const TaskDialog = ({ open, onOpenChange, task, groupId, onSave }: TaskDialogPro
           </div>
         </div>
       </SheetContent>
+
+      {/* Reminder Date Picker Dialog */}
+      <Dialog open={showDatePicker} onOpenChange={setShowDatePicker}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Select Reminder Date</DialogTitle>
+          </DialogHeader>
+          <Calendar
+            mode="single"
+            selected={reminderDate}
+            onSelect={handleReminderDateChange}
+            initialFocus
+            className="rounded-md border"
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* Custom Time Picker Dialog */}
+      <Dialog open={showTimePicker} onOpenChange={setShowTimePicker}>
+        <DialogContent className="sm:max-w-xs">
+          <DialogHeader>
+            <DialogTitle>Select Reminder Time</DialogTitle>
+          </DialogHeader>
+          <div className="flex gap-2 items-center justify-center py-4">
+            <select
+              className="rounded-md border bg-background text-foreground px-2 py-1"
+              value={reminderHour}
+              onChange={e => setReminderHour(e.target.value)}
+            >
+              {Array.from({ length: 12 }, (_, i) => {
+                const val = (i + 1).toString().padStart(2, '0');
+                return <option key={val} value={val}>{val}</option>;
+              })}
+            </select>
+            :
+            <select
+              className="rounded-md border bg-background text-foreground px-2 py-1"
+              value={reminderMinute}
+              onChange={e => setReminderMinute(e.target.value)}
+            >
+              {Array.from({ length: 60 }, (_, i) => {
+                const min = i.toString().padStart(2, '0');
+                return <option key={min} value={min}>{min}</option>;
+              })}
+            </select>
+            <select
+              className="rounded-md border bg-background text-foreground px-2 py-1"
+              value={reminderPeriod}
+              onChange={e => setReminderPeriod(e.target.value as 'AM' | 'PM')}
+            >
+              <option value="AM">AM</option>
+              <option value="PM">PM</option>
+            </select>
+          </div>
+          <div className="flex justify-end gap-2 mt-4">
+            <Button variant="outline" onClick={handleTimeCancel}>Cancel</Button>
+            <Button onClick={handleTimeConfirm}>OK</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Due Date Picker Dialog */}
       <Dialog open={showDueDatePicker} onOpenChange={setShowDueDatePicker}>

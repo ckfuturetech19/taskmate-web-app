@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import api from '@/services/apiService';
-import { pusherService } from '@/services/pusherService';
+import { socketService } from '@/services/socketService';
 import { Task } from '@/types/task';
 
 export const useTaskData = (userId: string | null) => {
@@ -31,25 +31,25 @@ export const useTaskData = (userId: string | null) => {
 
     fetchTasks();
 
-    // Setup Pusher for real-time updates
-    const channel = pusherService.subscribeToUser(userId);
+    // Setup Socket.io for real-time updates
+    socketService.initialize();
+    socketService.joinUserRoom(userId);
     
-    const handleUpdate = () => {
-      console.log('Real-time task update received via Pusher');
+    const handleUpdate = (data: any) => {
+      console.log('📡 Socket.io: Real-time task update received:', data);
       fetchTasks();
     };
 
-    channel.bind('task-added', handleUpdate);
-    channel.bind('task-updated', handleUpdate);
-    channel.bind('task-deleted', handleUpdate);
+    socketService.on('task-added', handleUpdate);
+    socketService.on('task-updated', handleUpdate);
+    socketService.on('task-deleted', handleUpdate);
 
     return () => {
-      channel.unbind_all();
-      // We don't necessarily want to unsubscribe here if other hooks use the same channel
-      // But Pusher manages multiple listeners on one channel internally
+      socketService.off('task-added', handleUpdate);
+      socketService.off('task-updated', handleUpdate);
+      socketService.off('task-deleted', handleUpdate);
     };
   }, [userId, fetchTasks]);
 
   return { tasks, isLoading, error, refresh: fetchTasks };
 };
-

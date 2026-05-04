@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, ReactNode, useEffect } from
 import { Notification } from '@/types/task';
 import { useAuth } from './AuthContext';
 import api from '@/services/apiService';
-import { pusherService } from '@/services/pusherService';
+import { socketService } from '@/services/socketService';
 
 interface NotificationContextType {
   notifications: Notification[];
@@ -52,11 +52,11 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
 
     fetchNotifications();
 
-    // Setup Pusher real-time notifications
-    const channel = pusherService.subscribeToUser(user.id);
+    // Setup Socket.io real-time notifications
+    socketService.joinUserRoom(user.id);
     
-    channel.bind('notification-received', (data: any) => {
-      console.log('🔔 New notification received via Pusher:', data);
+    const handleNotification = (data: any) => {
+      console.log('🔔 New notification received via Socket.io:', data);
       setNotifications(prev => [
         {
           ...data,
@@ -65,21 +65,19 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
         },
         ...prev
       ]);
-    });
+    };
 
-    channel.bind('pro-status-changed', (data: any) => {
-      console.log('💎 Pro status changed via Pusher:', data);
-      // Trigger a profile refresh in AuthContext
-      // Note: Since we don't have direct access to refreshProfile here,
-      // we can use a window event or just wait for the user to navigate.
-      // But a better way is to handle this in AuthContext or a common parent.
-      // For now, I'll just reload the page or show a toast.
+    const handleProStatus = (data: any) => {
+      console.log('💎 Pro status changed via Socket.io:', data);
       window.dispatchEvent(new CustomEvent('auth-refresh-required'));
-    });
+    };
+
+    socketService.on('notification-received', handleNotification);
+    socketService.on('pro-status-changed', handleProStatus);
 
     return () => {
-      channel.unbind('notification-received');
-      channel.unbind('pro-status-changed');
+      socketService.off('notification-received', handleNotification);
+      socketService.off('pro-status-changed', handleProStatus);
     };
   }, [user]);
 

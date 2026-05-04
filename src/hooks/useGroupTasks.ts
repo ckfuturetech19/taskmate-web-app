@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import api from '@/services/apiService';
 import { Task, Group } from '@/types/task';
-import { pusherService } from '@/services/pusherService';
+import { socketService } from '@/services/socketService';
 
 export const useGroupTasks = (userId: string | null, groups: Group[]) => {
   const [groupTasks, setGroupTasks] = useState<Task[]>([]);
@@ -40,25 +40,32 @@ export const useGroupTasks = (userId: string | null, groups: Group[]) => {
   useEffect(() => {
     fetchAllGroupTasks();
 
-    if (userId) {
-      const userChannel = pusherService.subscribeToUser(userId);
-      userChannel.bind('task-added', (data: any) => {
-        if (data.groupId) fetchAllGroupTasks();
-      });
-      userChannel.bind('task-updated', (data: any) => {
-        if (data.groupId) fetchAllGroupTasks();
-      });
-      userChannel.bind('task-deleted', (data: any) => {
-        if (data.groupId) fetchAllGroupTasks();
+    if (userId && groups.length > 0) {
+      // 1. Join each group's Socket.io room
+      groups.forEach(group => {
+        socketService.joinGroupRoom(group.id);
       });
 
+      const handleGroupUpdate = (data: any) => {
+        console.log('📡 Socket.io: Group update received:', data);
+        fetchAllGroupTasks();
+      };
+
+      // 2. Listen for task events (these come via the group room)
+      socketService.on('task-added', handleGroupUpdate);
+      socketService.on('task-updated', handleGroupUpdate);
+      socketService.on('task-deleted', handleGroupUpdate);
+
+      // 3. Also join personal room for updates that might affect groups
+      socketService.joinUserRoom(userId);
+
       return () => {
-        userChannel.unbind('task-added');
-        userChannel.unbind('task-updated');
-        userChannel.unbind('task-deleted');
+        socketService.off('task-added', handleGroupUpdate);
+        socketService.off('task-updated', handleGroupUpdate);
+        socketService.off('task-deleted', handleGroupUpdate);
       };
     }
-  }, [userId, fetchAllGroupTasks]);
+  }, [userId, groups, fetchAllGroupTasks]);
 
   return { groupTasks, isLoading, error, refresh: fetchAllGroupTasks };
 };

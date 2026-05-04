@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, ReactNode, useEffect, useMemo, useCallback } from 'react';
 import api from '@/services/apiService';
-import { pusherService } from '@/services/pusherService';
+import { socketService } from '@/services/socketService';
 import { Task, Group } from '@/types/task';
 import { useAuth } from './AuthContext';
 import { useTaskData } from '@/hooks/useTaskData';
@@ -84,29 +84,36 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
     if (user) {
       refreshData();
       
-      const channel = pusherService.subscribeToUser(user.id);
-      channel.bind('group-updated', fetchGroups);
-      channel.bind('categories-updated', fetchCategories);
+      socketService.joinUserRoom(user.id);
+      socketService.on('group-updated', fetchGroups);
+      socketService.on('categories-updated', fetchCategories);
 
       return () => {
-        channel.unbind('group-updated');
-        channel.unbind('categories-updated');
+        socketService.off('group-updated', fetchGroups);
+        socketService.off('categories-updated', fetchCategories);
       };
     }
   }, [user, refreshData, fetchGroups, fetchCategories]);
 
   const addTask = async (taskData: any) => {
     await addTaskOp(taskData);
+    await refreshPersonal();
   };
 
   const updateTask = async (id: string, updates: Partial<Task>) => {
     const task = tasks.find(t => t.id === id);
-    if (task) await updateTaskOp(id, updates, task);
+    if (task) {
+      await updateTaskOp(id, updates, task);
+      await refreshPersonal();
+    }
   };
 
   const deleteTask = async (id: string) => {
     const task = tasks.find(t => t.id === id);
-    if (task) await deleteTaskOp(task);
+    if (task) {
+      await deleteTaskOp(task);
+      await refreshPersonal();
+    }
   };
 
   const toggleTaskComplete = async (id: string) => {

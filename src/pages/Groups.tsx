@@ -22,7 +22,7 @@ const Groups = () => {
   const [joinDialogOpen, setJoinDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('groups');
 
-  const userGroups = groups.filter(g => user && g.members[user.id] === true);
+  const userGroups = groups;
   const groupTasks = tasks.filter(task => task.groupId && userGroups.some(g => g.id === task.groupId));
 
   const handleEdit = (task: Task) => {
@@ -33,23 +33,42 @@ const Groups = () => {
     });
   };
 
-  const handleCreateGroup = (name: string) => {
-    const group = createGroup(name);
-    toast({
-      title: 'Group created',
-      description: `"${group.name}" has been created. Share the invite code to add members.`,
-    });
-  };
-
-  const handleJoinGroup = (inviteCode: string): boolean => {
-    const success = joinGroup(inviteCode);
-    if (success) {
+  const handleCreateGroup = async (name: string) => {
+    try {
+      const group = await createGroup(name);
       toast({
-        title: 'Joined group',
-        description: 'You have successfully joined the group.',
+        title: 'Group created',
+        description: `"${group.name}" has been created. Share the invite code to add members.`,
+      });
+      setCreateDialogOpen(false);
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to create group. Please try again.',
+        variant: 'destructive',
       });
     }
-    return success;
+  };
+
+  const handleJoinGroup = async (inviteCode: string): Promise<boolean> => {
+    try {
+      const success = await joinGroup(inviteCode);
+      if (success) {
+        toast({
+          title: 'Joined group',
+          description: 'You have successfully joined the group.',
+        });
+        setJoinDialogOpen(false);
+      }
+      return success;
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: 'Failed to join group. Check the invite code.',
+        variant: 'destructive',
+      });
+      return false;
+    }
   };
 
   return (

@@ -105,7 +105,7 @@ const GroupDetail = () => {
             <div className="flex flex-wrap items-center gap-2 sm:gap-3 mt-1.5 sm:mt-2">
               <div className="flex items-center gap-1.5 text-xs sm:text-sm text-muted-foreground">
                 <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                <span>{Object.keys(group.members || {}).length} member{Object.keys(group.members || {}).length !== 1 ? 's' : ''}</span>
+                <span>{(group.members?.length || 0)} member{(group.members?.length || 0) !== 1 ? 's' : ''}</span>
               </div>
               {isOwner && (
                 <Badge variant="secondary" className="text-[10px] sm:text-xs">
