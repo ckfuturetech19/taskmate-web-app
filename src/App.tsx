@@ -23,6 +23,8 @@ import Settings from "./pages/Settings";
 import Notifications from "./pages/Notifications";
 import Clock from "./pages/Clock";
 import AdminUsers from "./pages/AdminUsers";
+import Notes from "./pages/Notes";
+import NoteDetail from "./pages/NoteDetail";
 import NotFound from "./pages/NotFound";
 import Contact from "./pages/Contact";
 
@@ -76,6 +78,12 @@ const App = () => {
                 } />
                 <Route path="/admin" element={
                   <ProtectedRoute><AdminUsers /></ProtectedRoute>
+                } />
+                <Route path="/notes" element={
+                  <ProtectedRoute><Notes /></ProtectedRoute>
+                } />
+                <Route path="/notes/:noteId" element={
+                  <ProtectedRoute><NoteDetail /></ProtectedRoute>
                 } />
                 <Route path="*" element={<NotFound />} />
               </Routes>

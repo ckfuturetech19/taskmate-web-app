@@ -30,7 +30,7 @@ import {
 } from '@/components/ui/select';
 import { Calendar } from '@/components/ui/calendar';
 import { format } from 'date-fns';
-import { CalendarIcon, Users, X, Bell } from 'lucide-react';
+import { CalendarIcon, Users, X, Bell, Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { safeParseDate } from '@/lib/dateUtils';
@@ -46,7 +46,7 @@ interface TaskDialogProps {
   onOpenChange: (open: boolean) => void;
   task?: Task | null;
   groupId?: string;
-  onSave: (data: Partial<Task>) => void;
+  onSave: (data: Partial<Task>) => Promise<void>;
 }
 
 const TaskDialog = ({ open, onOpenChange, task, groupId, onSave }: TaskDialogProps) => {
@@ -89,9 +89,10 @@ const TaskDialog = ({ open, onOpenChange, task, groupId, onSave }: TaskDialogPro
   const [tempTime, setTempTime] = useState<Date | null>(null);
   const [showDueDatePicker, setShowDueDatePicker] = useState(false);
   const [showRecurrenceEndDatePicker, setShowRecurrenceEndDatePicker] = useState(false);
-  
+
   // ✅ Auto-calculated colorIndex (matching Flutter - no manual picker)
   const [colorIndex, setColorIndex] = useState<number>(0);
+  const [isSaving, setIsSaving] = useState(false);
 
   // Check notification permission on mount
   useEffect(() => {
@@ -117,7 +118,7 @@ const TaskDialog = ({ open, onOpenChange, task, groupId, onSave }: TaskDialogPro
         setFocusDurationMinutes(task.focusDurationMinutes || 25);
         setColorIndex(task.colorIndex || 0);
         setAssignedTo(task.groupMembers || []);
-        
+
         // Handle recurrence sub-features
         if (task.recurrence) {
           setSelectedWeekdays(task.recurrence.daysOfWeek || []);
@@ -174,11 +175,13 @@ const TaskDialog = ({ open, onOpenChange, task, groupId, onSave }: TaskDialogPro
         setSelectedWeekdays([]);
         setRecurrenceEndType('never');
         setSkipCustomDays([]);
-        
-        // Auto-calculate next colorIndex
-        const paletteIndices = getPaletteIndices(getPaletteIndex());
+
+        // Auto-calculate next colorIndex (0-11) within current palette
+        const currentPalette = getPaletteIndex();
         const taskCount = tasks.length;
-        setColorIndex(taskCount % paletteIndices.length);
+        const localColorIndex = taskCount % 12;
+        const globalColorIndex = calculateGlobalColorIndex(currentPalette, localColorIndex);
+        setColorIndex(globalColorIndex);
       }
     }
   }, [open, task, tasks.length]);
@@ -298,77 +301,69 @@ const TaskDialog = ({ open, onOpenChange, task, groupId, onSave }: TaskDialogPro
     setSubtasks(subtasks.filter(st => st.id !== id));
   };
 
-  const handleSave = () => {
-    if (!title.trim()) return;
-    // ✅ Use auto-calculated colorIndex (matching Flutter sync)
-    // ColorIndex is already calculated automatically based on task count
-    const currentPaletteIndex = getPaletteIndex();
-    const selectedColor = getTaskColor(colorIndex, currentPaletteIndex, theme);
-    const tagsArray = tags.trim() ? tags.split(',').map(t => t.trim()).filter(t => t) : undefined;
-    const browserTimezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
-    let reminderString: string | undefined = undefined;
-    let reminderUtc: string | undefined = undefined;
-    if (reminder instanceof Date && !isNaN(reminder.getTime())) {
-      const local = new Date(reminder.getTime() - reminder.getTimezoneOffset() * 60000);
-      reminderString = local.toISOString().replace(/Z$/, '');
-      reminderUtc = reminder.toISOString();
-    }
+  const handleSave = async () => {
+    if (!title.trim() || isSaving) return;
 
-    // Build recurrence object with all sub-features
-    let finalRecurrence: Recurrence | undefined = undefined;
-    if (recurrenceType !== 'none') {
-      finalRecurrence = {
-        type: recurrenceType,
-        interval: recurrenceFrequency || 1,
-        daysOfWeek: recurrenceType === 'weekly' && selectedWeekdays.length > 0 ? selectedWeekdays : undefined,
-        repeatCount: recurrenceEndType === 'count' ? recurrenceEndCount : undefined,
-        endDate: recurrenceEndType === 'date' && recurrenceEndDate ? recurrenceEndDate.toISOString() : undefined,
-        skipDays: skipCustomDays.length > 0 ? skipCustomDays : undefined,
-        isPaused: false,
+    setIsSaving(true);
+    try {
+      const currentPaletteIndex = getPaletteIndex();
+      const selectedColor = getTaskColor(colorIndex, currentPaletteIndex, theme);
+      const tagsArray = tags.trim() ? tags.split(',').map(t => t.trim()).filter(t => t) : undefined;
+      let reminderUtc: string | undefined = undefined;
+      if (reminder instanceof Date && !isNaN(reminder.getTime())) {
+        reminderUtc = reminder.toISOString();
+      }
+
+      let finalRecurrence: Recurrence | undefined = undefined;
+      if (recurrenceType !== 'none') {
+        finalRecurrence = {
+          type: recurrenceType,
+          interval: recurrenceFrequency || 1,
+          daysOfWeek: recurrenceType === 'weekly' && selectedWeekdays.length > 0 ? selectedWeekdays : undefined,
+          repeatCount: recurrenceEndType === 'count' ? recurrenceEndCount : undefined,
+          endDate: recurrenceEndType === 'date' && recurrenceEndDate ? recurrenceEndDate.toISOString() : undefined,
+          skipDays: skipCustomDays.length > 0 ? skipCustomDays : undefined,
+          isPaused: false,
+        };
+      }
+
+      const taskObj: Partial<Task> = {
+        title: title.trim(),
+        description: description.trim() || undefined,
+        dueDate: dueDate ? dueDate.toISOString() : undefined,
+        recurrenceType,
+        recurrenceFrequency,
+        recurrence: finalRecurrence,
+        timeWindowStart: useTimeWindow ? timeWindowStart : undefined,
+        timeWindowEnd: useTimeWindow ? timeWindowEnd : undefined,
+        priorityLevel,
+        groupId,
+        groupMembers: groupId && assignedTo.length > 0 ? assignedTo : undefined,
+        color: selectedColor,
+        colorIndex: colorIndex,
+        categoryId: categoryId.trim() || undefined,
+        tags: tagsArray,
+        subtasks: subtasks.length > 0 ? subtasks : undefined,
+        reminder: reminderUtc,
+        reminderUtc: reminderUtc,
+        focusTimerEnabled: focusTimerEnabled,
+        focusDurationMinutes: focusTimerEnabled ? focusDurationMinutes : 25,
       };
-    }
 
-    // Build the Task object (excluding id, createdAt, userId, completed)
-    const taskObj: Partial<Task> = {
-      title: title.trim(),
-      description: description.trim() || undefined,
-      dueDate: dueDate ? dueDate.toISOString() : undefined,
-      recurrenceType,
-      recurrenceFrequency,
-      recurrence: finalRecurrence,
-      timeWindowStart: useTimeWindow ? timeWindowStart : undefined,
-      timeWindowEnd: useTimeWindow ? timeWindowEnd : undefined,
-      priorityLevel,
-      groupId,
-      groupMembers: groupId && assignedTo.length > 0 ? assignedTo : undefined,
-      color: selectedColor,
-      colorIndex: colorIndex,
-      categoryId: categoryId.trim() || undefined,
-      tags: tagsArray,
-      subtasks: subtasks.length > 0 ? subtasks : undefined,
-      reminder: reminderUtc,
-      reminderUtc: reminderUtc,
-      focusTimerEnabled: focusTimerEnabled,
-      focusDurationMinutes: focusTimerEnabled ? focusDurationMinutes : null,
-      // Add more fields as needed for full compatibility
-    };
-    
-    // If disabling focus timer, clear timer state fields
-    if (!focusTimerEnabled && task) {
-      taskObj.focusTimerStartTime = null;
-      taskObj.focusTimerIsRunning = false;
-      taskObj.focusTimerRemainingSeconds = null;
+      if (!focusTimerEnabled && task) {
+        taskObj.focusTimerStartTime = null;
+        taskObj.focusTimerIsRunning = false;
+        taskObj.focusTimerRemainingSeconds = null;
+      }
+
+      await onSave(taskObj);
+      onOpenChange(false);
+    } catch (error) {
+      console.error('Error in TaskDialog save:', error);
+      // Parent handleSaveTask already shows toast
+    } finally {
+      setIsSaving(false);
     }
-    
-    // Debug logging
-    console.log('Saving task with focus timer:', {
-      focusTimerEnabled: taskObj.focusTimerEnabled,
-      focusDurationMinutes: taskObj.focusDurationMinutes,
-      isEdit: !!task,
-    });
-    
-    onSave(taskObj);
-    onOpenChange(false);
   };
 
   return (
@@ -380,7 +375,8 @@ const TaskDialog = ({ open, onOpenChange, task, groupId, onSave }: TaskDialogPro
 
         {/* Action Buttons at Top */}
         <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 py-3 sm:py-4 border-b">
-          <Button className="flex-1 w-full sm:w-auto text-sm sm:text-base" onClick={handleSave} disabled={!title.trim()}>
+          <Button className="flex-1 w-full sm:w-auto text-sm sm:text-base gap-2" onClick={handleSave} disabled={!title.trim() || isSaving}>
+            {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
             {task ? 'Save Changes' : 'Create Task'}
           </Button>
           <Button variant="outline" className="w-full sm:w-auto text-sm sm:text-base" onClick={() => onOpenChange(false)}>
@@ -412,7 +408,7 @@ const TaskDialog = ({ open, onOpenChange, task, groupId, onSave }: TaskDialogPro
               maxLength={60}
             />
           </div>
-          
+
           {/* Subtasks - Second field matching Flutter (after title) */}
           <div className="space-y-2 sm:space-y-3">
             <Label>Subtasks</Label>
@@ -685,8 +681,8 @@ const TaskDialog = ({ open, onOpenChange, task, groupId, onSave }: TaskDialogPro
               <div className="space-y-2">
                 <Label className="text-sm sm:text-base">Repeat Every</Label>
                 <div className="flex items-center gap-2 flex-wrap">
-                  <Select 
-                    value={recurrenceFrequency?.toString() || '1'} 
+                  <Select
+                    value={recurrenceFrequency?.toString() || '1'}
                     onValueChange={(v) => setRecurrenceFrequency(parseInt(v))}
                   >
                     <SelectTrigger className="w-16 sm:w-20">
@@ -700,10 +696,10 @@ const TaskDialog = ({ open, onOpenChange, task, groupId, onSave }: TaskDialogPro
                   </Select>
                   <span className="text-sm text-muted-foreground">
                     {recurrenceType === 'daily' ? (recurrenceFrequency === 1 ? 'day' : 'days') :
-                     recurrenceType === 'weekly' ? (recurrenceFrequency === 1 ? 'week' : 'weeks') :
-                     recurrenceType === 'monthly' ? (recurrenceFrequency === 1 ? 'month' : 'months') :
-                     recurrenceType === 'yearly' ? (recurrenceFrequency === 1 ? 'year' : 'years') :
-                     recurrenceType === 'custom' ? 'times' : ''}
+                      recurrenceType === 'weekly' ? (recurrenceFrequency === 1 ? 'week' : 'weeks') :
+                        recurrenceType === 'monthly' ? (recurrenceFrequency === 1 ? 'month' : 'months') :
+                          recurrenceType === 'yearly' ? (recurrenceFrequency === 1 ? 'year' : 'years') :
+                            recurrenceType === 'custom' ? 'times' : ''}
                   </span>
                 </div>
               </div>
@@ -728,8 +724,8 @@ const TaskDialog = ({ open, onOpenChange, task, groupId, onSave }: TaskDialogPro
                           }}
                           className={cn(
                             "w-8 h-8 sm:w-10 sm:h-10 rounded-full text-xs sm:text-sm font-medium transition-colors",
-                            isSelected 
-                              ? "bg-primary text-primary-foreground" 
+                            isSelected
+                              ? "bg-primary text-primary-foreground"
                               : "bg-muted text-muted-foreground hover:bg-muted/80"
                           )}
                         >
@@ -941,7 +937,7 @@ const TaskDialog = ({ open, onOpenChange, task, groupId, onSave }: TaskDialogPro
                 <Users className="h-4 w-4" />
                 Assign To ({assignedTo.length} selected)
               </Label>
-              
+
               {/* Selected members badges */}
               {assignedTo.length > 0 && (
                 <div className="flex flex-wrap gap-2 p-2 border rounded-md bg-muted/50">
@@ -1011,9 +1007,9 @@ const TaskDialog = ({ open, onOpenChange, task, groupId, onSave }: TaskDialogPro
             <div className="space-y-2">
               <Label>Task Color</Label>
               <div className="flex items-center gap-3 p-3 border rounded-md bg-muted/50">
-                <div 
+                <div
                   className="w-12 h-12 rounded-md border-2 border-foreground/20"
-                  style={{ 
+                  style={{
                     backgroundColor: getTaskColor(colorIndex, getPaletteIndex(), theme),
                   }}
                 />

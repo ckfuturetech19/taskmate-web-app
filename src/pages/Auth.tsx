@@ -8,13 +8,21 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
-import { Loader2, Sparkles, ShieldCheck, Zap, Globe } from 'lucide-react';
+import { Loader2, Sparkles, ShieldCheck, Zap, Globe, KeyRound } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 const Auth = () => {
-  const { user, signInWithGoogle, signInWithEmail, signUpWithEmail } = useAuth();
+  const { 
+    user, 
+    signInWithGoogle, 
+    signInWithEmail, 
+    signUpWithEmail, 
+    sendOTP, 
+    verifyOTP 
+  } = useAuth();
+  
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   
@@ -25,6 +33,12 @@ const Auth = () => {
   const [signUpPassword, setSignUpPassword] = useState('');
   const [signUpName, setSignUpName] = useState('');
   const [signUpConfirmPassword, setSignUpConfirmPassword] = useState('');
+  
+  const [otpEmail, setOtpEmail] = useState('');
+  const [otpName, setOtpName] = useState('');
+  const [otpCode, setOtpCode] = useState('');
+  const [otpSent, setOtpSent] = useState(false);
+  const [otpLoading, setOtpLoading] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -83,6 +97,42 @@ const Auth = () => {
       setLoading(false);
     }
   };
+
+  const handleRequestOTP = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!otpEmail) {
+      toast({ title: 'Missing email', description: 'Please enter your email', variant: 'destructive' });
+      return;
+    }
+    try {
+      setOtpLoading(true);
+      await sendOTP(otpEmail);
+      setOtpSent(true);
+      toast({ title: 'OTP Sent', description: 'Please check your email for the 6-digit code.' });
+    } catch (error: any) {
+      toast({ title: 'Error', description: error.message || 'Failed to send OTP', variant: 'destructive' });
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
+  const handleVerifyOTP = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!otpCode || otpCode.length !== 6) {
+      toast({ title: 'Invalid OTP', description: 'Please enter the 6-digit code', variant: 'destructive' });
+      return;
+    }
+    try {
+      setOtpLoading(true);
+      await verifyOTP(otpEmail, otpCode, otpName);
+      toast({ title: 'Success', description: 'Logged in successfully!' });
+    } catch (error: any) {
+      toast({ title: 'Verification failed', description: error.message || 'Invalid OTP', variant: 'destructive' });
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
 
   const GoogleIcon = () => (
     <svg className="h-5 w-5" viewBox="0 0 24 24">
@@ -178,8 +228,9 @@ const Auth = () => {
           <Card className="border border-border/50 shadow-[0_20px_50px_rgba(0,0,0,0.1)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.3)] bg-card/70 backdrop-blur-2xl rounded-[2rem] overflow-hidden">
             <CardContent className="p-8">
               <Tabs defaultValue="signin" className="w-full">
-                <TabsList className="grid w-full grid-cols-2 mb-10 p-1.5 bg-muted/50 rounded-2xl">
+                <TabsList className="grid w-full grid-cols-3 mb-10 p-1.5 bg-muted/50 rounded-2xl">
                   <TabsTrigger value="signin" className="rounded-xl py-3 text-sm font-bold data-[state=active]:bg-background data-[state=active]:shadow-lg transition-all">Sign In</TabsTrigger>
+                  <TabsTrigger value="otp" className="rounded-xl py-3 text-sm font-bold data-[state=active]:bg-background data-[state=active]:shadow-lg transition-all">OTP Login</TabsTrigger>
                   <TabsTrigger value="signup" className="rounded-xl py-3 text-sm font-bold data-[state=active]:bg-background data-[state=active]:shadow-lg transition-all">Sign Up</TabsTrigger>
                 </TabsList>
 
@@ -214,6 +265,63 @@ const Auth = () => {
                       </Button>
                     </form>
                   </TabsContent>
+
+                  <TabsContent value="otp" className="mt-0 focus-visible:outline-none">
+                     {!otpSent ? (
+                       <form onSubmit={handleRequestOTP} className="space-y-5">
+                         <div className="space-y-2">
+                           <Label className="text-xs uppercase tracking-widest font-black ml-1 text-muted-foreground">Email Address</Label>
+                           <Input 
+                             type="email" 
+                             placeholder="name@example.com"
+                             value={otpEmail}
+                             onChange={(e) => setOtpEmail(e.target.value)}
+                             className="h-14 rounded-2xl bg-muted/30 border-muted-foreground/10 focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all font-medium px-5"
+                           />
+                         </div>
+                         <div className="space-y-2">
+                            <Label className="text-xs uppercase tracking-widest font-black ml-1 text-muted-foreground">Full Name (Optional)</Label>
+                            <Input 
+                              type="text" 
+                              placeholder="John Doe"
+                              value={otpName}
+                              onChange={(e) => setOtpName(e.target.value)}
+                              className="h-14 rounded-2xl bg-muted/30 border-muted-foreground/10 focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all font-medium px-5"
+                            />
+                          </div>
+                         <Button className="w-full h-14 rounded-2xl text-lg font-black bg-primary hover:bg-primary/90 shadow-lg shadow-primary/25 transition-all active:scale-[0.98] mt-4" disabled={otpLoading}>
+                           {otpLoading ? <Loader2 className="animate-spin h-6 w-6" /> : 'Send OTP'}
+                         </Button>
+                       </form>
+                     ) : (
+                       <form onSubmit={handleVerifyOTP} className="space-y-5">
+                         <div className="space-y-2 text-center">
+                           <p className="text-sm font-medium text-muted-foreground">OTP sent to <span className="text-primary font-bold">{otpEmail}</span></p>
+                         </div>
+                         <div className="space-y-2">
+                           <Label className="text-xs uppercase tracking-widest font-black ml-1 text-muted-foreground">Verification Code</Label>
+                           <Input 
+                             type="text" 
+                             maxLength={6}
+                             placeholder="123456"
+                             value={otpCode}
+                             onChange={(e) => setOtpCode(e.target.value)}
+                             className="h-16 text-center text-2xl tracking-[0.5em] font-black rounded-2xl bg-muted/30 border-muted-foreground/10 focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all px-5"
+                           />
+                         </div>
+                         <Button className="w-full h-14 rounded-2xl text-lg font-black bg-primary hover:bg-primary/90 shadow-lg shadow-primary/25 transition-all active:scale-[0.98] mt-4" disabled={otpLoading}>
+                           {otpLoading ? <Loader2 className="animate-spin h-6 w-6" /> : 'Verify & Login'}
+                         </Button>
+                         <button 
+                           type="button" 
+                           onClick={() => setOtpSent(false)} 
+                           className="w-full text-xs font-bold text-muted-foreground hover:text-primary transition-colors mt-2"
+                         >
+                           Change Email
+                         </button>
+                       </form>
+                     )}
+                   </TabsContent>
 
                   <TabsContent value="signup" className="mt-0 focus-visible:outline-none">
                     <form onSubmit={handleEmailSignUp} className="space-y-4">

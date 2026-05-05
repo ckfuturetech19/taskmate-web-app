@@ -113,16 +113,16 @@ const AppHeader = ({ title, collapsed = false, onMenuClick }: AppHeaderProps) =>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="h-9 w-9 rounded-full p-0">
                   <Avatar className="h-9 w-9">
-                    <AvatarImage src={user?.photoURL || undefined} alt={user?.displayName || 'User'} />
+                    <AvatarImage src={undefined} alt={user?.name || 'User'} />
                     <AvatarFallback className="bg-primary text-primary-foreground text-sm">
-                      {getInitials(user?.displayName)}
+                      {getInitials(user?.name)}
                     </AvatarFallback>
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <div className="px-2 py-1.5">
-                  <p className="text-sm font-medium text-foreground">{user?.displayName || 'User'}</p>
+                  <p className="text-sm font-medium text-foreground">{user?.name || 'User'}</p>
                   <p className="text-xs text-muted-foreground">{user?.email || ''}</p>
                 </div>
                 <DropdownMenuSeparator />
@@ -138,7 +138,7 @@ const AppHeader = ({ title, collapsed = false, onMenuClick }: AppHeaderProps) =>
               </DropdownMenuContent>
             </DropdownMenu>
             <div className="hidden sm:block">
-              <p className="text-sm font-medium text-foreground">{user?.displayName || 'User'}</p>
+              <p className="text-sm font-medium text-foreground">{user?.name || 'User'}</p>
               <p className="text-xs text-muted-foreground">{user?.email || ''}</p>
             </div>
           </div>

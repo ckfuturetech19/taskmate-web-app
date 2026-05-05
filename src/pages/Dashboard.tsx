@@ -68,13 +68,26 @@ const Dashboard = () => {
   const totalCreated = Math.max(tasksCreated, personalTasks.length);
   const displayCompletionRate = Math.max(analyticsCompletionRate, totalCreated > 0 ? (totalCompleted / totalCreated) * 100 : 0);
 
-  const handleSaveTask = (data: Omit<Task, 'id' | 'createdAt' | 'userId' | 'completed'>) => {
-    if (editingTask) {
-      updateTask(editingTask.id, data);
-    } else {
-      addTask(data);
+  const handleSaveTask = async (data: Omit<Task, 'id' | 'createdAt' | 'userId' | 'completed'>) => {
+    try {
+      if (editingTask) {
+        if (!editingTask.id) return;
+        await updateTask(editingTask.id, data);
+        toast({ title: 'Task updated successfully' });
+      } else {
+        await addTask(data);
+        toast({ title: 'Task added successfully' });
+      }
+    } catch (error: any) {
+      console.error('Error saving task:', error);
+      toast({ 
+        title: 'Failed to save task', 
+        description: error.message || 'An unexpected error occurred', 
+        variant: 'destructive' 
+      });
+    } finally {
+      setEditingTask(null);
     }
-    setEditingTask(null);
   };
 
   const handleEdit = (task: Task) => {

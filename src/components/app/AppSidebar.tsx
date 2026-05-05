@@ -1,6 +1,6 @@
 import logoImg from '../../assets/logo.png';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, CheckSquare, BarChart3, Settings, ChevronLeft, ChevronRight, X, Shield, LogOut, Smartphone, Timer, Users, ExternalLink, Share2, Copy, Check } from 'lucide-react';
+import { LayoutDashboard, CheckSquare, BarChart3, Settings, ChevronLeft, ChevronRight, X, Shield, LogOut, Smartphone, Timer, Users, ExternalLink, Share2, Copy, Check, FileText } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -19,6 +19,7 @@ const PRIVACY_POLICY_URL = 'https://chiragmali19.github.io/privacy-policy/';
 const menuItems = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
   { icon: CheckSquare, label: 'Tasks', path: '/tasks', showBadge: true },
+  { icon: FileText, label: 'Notes', path: '/notes' },
   { icon: Users, label: 'Team', path: '/groups' },
   { icon: BarChart3, label: 'Analytics', path: '/analytics' },
   { icon: Timer, label: 'Focus Timer', path: '/clock' },

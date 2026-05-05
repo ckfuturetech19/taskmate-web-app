@@ -18,6 +18,8 @@ interface AuthContextType {
   signInWithGoogle: () => Promise<void>;
   signInWithEmail: (email: string, password: string) => Promise<void>;
   signUpWithEmail: (email: string, password: string, name: string) => Promise<void>;
+  sendOTP: (email: string) => Promise<void>;
+  verifyOTP: (email: string, otp: string, name?: string) => Promise<void>;
   signOut: () => Promise<void>;
 }
 
@@ -87,9 +89,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signInWithGoogle = async () => {
-    // Note: Google Sign-in on Web usually needs a redirect or popup that returns a credential
-    // which is then sent to our backend. For now, we'll throw an error if not implemented on backend.
-    throw new Error('Google Sign-in not yet implemented on backend. Please use Email/Password.');
+    // Google Sign-in requires backend support at /auth/google-signin endpoint
+    // Backend should implement:
+    // POST /auth/google-signin with { email, name, photoURL } 
+    // and return { token, user }
+    
+    throw new Error(
+      'Google Sign-in backend endpoint not yet configured. ' +
+      'Please contact support or use Email/OTP sign-in.'
+    );
   };
 
   const signInWithEmail = async (email: string, password: string) => {
@@ -130,6 +138,34 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const sendOTP = async (email: string) => {
+    try {
+      await api.post('/auth/send-otp', { email });
+    } catch (error: any) {
+      console.error('Error sending OTP:', error);
+      throw new Error(error.response?.data?.error || 'Failed to send OTP');
+    }
+  };
+
+  const verifyOTP = async (email: string, otp: string, name?: string) => {
+    try {
+      const response = await api.post('/auth/verify-otp', { email, otp, name });
+      const { token, user } = response.data;
+      
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(user));
+      setUser(user);
+
+      // Initialize FCM
+      fcmService.initialize().then(() => {
+        fcmService.requestPermissionAndSaveToken(user.id);
+      });
+    } catch (error: any) {
+      console.error('Error verifying OTP:', error);
+      throw new Error(error.response?.data?.error || 'Failed to verify OTP');
+    }
+  };
+
   const signOut = async () => {
     try {
       // Delete FCM token from backend if possible
@@ -146,7 +182,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, signInWithGoogle, signInWithEmail, signUpWithEmail, signOut }}>
+    <AuthContext.Provider value={{ user, loading, signInWithGoogle, signInWithEmail, signUpWithEmail, sendOTP, verifyOTP, signOut }}>
       {children}
     </AuthContext.Provider>
   );
