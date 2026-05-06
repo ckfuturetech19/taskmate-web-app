@@ -1,8 +1,8 @@
 import { io, Socket } from 'socket.io-client';
 
-const SOCKET_URL = import.meta.env.VITE_API_URL ? 
-  import.meta.env.VITE_API_URL.replace('/api', '') : 
-  'http://localhost:5000';
+const baseApiUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000';
+// Use string replacement instead of URL object to avoid 'ws://https/' malformed URLs
+const SOCKET_URL = baseApiUrl.replace(/\/api$/, '').replace(/\/api\/$/, '');
 
 class SocketService {
   private socket: Socket | null = null;
@@ -12,8 +12,9 @@ class SocketService {
 
     console.log('📡 Socket.io: Connecting to', SOCKET_URL);
     this.socket = io(SOCKET_URL, {
-      transports: ['websocket'],
       autoConnect: true,
+      reconnectionAttempts: 5,
+      reconnectionDelay: 1000,
     });
 
     this.socket.on('connect', () => {
@@ -52,6 +53,11 @@ class SocketService {
   joinGroupRoom(groupId: string) {
     if (!this.socket) this.initialize();
     this.socket?.emit('join_group_room', groupId);
+  }
+
+  joinNoteRoom(noteId: string) {
+    if (!this.socket) this.initialize();
+    this.socket?.emit('join_note_room', noteId);
   }
 
   on(event: string, callback: (data: any) => void) {

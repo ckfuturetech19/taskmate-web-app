@@ -2,13 +2,14 @@ import logoImg from '../assets/logo.png';
 import { useEffect, useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
+import { useTheme } from '@/contexts/ThemeContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
-import { Loader2, Sparkles, ShieldCheck, Zap, Globe, KeyRound } from 'lucide-react';
+import { Loader2, Sparkles, ShieldCheck, Zap, Globe, KeyRound, ArrowRight, Mail, User, Lock } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
@@ -19,9 +20,8 @@ const Auth = () => {
     signInWithGoogle, 
     signInWithEmail, 
     signUpWithEmail, 
-    sendOTP, 
-    verifyOTP 
   } = useAuth();
+  const { theme } = useTheme();
   
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -32,14 +32,7 @@ const Auth = () => {
   const [signUpEmail, setSignUpEmail] = useState('');
   const [signUpPassword, setSignUpPassword] = useState('');
   const [signUpName, setSignUpName] = useState('');
-  const [signUpConfirmPassword, setSignUpConfirmPassword] = useState('');
   
-  const [otpEmail, setOtpEmail] = useState('');
-  const [otpName, setOtpName] = useState('');
-  const [otpCode, setOtpCode] = useState('');
-  const [otpSent, setOtpSent] = useState(false);
-  const [otpLoading, setOtpLoading] = useState(false);
-
   useEffect(() => {
     if (user) {
       navigate('/dashboard');
@@ -51,11 +44,7 @@ const Auth = () => {
       setLoading(true);
       await signInWithGoogle();
     } catch (error: any) {
-      toast({
-        title: 'Sign in failed',
-        description: error.message || 'Failed to sign in with Google',
-        variant: 'destructive',
-      });
+      toast({ title: 'Sign in failed', description: error.message, variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -64,14 +53,14 @@ const Auth = () => {
   const handleEmailSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!signInEmail || !signInPassword) {
-      toast({ title: 'Missing fields', description: 'Please enter email and password', variant: 'destructive' });
+      toast({ title: 'Missing fields', description: 'Please enter both email and password.', variant: 'destructive' });
       return;
     }
     try {
       setLoading(true);
       await signInWithEmail(signInEmail, signInPassword);
     } catch (error: any) {
-      toast({ title: 'Sign in failed', description: error.message || 'Failed to sign in', variant: 'destructive' });
+      toast({ title: 'Sign in failed', description: error.message, variant: 'destructive' });
     } finally {
       setLoading(false);
     }
@@ -80,11 +69,7 @@ const Auth = () => {
   const handleEmailSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!signUpEmail || !signUpPassword || !signUpName) {
-      toast({ title: 'Missing fields', description: 'Please fill in all required fields', variant: 'destructive' });
-      return;
-    }
-    if (signUpPassword !== signUpConfirmPassword) {
-      toast({ title: 'Passwords do not match', variant: 'destructive' });
+      toast({ title: 'Missing fields', description: 'Please fill in all fields.', variant: 'destructive' });
       return;
     }
     try {
@@ -92,47 +77,11 @@ const Auth = () => {
       await signUpWithEmail(signUpEmail, signUpPassword, signUpName);
       toast({ title: 'Account created', description: 'Welcome to TaskMate!' });
     } catch (error: any) {
-      toast({ title: 'Sign up failed', description: error.message || 'Failed to create account', variant: 'destructive' });
+      toast({ title: 'Signup failed', description: error.message, variant: 'destructive' });
     } finally {
       setLoading(false);
     }
   };
-
-  const handleRequestOTP = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!otpEmail) {
-      toast({ title: 'Missing email', description: 'Please enter your email', variant: 'destructive' });
-      return;
-    }
-    try {
-      setOtpLoading(true);
-      await sendOTP(otpEmail);
-      setOtpSent(true);
-      toast({ title: 'OTP Sent', description: 'Please check your email for the 6-digit code.' });
-    } catch (error: any) {
-      toast({ title: 'Error', description: error.message || 'Failed to send OTP', variant: 'destructive' });
-    } finally {
-      setOtpLoading(false);
-    }
-  };
-
-  const handleVerifyOTP = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!otpCode || otpCode.length !== 6) {
-      toast({ title: 'Invalid OTP', description: 'Please enter the 6-digit code', variant: 'destructive' });
-      return;
-    }
-    try {
-      setOtpLoading(true);
-      await verifyOTP(otpEmail, otpCode, otpName);
-      toast({ title: 'Success', description: 'Logged in successfully!' });
-    } catch (error: any) {
-      toast({ title: 'Verification failed', description: error.message || 'Invalid OTP', variant: 'destructive' });
-    } finally {
-      setOtpLoading(false);
-    }
-  };
-
 
   const GoogleIcon = () => (
     <svg className="h-5 w-5" viewBox="0 0 24 24">
@@ -144,264 +93,227 @@ const Auth = () => {
   );
 
   return (
-    <div className="min-h-screen w-full flex bg-background relative overflow-hidden font-outfit transition-colors duration-500">
-      {/* Dynamic Background Elements */}
-      <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-primary/10 dark:bg-primary/5 blur-[120px] rounded-full animate-pulse" />
-      <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-accent/10 dark:bg-accent/5 blur-[120px] rounded-full animate-pulse" style={{ animationDelay: '2s' }} />
-      <div className="absolute top-[30%] right-[10%] w-[30%] h-[30%] bg-blue-500/5 blur-[100px] rounded-full" />
-
-      {/* Left Panel: Brand & Features (Desktop) */}
-      <div className="flex-1 hidden lg:flex flex-col justify-center px-16 xl:px-32 bg-muted/20 dark:bg-muted/5 border-r border-border/50 relative overflow-hidden">
+    <motion.div 
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="min-h-screen w-full flex bg-transparent relative overflow-hidden font-jakarta"
+    >
+      {/* Left Panel: Purposeful Content */}
+      <div className="flex-1 hidden lg:flex flex-col justify-center px-16 xl:px-24 relative z-10">
         <motion.div 
-          initial={{ opacity: 0, x: -30 }}
+          initial={{ opacity: 0, x: -50 }}
           animate={{ opacity: 1, x: 0 }}
-          transition={{ duration: 0.8, ease: "easeOut" }}
-          className="relative z-10"
+          transition={{ duration: 1 }}
+          className="space-y-12"
         >
-          <div className="flex items-center gap-4 mb-12">
-            <div className="p-2.5 bg-primary rounded-2xl shadow-xl shadow-primary/20 rotate-3">
-              <img src={logoImg} alt="TaskMate" className="h-9 w-9 invert dark:invert-0" />
+          <div className="flex items-center gap-4">
+            <div className={cn(
+              "p-3 rounded-[1.2rem] shadow-2xl shadow-primary/30",
+              theme === 'dark' ? "bg-primary" : "bg-primary/10"
+            )}>
+              <img src={logoImg} alt="Logo" className="h-8 w-8" />
             </div>
-            <span className="text-4xl font-black tracking-tight bg-clip-text text-transparent bg-gradient-to-r from-primary via-primary to-accent">
-              TaskMate
-            </span>
+            <span className={cn(
+              "text-3xl font-black tracking-tighter",
+              theme === 'dark' ? "text-white" : "text-black"
+            )}>TASK<span className="text-primary">MATE</span></span>
           </div>
-          
-          <h1 className="text-6xl xl:text-7xl font-black mb-8 leading-[1.1] tracking-tight">
-            Work smart. <br />
-            <span className="bg-clip-text text-transparent bg-gradient-to-r from-primary to-accent">Live better.</span>
-          </h1>
-          
-          <p className="text-xl text-muted-foreground mb-12 max-w-lg leading-relaxed font-medium">
-            The ultimate productivity hub. Synchronize your tasks, collaborate with groups, and track your progress with beautiful analytics.
-          </p>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="space-y-6">
+            <h1 className={cn(
+              "text-7xl xl:text-8xl font-black tracking-tighter leading-[0.9]",
+              theme === 'dark' ? "text-white" : "text-black"
+            )}>
+              UNIFIED <br />
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">ECOSYSTEM</span>
+            </h1>
+            <p className="text-xl text-muted-foreground font-bold max-w-lg leading-relaxed uppercase tracking-widest">
+              Manage personal tasks, collaborative notes, and shared circles in one high-performance terminal.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4 max-w-2xl">
             {[
-              { icon: Zap, text: 'Real-time Engine', color: 'text-amber-500', bg: 'bg-amber-500/10' },
-              { icon: ShieldCheck, text: 'Secure & Private', color: 'text-emerald-500', bg: 'bg-emerald-500/10' },
-              { icon: Globe, text: 'Cross-platform', color: 'text-sky-500', bg: 'bg-sky-500/10' },
-              { icon: Sparkles, text: 'AI-Powered Insights', color: 'text-indigo-500', bg: 'bg-indigo-500/10' },
-            ].map((feature, i) => (
+              { icon: User, label: 'Personal Flow', desc: 'Private tasks' },
+              { icon: Globe, label: 'Shared Circles', desc: 'Group sync' },
+              { icon: Zap, label: 'Real-time', desc: 'Instant updates' },
+              { icon: Sparkles, label: 'Rich Notes', desc: 'Collaborative' },
+            ].map((f, i) => (
               <motion.div 
                 key={i}
-                initial={{ opacity: 0, y: 10 }}
+                initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4 + (0.1 * i) }}
-                className="flex items-center gap-4 p-4 rounded-2xl bg-card/40 border border-border/40 backdrop-blur-md hover:border-primary/30 transition-all group"
+                transition={{ delay: 0.5 + (i * 0.1) }}
+                className={cn(
+                  "p-6 rounded-[2rem] border transition-all group",
+                  theme === 'dark' ? "glass-dark border-white/5 hover:border-primary/20" : "bg-white/40 border-black/5 hover:border-primary/50 shadow-sm"
+                )}
               >
-                <div className={cn("p-2 rounded-lg transition-transform group-hover:scale-110", feature.bg)}>
-                  <feature.icon className={cn("h-6 w-6", feature.color)} />
-                </div>
-                <span className="font-bold text-sm xl:text-base">{feature.text}</span>
+                <f.icon className="h-8 w-8 text-primary mb-4" />
+                <h3 className="font-black text-sm uppercase tracking-widest mb-1">{f.label}</h3>
+                <p className="text-xs text-muted-foreground font-bold">{f.desc}</p>
               </motion.div>
             ))}
           </div>
         </motion.div>
-        
-        {/* Abstract decor */}
-        <div className="absolute bottom-10 left-10 opacity-20 dark:opacity-10 pointer-events-none">
-          <div className="grid grid-cols-4 gap-2">
-            {Array.from({ length: 16 }).map((_, i) => (
-              <div key={i} className="w-2 h-2 rounded-full bg-primary" />
-            ))}
-          </div>
-        </div>
       </div>
 
-      {/* Right Panel: Auth Forms */}
-      <div className="flex-1 flex flex-col justify-center items-center p-6 md:p-12 z-10">
+      {/* Right Panel: Auth Gate */}
+      <div className="flex-1 flex flex-col justify-center items-center p-6 relative z-10 perspective">
         <motion.div 
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, delay: 0.2 }}
-          className="w-full max-w-md"
+          initial={{ opacity: 0, scale: 0.9, rotateY: 20 }}
+          animate={{ opacity: 1, scale: 1, rotateY: 0 }}
+          transition={{ duration: 0.8, type: 'spring' }}
+          className="w-full max-w-[500px]"
         >
-          <div className="text-center mb-10 lg:hidden">
-             <div className="inline-block p-3 bg-primary rounded-2xl shadow-xl shadow-primary/20 mb-4">
-               <img src={logoImg} alt="TaskMate" className="h-10 w-10 invert dark:invert-0" />
-             </div>
-             <h2 className="text-4xl font-black tracking-tight">Welcome Back</h2>
-             <p className="text-muted-foreground mt-2 font-medium">Continue your journey with TaskMate</p>
+          <div className="mb-12 text-center lg:hidden">
+            <div className="inline-block p-4 bg-primary rounded-3xl mb-6 shadow-2xl shadow-primary/40">
+              <img src={logoImg} alt="Logo" className="h-10 w-10" />
+            </div>
+            <h2 className="text-5xl font-black tracking-tighter">TASKMATE</h2>
           </div>
 
-          <Card className="border border-border/50 shadow-[0_20px_50px_rgba(0,0,0,0.1)] dark:shadow-[0_20px_50px_rgba(0,0,0,0.3)] bg-card/70 backdrop-blur-2xl rounded-[2rem] overflow-hidden">
-            <CardContent className="p-8">
+          <Card className="glass rounded-[3rem] border-white/10 overflow-hidden shadow-2xl">
+            <CardContent className="p-8 sm:p-12">
               <Tabs defaultValue="signin" className="w-full">
-                <TabsList className="grid w-full grid-cols-3 mb-10 p-1.5 bg-muted/50 rounded-2xl">
-                  <TabsTrigger value="signin" className="rounded-xl py-3 text-sm font-bold data-[state=active]:bg-background data-[state=active]:shadow-lg transition-all">Sign In</TabsTrigger>
-                  <TabsTrigger value="otp" className="rounded-xl py-3 text-sm font-bold data-[state=active]:bg-background data-[state=active]:shadow-lg transition-all">OTP Login</TabsTrigger>
-                  <TabsTrigger value="signup" className="rounded-xl py-3 text-sm font-bold data-[state=active]:bg-background data-[state=active]:shadow-lg transition-all">Sign Up</TabsTrigger>
+                <TabsList className={cn(
+                  "grid w-full grid-cols-2 h-14 p-1.5 rounded-2xl mb-12",
+                  theme === 'dark' ? "glass-dark" : "bg-black/5 border border-black/5"
+                )}>
+                  <TabsTrigger value="signin" className="rounded-xl font-black text-xs uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">ACCESS</TabsTrigger>
+                  <TabsTrigger value="signup" className="rounded-xl font-black text-xs uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">CREATE</TabsTrigger>
                 </TabsList>
 
-                <AnimatePresence mode="wait">
-                  <TabsContent value="signin" className="mt-0 focus-visible:outline-none">
-                    <form onSubmit={handleEmailSignIn} className="space-y-5">
-                      <div className="space-y-2">
-                        <Label className="text-xs uppercase tracking-widest font-black ml-1 text-muted-foreground">Email Address</Label>
+                {/* Sign In Tab */}
+                <TabsContent value="signin" className="mt-0 space-y-8">
+                  <div className="space-y-6">
+                    <div className="space-y-3">
+                      <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground ml-1">Terminal Identity</Label>
+                      <div className="relative">
+                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                         <Input 
                           type="email" 
-                          placeholder="name@example.com"
+                          placeholder="ENTER_EMAIL"
                           value={signInEmail}
                           onChange={(e) => setSignInEmail(e.target.value)}
-                          className="h-14 rounded-2xl bg-muted/30 border-muted-foreground/10 focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all font-medium px-5"
+                          className={cn(
+                            "h-14 rounded-2xl border pl-12 font-bold tracking-wider transition-all",
+                            theme === 'dark' ? "glass-dark border-white/5" : "bg-black/5 border-black/5 focus:bg-white"
+                          )}
+                          autoComplete="off"
                         />
                       </div>
-                      <div className="space-y-2">
-                        <div className="flex justify-between items-center px-1">
-                          <Label className="text-xs uppercase tracking-widest font-black text-muted-foreground">Password</Label>
-                          <Link to="/forgot" className="text-xs text-primary font-bold hover:underline transition-colors">Forgot Password?</Link>
-                        </div>
+                    </div>
+                    <div className="space-y-3">
+                      <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground ml-1">Access Key</Label>
+                      <div className="relative">
+                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                         <Input 
                           type="password" 
                           placeholder="••••••••"
                           value={signInPassword}
                           onChange={(e) => setSignInPassword(e.target.value)}
-                          className="h-14 rounded-2xl bg-muted/30 border-muted-foreground/10 focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all font-medium px-5"
+                          className={cn(
+                            "h-14 rounded-2xl border pl-12 font-bold tracking-wider transition-all",
+                            theme === 'dark' ? "glass-dark border-white/5" : "bg-black/5 border-black/5 focus:bg-white"
+                          )}
+                          autoComplete="off"
                         />
                       </div>
-                      <Button className="w-full h-14 rounded-2xl text-lg font-black bg-primary hover:bg-primary/90 shadow-lg shadow-primary/25 transition-all active:scale-[0.98] mt-4" disabled={loading}>
-                        {loading ? <Loader2 className="animate-spin h-6 w-6" /> : 'Log In'}
-                      </Button>
-                    </form>
-                  </TabsContent>
+                    </div>
+                  </div>
 
-                  <TabsContent value="otp" className="mt-0 focus-visible:outline-none">
-                     {!otpSent ? (
-                       <form onSubmit={handleRequestOTP} className="space-y-5">
-                         <div className="space-y-2">
-                           <Label className="text-xs uppercase tracking-widest font-black ml-1 text-muted-foreground">Email Address</Label>
-                           <Input 
-                             type="email" 
-                             placeholder="name@example.com"
-                             value={otpEmail}
-                             onChange={(e) => setOtpEmail(e.target.value)}
-                             className="h-14 rounded-2xl bg-muted/30 border-muted-foreground/10 focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all font-medium px-5"
-                           />
-                         </div>
-                         <div className="space-y-2">
-                            <Label className="text-xs uppercase tracking-widest font-black ml-1 text-muted-foreground">Full Name (Optional)</Label>
-                            <Input 
-                              type="text" 
-                              placeholder="John Doe"
-                              value={otpName}
-                              onChange={(e) => setOtpName(e.target.value)}
-                              className="h-14 rounded-2xl bg-muted/30 border-muted-foreground/10 focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all font-medium px-5"
-                            />
-                          </div>
-                         <Button className="w-full h-14 rounded-2xl text-lg font-black bg-primary hover:bg-primary/90 shadow-lg shadow-primary/25 transition-all active:scale-[0.98] mt-4" disabled={otpLoading}>
-                           {otpLoading ? <Loader2 className="animate-spin h-6 w-6" /> : 'Send OTP'}
-                         </Button>
-                       </form>
-                     ) : (
-                       <form onSubmit={handleVerifyOTP} className="space-y-5">
-                         <div className="space-y-2 text-center">
-                           <p className="text-sm font-medium text-muted-foreground">OTP sent to <span className="text-primary font-bold">{otpEmail}</span></p>
-                         </div>
-                         <div className="space-y-2">
-                           <Label className="text-xs uppercase tracking-widest font-black ml-1 text-muted-foreground">Verification Code</Label>
-                           <Input 
-                             type="text" 
-                             maxLength={6}
-                             placeholder="123456"
-                             value={otpCode}
-                             onChange={(e) => setOtpCode(e.target.value)}
-                             className="h-16 text-center text-2xl tracking-[0.5em] font-black rounded-2xl bg-muted/30 border-muted-foreground/10 focus:border-primary/50 focus:ring-4 focus:ring-primary/10 transition-all px-5"
-                           />
-                         </div>
-                         <Button className="w-full h-14 rounded-2xl text-lg font-black bg-primary hover:bg-primary/90 shadow-lg shadow-primary/25 transition-all active:scale-[0.98] mt-4" disabled={otpLoading}>
-                           {otpLoading ? <Loader2 className="animate-spin h-6 w-6" /> : 'Verify & Login'}
-                         </Button>
-                         <button 
-                           type="button" 
-                           onClick={() => setOtpSent(false)} 
-                           className="w-full text-xs font-bold text-muted-foreground hover:text-primary transition-colors mt-2"
-                         >
-                           Change Email
-                         </button>
-                       </form>
-                     )}
-                   </TabsContent>
+                  <Button 
+                    onClick={handleEmailSignIn}
+                    className="w-full h-16 rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-black text-sm tracking-[0.2em] shadow-2xl shadow-primary/20 group"
+                    disabled={loading}
+                  >
+                    {loading ? <Loader2 className="animate-spin h-5 w-5" /> : (
+                      <>
+                        INITIALIZE SESSION
+                        <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+                      </>
+                    )}
+                  </Button>
+                </TabsContent>
 
-                  <TabsContent value="signup" className="mt-0 focus-visible:outline-none">
-                    <form onSubmit={handleEmailSignUp} className="space-y-4">
-                      <div className="space-y-2">
-                        <Label className="text-xs uppercase tracking-widest font-black ml-1 text-muted-foreground">Full Name</Label>
+                {/* Create Account Tab */}
+                <TabsContent value="signup" className="mt-0 space-y-8">
+                  <div className="space-y-6">
+                    <div className="space-y-3">
+                      <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground ml-1">Display Name</Label>
+                      <div className="relative">
+                        <User className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                         <Input 
-                          placeholder="John Doe"
+                          type="text" 
+                          placeholder="YOUR_NAME"
                           value={signUpName}
                           onChange={(e) => setSignUpName(e.target.value)}
-                          className="h-13 rounded-2xl bg-muted/30 border-muted-foreground/10 focus:border-primary/50 focus:ring-4 focus:ring-primary/10 px-5"
+                          className={cn(
+                            "h-14 rounded-2xl border pl-12 font-bold tracking-wider transition-all",
+                            theme === 'dark' ? "glass-dark border-white/5" : "bg-black/5 border-black/5 focus:bg-white"
+                          )}
+                          autoComplete="off"
                         />
                       </div>
-                      <div className="space-y-2">
-                        <Label className="text-xs uppercase tracking-widest font-black ml-1 text-muted-foreground">Email</Label>
+                    </div>
+                    <div className="space-y-3">
+                      <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground ml-1">New Identity</Label>
+                      <div className="relative">
+                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                         <Input 
                           type="email" 
-                          placeholder="name@example.com"
+                          placeholder="EMAIL_ADDRESS"
                           value={signUpEmail}
                           onChange={(e) => setSignUpEmail(e.target.value)}
-                          className="h-13 rounded-2xl bg-muted/30 border-muted-foreground/10 focus:border-primary/50 focus:ring-4 focus:ring-primary/10 px-5"
+                          className={cn(
+                            "h-14 rounded-2xl border pl-12 font-bold tracking-wider transition-all",
+                            theme === 'dark' ? "glass-dark border-white/5" : "bg-black/5 border-black/5 focus:bg-white"
+                          )}
+                          autoComplete="off"
                         />
                       </div>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div className="space-y-2">
-                          <Label className="text-xs uppercase tracking-widest font-black ml-1 text-muted-foreground">Password</Label>
-                          <Input 
-                            type="password" 
-                            placeholder="Min 6"
-                            value={signUpPassword}
-                            onChange={(e) => setSignUpPassword(e.target.value)}
-                            className="h-13 rounded-2xl bg-muted/30 border-muted-foreground/10 focus:border-primary/50 focus:ring-4 focus:ring-primary/10 px-5"
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <Label className="text-xs uppercase tracking-widest font-black ml-1 text-muted-foreground">Confirm</Label>
-                          <Input 
-                            type="password" 
-                            placeholder="Repeat"
-                            value={signUpConfirmPassword}
-                            onChange={(e) => setSignUpConfirmPassword(e.target.value)}
-                            className="h-13 rounded-2xl bg-muted/30 border-muted-foreground/10 focus:border-primary/50 focus:ring-4 focus:ring-primary/10 px-5"
-                          />
-                        </div>
+                    </div>
+                    <div className="space-y-3">
+                      <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground ml-1">Secure Key</Label>
+                      <div className="relative">
+                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+                        <Input 
+                          type="password" 
+                          placeholder="••••••••"
+                          value={signUpPassword}
+                          onChange={(e) => setSignUpPassword(e.target.value)}
+                          className={cn(
+                            "h-14 rounded-2xl border pl-12 font-bold tracking-wider transition-all",
+                            theme === 'dark' ? "glass-dark border-white/5" : "bg-black/5 border-black/5 focus:bg-white"
+                          )}
+                          autoComplete="off"
+                        />
                       </div>
-                      <Button className="w-full h-14 rounded-2xl text-lg font-black bg-primary hover:bg-primary/90 shadow-lg shadow-primary/25 transition-all active:scale-[0.98] mt-4" disabled={loading}>
-                        {loading ? <Loader2 className="animate-spin h-6 w-6" /> : 'Create Account'}
-                      </Button>
-                    </form>
-                  </TabsContent>
-                </AnimatePresence>
-
-                <div className="relative my-10">
-                  <div className="absolute inset-0 flex items-center">
-                    <Separator className="w-full opacity-50" />
+                    </div>
                   </div>
-                  <div className="relative flex justify-center text-xs uppercase tracking-[0.2em]">
-                    <span className="bg-card px-4 text-muted-foreground font-black">Or continue with</span>
-                  </div>
-                </div>
 
-                <Button 
-                  variant="outline" 
-                  className="w-full h-14 rounded-2xl border-2 border-border/50 hover:bg-muted/50 hover:border-primary/30 transition-all font-bold gap-4 text-base"
-                  onClick={handleGoogleSignIn}
-                  disabled={loading}
-                >
-                  <GoogleIcon />
-                  Continue with Google
-                </Button>
-
-                <p className="text-center text-xs text-muted-foreground mt-10 font-medium leading-relaxed">
-                  By joining TaskMate, you agree to our <br />
-                  <Link to="/terms" className="text-primary font-bold hover:underline transition-colors">Terms of Service</Link> and <Link to="/privacy" className="text-primary font-bold hover:underline transition-colors">Privacy Policy</Link>
-                </p>
+                  <Button 
+                    onClick={handleEmailSignUp}
+                    className="w-full h-16 rounded-2xl bg-secondary hover:bg-secondary/90 text-white font-black text-sm tracking-[0.2em] shadow-2xl shadow-secondary/20 group"
+                    disabled={loading}
+                  >
+                    {loading ? <Loader2 className="animate-spin h-5 w-5" /> : (
+                      <>
+                        CREATE ACCOUNT
+                        <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
+                      </>
+                    )}
+                  </Button>
+                </TabsContent>
               </Tabs>
+
             </CardContent>
           </Card>
         </motion.div>
       </div>
-    </div>
+    </motion.div>
   );
 };
 

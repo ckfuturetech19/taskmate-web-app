@@ -6,64 +6,53 @@ import TaskDialog from '@/components/tasks/TaskDialog';
 import AnalyticsChart from '@/components/dashboard/AnalyticsChart';
 import ProgressDonut from '@/components/dashboard/ProgressDonut';
 import RemindersCard from '@/components/dashboard/RemindersCard';
-import TaskListCard from '@/components/dashboard/TaskListCard';
 import TimeTrackerCard from '@/components/dashboard/TimeTrackerCard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useTaskContext } from '@/contexts/TaskContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAnalytics } from '@/contexts/AnalyticsContext';
 import { useAnalyticsSync } from '@/hooks/useAnalyticsSync';
 import { Task } from '@/types/task';
-import { CalendarDays, Clock, CheckCircle2, Plus, TrendingUp, AlertCircle, FileDown, Upload, CheckCircle, XCircle } from 'lucide-react';
+import { CalendarDays, Clock, CheckCircle2, Plus, TrendingUp, AlertCircle, FileDown, Sparkles, Zap, BarChart3 } from 'lucide-react';
 import { safeIsToday, safeParseDate, safeIsPast } from '@/lib/dateUtils';
 import { toast } from '@/hooks/use-toast';
+import { motion } from 'framer-motion';
 
 const Dashboard = () => {
   const { user } = useAuth();
   const { tasks, addTask, updateTask, deleteTask, toggleTaskComplete, getPersonalTasks } = useTaskContext();
   const { tasksCompleted, tasksCreated, currentStreak, completionRate: analyticsCompletionRate } = useAnalytics();
-  
+
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
-  const [importDialogOpen, setImportDialogOpen] = useState(false);
-  const [importing, setImporting] = useState(false);
-  const [importResult, setImportResult] = useState<{ success: number; failed: number } | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [activeTab, setActiveTab] = useState('today');
 
   useAnalyticsSync();
 
   const personalTasks = getPersonalTasks();
-  
+
   const todaysTasks = personalTasks.filter(task => {
     if (task.isCompleted || !task.dueDate) return false;
     const dueDate = safeParseDate(task.dueDate);
     return dueDate && safeIsToday(dueDate);
   });
-  
+
   const overdueTasks = personalTasks.filter(task => {
     if (task.isCompleted || !task.dueDate) return false;
     const dueDate = safeParseDate(task.dueDate);
     return dueDate && safeIsPast(dueDate) && !safeIsToday(dueDate);
   });
-  
+
   const upcomingTasks = personalTasks.filter(task => {
     if (task.isCompleted || !task.dueDate) return false;
     const dueDate = safeParseDate(task.dueDate);
     return dueDate && !safeIsPast(dueDate) && !safeIsToday(dueDate);
   }).slice(0, 5);
-  
+
   const pendingTasks = personalTasks.filter(task => !task.isCompleted);
-  
-  const localCompletedToday = personalTasks.filter(task => {
-    if (!task.isCompleted || !task.lastCompletedDate) return false;
-    const completedDate = safeParseDate(task.lastCompletedDate);
-    return completedDate && safeIsToday(completedDate);
-  });
-  
-  // Merge local and analytics data for consistency
+
   const totalCompleted = Math.max(tasksCompleted, personalTasks.filter(t => t.isCompleted).length);
   const totalCreated = Math.max(tasksCreated, personalTasks.length);
   const displayCompletionRate = Math.max(analyticsCompletionRate, totalCreated > 0 ? (totalCompleted / totalCreated) * 100 : 0);
@@ -80,11 +69,7 @@ const Dashboard = () => {
       }
     } catch (error: any) {
       console.error('Error saving task:', error);
-      toast({ 
-        title: 'Failed to save task', 
-        description: error.message || 'An unexpected error occurred', 
-        variant: 'destructive' 
-      });
+      toast({ title: 'Failed to save task', variant: 'destructive' });
     } finally {
       setEditingTask(null);
     }
@@ -95,509 +80,267 @@ const Dashboard = () => {
     setDialogOpen(true);
   };
 
-  const handleImportClick = () => {
-    setImportDialogOpen(true);
-    setImportResult(null);
-  };
-
-  const handleFileSelect = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    setImporting(true);
-    setImportResult(null);
-
-    try {
-      const text = await file.text();
-      let data: any;
-
-      // Try to parse as JSON
-      try {
-        data = JSON.parse(text);
-      } catch (e) {
-        toast({
-          title: 'Invalid file format',
-          description: 'Please upload a valid JSON file.',
-          variant: 'destructive',
-        });
-        setImporting(false);
-        return;
-      }
-
-      // Handle array of tasks or single task object
-      const tasksToImport = Array.isArray(data) ? data : [data];
-      let successCount = 0;
-      let failedCount = 0;
-
-      // Import each task
-      for (const taskData of tasksToImport) {
-        try {
-          // Validate required fields
-          if (!taskData.title || typeof taskData.title !== 'string') {
-            failedCount++;
-            continue;
-          }
-
-          // Prepare task data (exclude id, createdAt, userId, completed)
-          const taskToAdd: Omit<Task, 'id' | 'createdAt' | 'userId' | 'completed'> = {
-            title: taskData.title,
-            description: taskData.description || undefined,
-            dueDate: taskData.dueDate || undefined,
-            reminder: taskData.reminder || undefined,
-            reminderUtc: taskData.reminderUtc || undefined,
-            priorityLevel: taskData.priorityLevel || 'none',
-            categoryId: taskData.categoryId || undefined,
-            tags: taskData.tags || undefined,
-            subtasks: taskData.subtasks || undefined,
-            recurrenceType: taskData.recurrenceType || 'none',
-            recurrenceFrequency: taskData.recurrenceFrequency || undefined,
-            recurrence: taskData.recurrence || undefined,
-            timeWindowStart: taskData.timeWindowStart || undefined,
-            timeWindowEnd: taskData.timeWindowEnd || undefined,
-            focusTimerEnabled: taskData.focusTimerEnabled || false,
-            focusDurationMinutes: taskData.focusDurationMinutes || undefined,
-            color: taskData.color || undefined,
-            colorIndex: taskData.colorIndex || undefined,
-          };
-
-          await addTask(taskToAdd);
-          successCount++;
-        } catch (error) {
-          console.error('Error importing task:', error);
-          failedCount++;
-        }
-      }
-
-      setImportResult({ success: successCount, failed: failedCount });
-      
-      if (successCount > 0) {
-        toast({
-          title: 'Import successful',
-          description: `Successfully imported ${successCount} task${successCount !== 1 ? 's' : ''}${failedCount > 0 ? `, ${failedCount} failed` : ''}.`,
-        });
-      } else {
-        toast({
-          title: 'Import failed',
-          description: 'No tasks were imported. Please check your file format.',
-          variant: 'destructive',
-        });
-      }
-
-      // Reset file input
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
-      }
-    } catch (error) {
-      console.error('Error reading file:', error);
-      toast({
-        title: 'Import error',
-        description: 'Failed to read the file. Please try again.',
-        variant: 'destructive',
-      });
-    } finally {
-      setImporting(false);
-    }
-  };
-
   return (
     <AppLayout title="Dashboard">
-      <div className="space-y-3 sm:space-y-4">
-        {/* Header Section */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-          <div>
-            <h1 className="text-2xl sm:text-3xl font-bold text-foreground mb-1">
-              Dashboard
+      <motion.div
+        initial={{ opacity: 0, scale: 0.98, y: 10 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+        className="space-y-6 pb-10"
+      >
+
+        {/* Welcome Header */}
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
+          <motion.div
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="space-y-2"
+          >
+            <div className="flex items-center gap-2 text-primary font-black uppercase tracking-[0.4em] text-[10px]">
+              <Zap className="h-3 w-3" />
+              <span>Strategic Command Hub</span>
+            </div>
+            <h1 className="text-4xl sm:text-6xl font-black tracking-tighter text-foreground leading-[0.9]">
+              Intelligence <span className="text-primary">Restored.</span>
             </h1>
-            <p className="text-xs sm:text-sm text-muted-foreground">
-              Plan, prioritize, and accomplish your tasks with ease.
+            <p className="text-muted-foreground text-sm font-medium max-w-md italic border-l-2 border-primary/20 pl-4">
+              Analyzing <span className="text-foreground font-bold">{todaysTasks.length} active objectives</span> for today. Operational readiness is 100%.
             </p>
-          </div>
-          <div className="flex gap-2 shrink-0">
-            <Button 
-              onClick={() => setDialogOpen(true)} 
-              size="default"
-              className="gap-2 transition-all duration-300 hover:scale-105 group text-sm"
-              style={{ background: 'linear-gradient(135deg, #1E6F43, #2FAE72)' }}
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="flex gap-3 shrink-0"
+          >
+            <Button
+              onClick={() => setDialogOpen(true)}
+              size="lg"
+              className="rounded-2xl px-8 h-14 font-black transition-all hover:scale-105 active:scale-95 shadow-2xl shadow-primary/30 bg-primary hover:bg-primary/90 text-sm tracking-widest"
             >
-              <Plus className="h-4 w-4 transition-transform duration-300 group-hover:rotate-90" />
-              <span className="hidden sm:inline">Add Task</span>
-              <span className="sm:hidden">Add</span>
+              <Plus className="h-5 w-5 mr-2" />
+              INITIATE TASK
             </Button>
-            <Button 
-              variant="outline"
-              size="default"
-              className="gap-2 transition-all duration-300 hover:scale-105 text-sm"
-              onClick={handleImportClick}
-            >
-              <FileDown className="h-4 w-4" />
-              <span className="hidden sm:inline">Import Data</span>
-              <span className="sm:hidden">Import</span>
-            </Button>
-          </div>
+          </motion.div>
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard
-            title="Total Tasks"
+            title="Operation Volume"
             value={totalCreated}
-            icon={CalendarDays}
-            trend="up"
-            trendValue={5}
-            trendText="Lifetime created"
+            icon={Zap}
             variant="primary"
-            delay={0}
-          />
-          <StatCard
-            title="Pending"
-            value={pendingTasks.length}
-            icon={Clock}
-            subtitle={`${pendingTasks.length} tasks remaining`}
+            trend="up"
+            trendValue={12}
             delay={100}
           />
           <StatCard
-            title="Completed Total"
-            value={totalCompleted}
-            icon={CheckCircle2}
-            trend="up"
-            subtitle={`${Math.round(displayCompletionRate)}% completion rate`}
+            title="Critical Payload"
+            value={pendingTasks.length}
+            icon={Clock}
+            subtitle={`${pendingTasks.length} tasks to go`}
+            variant="destructive"
             delay={200}
           />
           <StatCard
-            title="Current Streak"
+            title="Combat Efficiency"
+            value={`${Math.round(displayCompletionRate)}%`}
+            icon={CheckCircle2}
+            variant="accent"
+            subtitle="Efficiency score"
+            delay={300}
+          />
+          <StatCard
+            title="Operational Continuity"
             value={currentStreak}
             icon={TrendingUp}
-            variant={currentStreak > 0 ? 'default' : undefined}
-            subtitle={currentStreak > 0 ? `${currentStreak} day streak!` : "Start a streak today"}
-            delay={300}
+            variant="purple"
+            subtitle={currentStreak > 0 ? `${currentStreak} day streak!` : "Start today"}
+            delay={400}
           />
         </div>
 
-        {/* Middle Section - Three Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-3 items-stretch">
-          {/* Project Analytics */}
-          <div className="animate-slide-in-up flex" style={{ animationDelay: '400ms', animationFillMode: 'both' }}>
-            <AnalyticsChart
-              data={useMemo(() => {
-                const days = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
-                const today = new Date();
-                return days.map((day, index) => {
-                  const date = new Date(today);
-                  date.setDate(today.getDate() - (6 - index));
-                  const dayStart = new Date(date.setHours(0, 0, 0, 0));
-                  const dayEnd = new Date(date.setHours(23, 59, 59, 999));
-                  
-                  const dayTasks = personalTasks.filter(t => {
-                    if (!t.dueDate) return false;
-                    const dueDate = safeParseDate(t.dueDate);
-                    return dueDate && dueDate >= dayStart && dueDate <= dayEnd;
+        {/* Top Row - Intelligence Grid (3 Side-by-Side with Same Height) */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
+          
+          {/* 1. Productivity Analytics */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+            className="glass rounded-[2.5rem] border-white/10 overflow-hidden flex flex-col h-[380px]"
+          >
+            <div className="p-6 border-b border-white/5 flex items-center justify-between">
+              <h3 className="font-black text-sm tracking-tight flex items-center gap-2 uppercase italic text-muted-foreground">
+                <BarChart3 className="h-4 w-4 text-primary" />
+                Productivity Wave
+              </h3>
+            </div>
+            <div className="p-6 flex-1 min-h-0">
+              <AnalyticsChart
+                type="bar"
+                data={useMemo(() => {
+                  const days = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
+                  const today = new Date();
+                  return days.map((day, index) => {
+                    const date = new Date(today);
+                    date.setDate(today.getDate() - (6 - index));
+                    const dayStart = new Date(date.setHours(0, 0, 0, 0));
+                    const dayEnd = new Date(date.setHours(23, 59, 59, 999));
+                    const dayTasks = personalTasks.filter(t => {
+                      if (!t.dueDate) return false;
+                      const dueDate = safeParseDate(t.dueDate);
+                      return dueDate && dueDate >= dayStart && dueDate <= dayEnd;
+                    });
+                    return {
+                      name: day,
+                      completed: dayTasks.filter(t => t.isCompleted).length,
+                      pending: dayTasks.filter(t => !t.isCompleted).length,
+                      value: dayTasks.length,
+                    };
                   });
-                  
-                  return {
-                    name: day,
-                    completed: dayTasks.filter(t => t.completed).length,
-                    pending: dayTasks.filter(t => !t.completed).length,
-                    value: dayTasks.length,
-                  };
-                });
-              }, [personalTasks])}
-              type="bar"
-              title="Project Analytics"
-              className="w-full h-full flex flex-col"
-            />
-          </div>
-
-          {/* Focus Timers */}
-          <div className="animate-slide-in-up flex" style={{ animationDelay: '450ms', animationFillMode: 'both' }}>
-            <div className="w-full h-full flex flex-col">
-              <RemindersCard
-                tasks={personalTasks}
-                onAddTask={() => setDialogOpen(true)}
-                onStartTimer={(task) => {
-                  // Navigate to clock or start timer
-                  console.log('Start timer for task:', task);
-                }}
-                className="h-full flex flex-col"
+                }, [personalTasks])}
               />
             </div>
-          </div>
+          </motion.div>
 
-          {/* Time Tracker */}
-          <div className="animate-slide-in-up flex" style={{ animationDelay: '500ms', animationFillMode: 'both' }}>
-            <TimeTrackerCard className="w-full h-full" />
-          </div>
+          {/* 2. Reminders Card */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.3 }}
+            className="h-[380px] flex flex-col"
+          >
+            <RemindersCard 
+              tasks={personalTasks} 
+              onAddTask={() => setDialogOpen(true)} 
+              onStartTimer={(t) => console.log(t)} 
+              className="flex-1 rounded-[2.5rem]"
+            />
+          </motion.div>
+
+          {/* 3. Time Tracker Card */}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.4 }}
+            className="h-[380px] flex flex-col"
+          >
+            <TimeTrackerCard className="flex-1 rounded-[2.5rem]" />
+          </motion.div>
         </div>
 
-        {/* Task Sections with Tabs */}
-        <Tabs defaultValue="today" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 h-9">
-            <TabsTrigger value="today" className="gap-1.5 text-xs sm:text-sm">
-              <CalendarDays className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Today</span>
-              <span className="sm:hidden">Today</span>
-              <span className="hidden md:inline"> ({todaysTasks.length})</span>
-            </TabsTrigger>
-            <TabsTrigger value="overdue" className="gap-1.5 text-xs sm:text-sm">
-              <AlertCircle className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Overdue</span>
-              <span className="sm:hidden">Overdue</span>
-              <span className="hidden md:inline"> ({overdueTasks.length})</span>
-            </TabsTrigger>
-            <TabsTrigger value="upcoming" className="gap-1.5 text-xs sm:text-sm">
-              <Clock className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Upcoming</span>
-              <span className="sm:hidden">Upcoming</span>
-              <span className="hidden md:inline"> ({upcomingTasks.length})</span>
-            </TabsTrigger>
-          </TabsList>
-
-          {/* Today's Tasks */}
-          <TabsContent value="today" className="mt-3">
-            {todaysTasks.length === 0 ? (
-              <Card className="border-dashed">
-                <CardContent className="flex flex-col items-center justify-center py-12">
-                  <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                    <CalendarDays className="h-8 w-8 text-primary" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-foreground mb-2">No tasks for today</h3>
-                  <p className="text-sm text-muted-foreground mb-4">Start your day by adding a new task</p>
-                  <Button onClick={() => setDialogOpen(true)} variant="outline" className="gap-2">
-                    <Plus className="h-4 w-4" />
-                    Add Task
-                  </Button>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="space-y-2 max-h-[300px] overflow-y-auto">
-                {todaysTasks.slice(0, 5).map((task, index) => (
-                  <div 
-                    key={task.id}
-                    className="animate-slide-in-up"
-                    style={{ 
-                      animationDelay: `${index * 50}ms`,
-                      animationFillMode: 'both'
-                    }}
-                  >
-                    <TaskCard
-                      task={task}
-                      onToggleComplete={toggleTaskComplete}
-                      onEdit={handleEdit}
-                      onDelete={deleteTask}
-                    />
-                  </div>
-                ))}
-                {todaysTasks.length > 5 && (
-                  <p className="text-xs text-muted-foreground text-center py-2">
-                    +{todaysTasks.length - 5} more tasks
-                  </p>
-                )}
+        {/* Bottom Row - Full Width Task Matrix */}
+        <motion.div 
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.5 }}
+          className="space-y-4"
+        >
+          <Tabs defaultValue="today" onValueChange={setActiveTab} className="w-full">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4 px-4 bg-white/5 p-4 rounded-[2rem] border border-white/10">
+              <div className="flex items-center gap-4">
+                <div className="h-10 w-2 bg-primary rounded-full shadow-[0_0_15px_rgba(var(--primary-rgb),0.5)]" />
+                <h3 className="font-black text-2xl tracking-tighter uppercase italic">Task Matrix</h3>
               </div>
-            )}
-          </TabsContent>
-
-          {/* Overdue Tasks */}
-          <TabsContent value="overdue" className="mt-3">
-            {overdueTasks.length === 0 ? (
-              <Card className="border-dashed">
-                <CardContent className="flex flex-col items-center justify-center py-12">
-                  <div className="h-16 w-16 rounded-full bg-green-500/10 flex items-center justify-center mb-4">
-                    <CheckCircle2 className="h-8 w-8 text-green-500" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-foreground mb-2">All caught up!</h3>
-                  <p className="text-sm text-muted-foreground">You have no overdue tasks</p>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="space-y-2 max-h-[300px] overflow-y-auto">
-                {overdueTasks.slice(0, 5).map((task, index) => (
-                  <div 
-                    key={task.id}
-                    className="animate-slide-in-up"
-                    style={{ 
-                      animationDelay: `${index * 50}ms`,
-                      animationFillMode: 'both'
-                    }}
-                  >
-                    <TaskCard
-                      task={task}
-                      onToggleComplete={toggleTaskComplete}
-                      onEdit={handleEdit}
-                      onDelete={deleteTask}
-                    />
-                  </div>
-                ))}
-                {overdueTasks.length > 5 && (
-                  <p className="text-xs text-muted-foreground text-center py-2">
-                    +{overdueTasks.length - 5} more tasks
-                  </p>
-                )}
-              </div>
-            )}
-          </TabsContent>
-
-          {/* Upcoming Tasks */}
-          <TabsContent value="upcoming" className="mt-3">
-            {upcomingTasks.length === 0 ? (
-              <Card className="border-dashed">
-                <CardContent className="flex flex-col items-center justify-center py-12">
-                  <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center mb-4">
-                    <Clock className="h-8 w-8 text-primary" />
-                  </div>
-                  <h3 className="text-lg font-semibold text-foreground mb-2">No upcoming tasks</h3>
-                  <p className="text-sm text-muted-foreground mb-4">Plan ahead by scheduling tasks</p>
-                  <Button onClick={() => setDialogOpen(true)} variant="outline" className="gap-2">
-                    <Plus className="h-4 w-4" />
-                    Add Task
-                  </Button>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="space-y-2 max-h-[300px] overflow-y-auto">
-                {upcomingTasks.slice(0, 5).map((task, index) => (
-                  <div 
-                    key={task.id}
-                    className="animate-slide-in-up"
-                    style={{ 
-                      animationDelay: `${index * 50}ms`,
-                      animationFillMode: 'both'
-                    }}
-                  >
-                    <TaskCard
-                      task={task}
-                      onToggleComplete={toggleTaskComplete}
-                      onEdit={handleEdit}
-                      onDelete={deleteTask}
-                    />
-                  </div>
-                ))}
-                {upcomingTasks.length > 5 && (
-                  <p className="text-xs text-muted-foreground text-center py-2">
-                    +{upcomingTasks.length - 5} more tasks
-                  </p>
-                )}
-              </div>
-            )}
-          </TabsContent>
-        </Tabs>
-      </div>
-
-      <TaskDialog
-        open={dialogOpen}
-        onOpenChange={(open) => {
-          setDialogOpen(open);
-          if (!open) setEditingTask(null);
-        }}
-        task={editingTask}
-        onSave={handleSaveTask}
-      />
-
-      {/* Import Data Dialog */}
-      <Dialog open={importDialogOpen} onOpenChange={setImportDialogOpen}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <div className="flex items-center gap-3 mb-2">
-              <div className="p-2 bg-primary/10 rounded-full">
-                <Upload className="w-6 h-6 text-primary" />
-              </div>
-              <DialogTitle>Import Tasks</DialogTitle>
-            </div>
-            <DialogDescription className="text-base pt-2">
-              Upload a JSON file to import tasks. The file should contain an array of task objects or a single task object.
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="py-4 space-y-4">
-            <div className="border-2 border-dashed border-border rounded-lg p-6 text-center">
-              <Upload className="h-10 w-10 mx-auto mb-3 text-muted-foreground" />
-              <p className="text-sm font-medium mb-1">Select a JSON file</p>
-              <p className="text-xs text-muted-foreground mb-4">
-                Choose a file containing your tasks
-              </p>
-              <input
-                ref={fileInputRef}
-                type="file"
-                accept=".json,application/json"
-                onChange={handleFileSelect}
-                className="hidden"
-                id="import-file-input"
-                disabled={importing}
-              />
-              <Button
-                onClick={() => fileInputRef.current?.click()}
-                disabled={importing}
-                variant="outline"
-                className="gap-2"
-                style={{ background: 'linear-gradient(135deg, #1E6F43, #2FAE72)' }}
-              >
-                <Upload className="h-4 w-4" />
-                {importing ? 'Importing...' : 'Choose File'}
-              </Button>
+              <TabsList className="bg-white/5 border border-white/10 rounded-2xl h-12 p-1 min-w-[300px]">
+                <TabsTrigger value="today" className="flex-1 rounded-xl px-6 text-[10px] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-black tracking-[0.2em]">TODAY</TabsTrigger>
+                <TabsTrigger value="upcoming" className="flex-1 rounded-xl px-6 text-[10px] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-black tracking-[0.2em]">UPCOMING</TabsTrigger>
+                <TabsTrigger value="overdue" className="flex-1 rounded-xl px-6 text-[10px] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-black tracking-[0.2em]">OVERDUE</TabsTrigger>
+              </TabsList>
             </div>
 
-            {importResult && (
-              <div className="p-4 rounded-lg border" style={{ 
-                backgroundColor: importResult.failed > 0 ? 'rgba(239, 68, 68, 0.1)' : 'rgba(34, 197, 94, 0.1)',
-                borderColor: importResult.failed > 0 ? 'rgba(239, 68, 68, 0.3)' : 'rgba(34, 197, 94, 0.3)'
-              }}>
-                <div className="flex items-start gap-3">
-                  {importResult.failed === 0 ? (
-                    <CheckCircle className="h-5 w-5 text-green-500 shrink-0 mt-0.5" />
-                  ) : (
-                    <XCircle className="h-5 w-5 text-red-500 shrink-0 mt-0.5" />
-                  )}
-                  <div className="flex-1">
-                    <p className="font-semibold text-sm mb-1">
-                      {importResult.failed === 0 ? 'Import Complete' : 'Import Completed with Errors'}
-                    </p>
-                    <div className="text-xs space-y-1">
-                      <p className="text-green-600 dark:text-green-400">
-                        ✓ {importResult.success} task{importResult.success !== 1 ? 's' : ''} imported successfully
-                      </p>
-                      {importResult.failed > 0 && (
-                        <p className="text-red-600 dark:text-red-400">
-                          ✗ {importResult.failed} task{importResult.failed !== 1 ? 's' : ''} failed to import
-                        </p>
-                      )}
+            <TabsContent value="today" className="mt-0 focus-visible:outline-none">
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                {todaysTasks.length > 0 ? (
+                  todaysTasks.map((task, i) => (
+                    <motion.div
+                      key={task.id}
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: i * 0.1 }}
+                    >
+                      <TaskCard task={task} onToggleComplete={toggleTaskComplete} onEdit={handleEdit} onDelete={deleteTask} />
+                    </motion.div>
+                  ))
+                ) : (
+                  <Card className="glass border-dashed border-white/20 rounded-[2.5rem] p-16 text-center col-span-full">
+                    <div className="h-20 w-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                      <CheckCircle2 className="h-10 w-10 text-primary" />
                     </div>
-                  </div>
-                </div>
+                    <h4 className="font-bold text-2xl text-foreground">Mission Accomplished</h4>
+                    <p className="text-muted-foreground mt-2">All objectives for today have been cleared.</p>
+                  </Card>
+                )}
               </div>
-            )}
+            </TabsContent>
 
-            <div className="p-3 bg-muted rounded-lg">
-              <p className="text-xs font-semibold mb-2">Expected JSON format:</p>
-              <pre className="text-xs text-muted-foreground overflow-x-auto">
-{`[
-  {
-    "title": "Task title",
-    "description": "Optional description",
-    "dueDate": "2024-01-01T00:00:00.000Z",
-    "priorityLevel": "high"
-  }
-]`}
-              </pre>
-            </div>
-          </div>
+            <TabsContent value="upcoming" className="mt-0 focus-visible:outline-none">
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                {upcomingTasks.length > 0 ? (
+                  upcomingTasks.map((task, i) => (
+                    <motion.div
+                      key={task.id}
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ delay: i * 0.1 }}
+                    >
+                      <TaskCard task={task} onToggleComplete={toggleTaskComplete} onEdit={handleEdit} onDelete={deleteTask} />
+                    </motion.div>
+                  ))
+                ) : (
+                  <Card className="glass border-dashed border-white/20 rounded-[2.5rem] p-16 text-center col-span-full">
+                    <div className="h-20 w-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                      <CalendarDays className="h-10 w-10 text-primary" />
+                    </div>
+                    <h4 className="font-bold text-2xl text-foreground">Operational Clear</h4>
+                    <p className="text-muted-foreground mt-2">No upcoming tasks scheduled in the mission logs.</p>
+                  </Card>
+                )}
+              </div>
+            </TabsContent>
 
-          <div className="flex justify-end gap-2">
-            <Button
-              variant="outline"
-              onClick={() => {
-                setImportDialogOpen(false);
-                setImportResult(null);
-                if (fileInputRef.current) {
-                  fileInputRef.current.value = '';
-                }
-              }}
-              disabled={importing}
-            >
-              Close
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
+            <TabsContent value="overdue" className="mt-0 focus-visible:outline-none">
+              <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                {overdueTasks.length > 0 ? (
+                  overdueTasks.map((task, i) => (
+                    <motion.div
+                      key={task.id}
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: i * 0.1 }}
+                    >
+                      <TaskCard task={task} onToggleComplete={toggleTaskComplete} onEdit={handleEdit} onDelete={deleteTask} />
+                    </motion.div>
+                  ))
+                ) : (
+                  <Card className="glass border-dashed border-white/20 rounded-[2.5rem] p-16 text-center col-span-full">
+                    <div className="h-20 w-20 bg-rose-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
+                      <AlertCircle className="h-10 w-10 text-rose-500" />
+                    </div>
+                    <h4 className="font-bold text-2xl text-foreground">Integrity Maintained</h4>
+                    <p className="text-muted-foreground mt-2">No overdue objectives. Operational efficiency is optimal.</p>
+                  </Card>
+                )}
+              </div>
+            </TabsContent>
+          </Tabs>
+        </motion.div>
+
+        <TaskDialog
+          open={dialogOpen}
+          onOpenChange={(open) => {
+            setDialogOpen(open);
+            if (!open) setEditingTask(null);
+          }}
+          task={editingTask}
+          onSave={handleSaveTask}
+        />
+      </motion.div>
     </AppLayout>
   );
 };
 
 export default Dashboard;
+

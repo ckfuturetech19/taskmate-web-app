@@ -40,6 +40,17 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { fcmService } from '@/services/fcmService';
 import { GroupMemberProfile } from '@/types/task';
+import { AIService } from '@/services/aiService';
+import { Sparkles, Wand2, BrainCircuit, Zap, Check, CheckCircle2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+} from '@/components/ui/dropdown-menu';
 
 interface TaskDialogProps {
   open: boolean;
@@ -93,6 +104,8 @@ const TaskDialog = ({ open, onOpenChange, task, groupId, onSave }: TaskDialogPro
   // ✅ Auto-calculated colorIndex (matching Flutter - no manual picker)
   const [colorIndex, setColorIndex] = useState<number>(0);
   const [isSaving, setIsSaving] = useState(false);
+  const [isEnhancing, setIsEnhancing] = useState(false);
+  const { toast } = useToast();
 
   // Check notification permission on mount
   useEffect(() => {
@@ -366,6 +379,69 @@ const TaskDialog = ({ open, onOpenChange, task, groupId, onSave }: TaskDialogPro
     }
   };
 
+  const handleAiEnhance = async (options: string[]) => {
+    if (!title.trim()) return;
+
+    try {
+      setIsEnhancing(true);
+      toast({ 
+        title: '✨ AI is thinking...', 
+        description: 'Analyzing your task to provide premium enhancements.' 
+      });
+
+      const enhancement = await AIService.enhanceTask(title, options);
+      
+      if (enhancement) {
+        if (enhancement.title && options.includes('Title')) setTitle(enhancement.title);
+        if (enhancement.description && options.includes('Description')) setDescription(enhancement.description);
+        
+        if (enhancement.subtasks && options.includes('Subtasks')) {
+          const newSubtasks = enhancement.subtasks.map((st: string) => ({
+            id: `ai_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            title: st,
+            completed: false
+          }));
+          setSubtasks(prev => [...prev, ...newSubtasks]);
+        }
+
+        if (enhancement.dueDate && options.includes('Due Date')) {
+          const date = new Date(enhancement.dueDate);
+          if (!isNaN(date.getTime())) setDueDate(date);
+        }
+
+        if (enhancement.reminder && (options.includes('Due Date') || options.includes('Reminder'))) {
+          const rDate = new Date(enhancement.reminder);
+          if (!isNaN(rDate.getTime())) {
+            setReminder(rDate);
+            setReminderDate(rDate);
+            setReminderHour(rDate.getHours() > 12 ? (rDate.getHours() - 12).toString().padStart(2, '0') : (rDate.getHours() || 12).toString().padStart(2, '0'));
+            setReminderMinute(rDate.getMinutes().toString().padStart(2, '0'));
+            setReminderPeriod(rDate.getHours() >= 12 ? 'PM' : 'AM');
+          }
+        }
+
+        if (enhancement.priority && options.includes('Priority')) {
+          setPriorityLevel(enhancement.priority.toLowerCase() as PriorityLevel);
+        }
+
+        if (enhancement.category && options.includes('Category')) {
+          const match = categories.find(c => c.name.toLowerCase() === enhancement.category.toLowerCase());
+          if (match) setCategoryId(match.id);
+        }
+
+        toast({ 
+          title: '✨ Task Enhanced!', 
+          description: 'AI has auto-filled the selected details for you.' 
+        });
+      }
+    } catch (error) {
+      console.error('AI Enhancement Error:', error);
+      toast({ title: 'AI Error', description: 'Failed to enhance task', variant: 'destructive' });
+    } finally {
+      setIsEnhancing(false);
+    }
+  };
+
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="overflow-y-auto w-full sm:w-full md:max-w-2xl lg:max-w-3xl xl:max-w-4xl p-4 sm:p-6">
@@ -396,17 +472,58 @@ const TaskDialog = ({ open, onOpenChange, task, groupId, onSave }: TaskDialogPro
                 {title.length}/60
               </span>
             </div>
-            <Input
-              id="title"
-              value={title}
-              onChange={(e) => {
-                if (e.target.value.length <= 60) {
-                  setTitle(e.target.value);
-                }
-              }}
-              placeholder="Enter task title"
-              maxLength={60}
-            />
+            <div className="flex gap-2">
+              <Input
+                id="title"
+                value={title}
+                onChange={(e) => {
+                  if (e.target.value.length <= 60) {
+                    setTitle(e.target.value);
+                  }
+                }}
+                placeholder="Enter task title"
+                maxLength={60}
+                className="flex-1"
+              />
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    variant="outline" 
+                    size="icon" 
+                    disabled={!title.trim() || isEnhancing}
+                    className={cn(
+                      "transition-all duration-500",
+                      title.trim() ? "border-purple-500/50 text-purple-600 bg-purple-500/5 shadow-lg shadow-purple-500/10" : "opacity-50"
+                    )}
+                  >
+                    {isEnhancing ? <Loader2 className="h-4 w-4 animate-spin" /> : <Sparkles className="h-4 w-4" />}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56 rounded-2xl p-2 border-purple-500/20">
+                  <DropdownMenuLabel className="flex items-center gap-2 text-purple-600">
+                    <Wand2 className="h-3 w-3" />
+                    <span>AI Enhancement</span>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => handleAiEnhance(['Title', 'Description', 'Subtasks', 'Due Date', 'Category', 'Priority', 'Reminder'])} className="rounded-xl py-2 cursor-pointer gap-2 group">
+                    <Zap className="h-4 w-4 text-amber-500 group-hover:scale-110 transition-transform" />
+                    <span>Enhance All</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleAiEnhance(['Description'])} className="rounded-xl py-2 cursor-pointer gap-2">
+                    <BrainCircuit className="h-4 w-4 text-blue-500" />
+                    <span>Description Only</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleAiEnhance(['Subtasks'])} className="rounded-xl py-2 cursor-pointer gap-2">
+                    <CheckCircle2 className="h-4 w-4 text-green-500" />
+                    <span>Generate Subtasks</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleAiEnhance(['Due Date', 'Priority', 'Category'])} className="rounded-xl py-2 cursor-pointer gap-2">
+                    <Bell className="h-4 w-4 text-purple-500" />
+                    <span>Smart Metadata</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
           </div>
 
           {/* Subtasks - Second field matching Flutter (after title) */}

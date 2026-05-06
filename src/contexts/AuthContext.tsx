@@ -21,6 +21,7 @@ interface AuthContextType {
   sendOTP: (email: string) => Promise<void>;
   verifyOTP: (email: string, otp: string, name?: string) => Promise<void>;
   signOut: () => Promise<void>;
+  updateProfile: (data: { name?: string }) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -181,8 +182,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const updateProfile = async (data: { name?: string }) => {
+    try {
+      const response = await api.put('/users/profile', data);
+      if (response.data) {
+        const updatedUser = response.data.user || response.data;
+        setUser(updatedUser);
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+      }
+    } catch (error: any) {
+      console.error('Error updating profile:', error);
+      throw new Error(error.response?.data?.error || 'Failed to update profile');
+    }
+  };
+
   return (
-    <AuthContext.Provider value={{ user, loading, signInWithGoogle, signInWithEmail, signUpWithEmail, sendOTP, verifyOTP, signOut }}>
+    <AuthContext.Provider value={{ user, loading, signInWithGoogle, signInWithEmail, signUpWithEmail, sendOTP, verifyOTP, signOut, updateProfile }}>
       {children}
     </AuthContext.Provider>
   );

@@ -1,92 +1,181 @@
-import dashboardDarkImg from '../../assets/dashboardDark.png';
-import dashboardLightImg from '../../assets/dashboardLight.png';
+import dashboardDarkImg from '@/assets/dashboardDark.png';
+import dashboardLightImg from '@/assets/dashboardLight.png';
 import { Link } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { ArrowRight } from 'lucide-react';
+import { Play, ChevronRight } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
+import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
+import { useRef, useEffect } from 'react';
+
+const Typewriter = ({ text, delay = 0, className }: { text: string, delay?: number, className?: string }) => {
+  return (
+    <motion.span className={className}>
+      {text.split("").map((char, i) => (
+        <motion.span
+          key={i}
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{
+            duration: 0.05,
+            delay: delay + (i * 0.05),
+            ease: "linear"
+          }}
+        >
+          {char}
+        </motion.span>
+      ))}
+      <motion.span
+        animate={{ opacity: [0, 1, 0] }}
+        transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
+        className="inline-block w-[0.5em] h-[1em] bg-primary align-middle ml-1"
+      />
+    </motion.span>
+  );
+};
 
 const HeroSection = () => {
   const { theme } = useTheme();
-  const dashboardImage = theme === 'dark' 
-    ? dashboardDarkImg
-    : dashboardLightImg;
+  const containerRef = useRef<HTMLDivElement>(null);
+  
+  const { scrollYProgress } = useScroll({
+    target: containerRef,
+    offset: ["start start", "end start"]
+  });
+
+  const smoothProgress = useSpring(scrollYProgress, { stiffness: 100, damping: 30, restDelta: 0.001 });
+  
+  const scrollRotateX = useTransform(smoothProgress, [0, 0.5], [15, 0]);
+  const scrollScale = useTransform(smoothProgress, [0, 0.5], [0.85, 1]);
+  const scrollOpacity = useTransform(smoothProgress, [0, 0.2], [1, 0.8]);
+
+  const dashboardImage = theme === 'dark' ? dashboardDarkImg : dashboardLightImg;
 
   return (
-    <section id="home" className="relative pt-24 md:pt-32 pb-16 md:pb-24 px-4 overflow-hidden">
-      <div className="container mx-auto max-w-7xl">
-        {/* Trusted Badge */}
-        <div className="flex items-center justify-center gap-2 mb-6 animate-fade-in">
-          <div className="flex -space-x-2">
-            <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary to-accent border-2 border-background"></div>
-            <div className="h-8 w-8 rounded-full bg-gradient-to-br from-accent to-primary border-2 border-background"></div>
-            <div className="h-8 w-8 rounded-full bg-gradient-to-br from-primary/80 to-accent/80 border-2 border-background"></div>
-          </div>
-          <span className="text-sm text-muted-foreground font-medium">1K+ Installs</span>
-        </div>
+    <section 
+      id="home" 
+      ref={containerRef}
+      className={cn(
+        "relative min-h-screen flex items-center pt-32 pb-24 md:pb-40 px-4 overflow-hidden transition-colors duration-700 bg-transparent"
+      )}
+    >
+      {/* Sexy Noise Texture Overlay */}
+      <div className="absolute inset-0 z-[2] bg-noise opacity-[0.05] pointer-events-none" />
 
-        {/* Main Headline */}
-        <div className="text-center mb-8 md:mb-12 animate-fade-in" style={{ animationDelay: '0.1s' }}>
-          <h1 className="text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-bold text-foreground mb-4 md:mb-6 leading-tight">
-            Boost Productivity with the{' '}
-            <span className="text-primary">TaskMate</span>
-          </h1>
-          <p className="text-lg md:text-xl lg:text-2xl text-muted-foreground max-w-3xl mx-auto leading-relaxed">
-            Streamline your workflow, Manage Projects, and empower your team with TaskMate the all-in-one task management solution.
-          </p>
-        </div>
-
-        {/* CTA Buttons */}
-        <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12 md:mb-16 animate-fade-in" style={{ animationDelay: '0.2s' }}>
-          <Link to="/auth">
-            <Button size="lg" className="gap-2 px-8 py-6 text-base md:text-lg shadow-lg hover:shadow-xl transition-all duration-300">
-              <span>Book a demo</span>
-              <ArrowRight className="h-5 w-5" />
-            </Button>
-          </Link>
-          <Button size="lg" variant="outline" className="gap-2 px-8 py-6 text-base md:text-lg">
-            Learn More
-          </Button>
-        </div>
-
-        {/* Dashboard Screenshot */}
-        <div className="mb-12 md:mb-16 animate-fade-in" style={{ animationDelay: '0.3s' }}>
-          <div className="relative max-w-6xl mx-auto">
-            <div className="rounded-2xl overflow-hidden shadow-2xl border border-border/50">
-              <img 
-                src={dashboardImage}
-                alt="TaskMate Dashboard"
-                className="w-full h-auto"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Stats Section */}
-        <div className="flex flex-wrap justify-center gap-8 md:gap-12 animate-fade-in" style={{ animationDelay: '0.4s' }}>
-          <div className="text-center">
-            <div className="text-2xl md:text-3xl font-bold text-foreground mb-1">1K+</div>
-            <div className="text-xs md:text-sm text-muted-foreground">Installs</div>
-          </div>
-          <div className="text-center">
-            <div className="text-2xl md:text-3xl font-bold text-foreground mb-1">10K+</div>
-            <div className="text-xs md:text-sm text-muted-foreground">Tasks Done</div>
-          </div>
-          <a 
-            href="https://play.google.com/store/apps/details?id=com.ckfuturetech.taskmate&hl=en_IN" 
-            target="_blank" 
-            rel="noopener noreferrer"
-            className="text-center group cursor-pointer"
+      <div className="container mx-auto max-w-7xl relative z-10">
+        <div className="flex flex-col items-center text-center mb-24">
+          {/* Active Status Badge */}
+          <motion.div 
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className={cn(
+              "group cursor-pointer mb-12 p-[1px] rounded-full bg-gradient-to-r from-primary via-secondary to-primary shadow-2xl",
+              theme === 'dark' ? "shadow-primary/20" : "shadow-primary/10"
+            )}
           >
-            <div className="text-2xl md:text-3xl font-bold text-foreground mb-1 flex items-center gap-1 justify-center group-hover:text-primary transition-colors">
-              <span>5.0</span>
-              <span className="text-yellow-500">★</span>
+            <div className={cn(
+              "px-8 py-3 rounded-full backdrop-blur-2xl flex items-center gap-4 transition-all duration-500 hover:bg-opacity-50",
+              theme === 'dark' ? "bg-black/80" : "bg-white/90"
+            )}>
+              <div className="h-2 w-2 rounded-full bg-primary shadow-[0_0_12px_#22d3ee] animate-pulse" />
+              <span className={cn(
+                "text-[10px] font-black uppercase tracking-[0.4em] transition-colors",
+                theme === 'dark' ? "text-white" : "text-black/60"
+              )}>Circle Mesh v2.0 // Active Node</span>
+              <ChevronRight className="h-4 w-4 text-primary group-hover:translate-x-1 transition-transform" />
             </div>
-            <div className="text-xs md:text-sm text-muted-foreground">30+ Reviews</div>
-          </a>
+          </motion.div>
+
+          {/* Sexy Title Block */}
+          <div className="relative mb-12">
+            <motion.h1 
+              initial={{ opacity: 0, scale: 0.8, y: 60 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+              className={cn(
+                "text-5xl sm:text-7xl md:text-9xl lg:text-[11rem] font-black leading-tight tracking-tighter transition-colors pb-8",
+                theme === 'dark' ? "text-white" : "text-black"
+              )}
+            >
+              FUTURE<br />
+              <Typewriter 
+                text="TASKMATE" 
+                delay={1} 
+                className="text-gradient drop-shadow-[0_0_60px_rgba(34,211,238,0.3)]" 
+              />
+            </motion.h1>
+          </div>
+
+          <motion.p 
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1, delay: 0.2 }}
+            className={cn(
+              "text-xl md:text-3xl max-w-3xl mx-auto mb-20 font-bold leading-relaxed transition-colors",
+              theme === 'dark' ? "text-white/40" : "text-black/40"
+            )}
+          >
+            Unified personal tasks, collaborative rich notes, and group circles. Synchronized in real-time across your web terminal and mobile ecosystem.
+          </motion.p>
+
+          {/* Action Hub */}
+          <motion.div 
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 1, delay: 0.4 }}
+            className="flex flex-col sm:flex-row gap-10 items-center"
+          >
+            <Link to="/auth">
+              <button className="h-20 px-16 bg-primary text-black font-black uppercase text-[13px] tracking-[0.4em] rounded-full hover:shadow-[0_0_50px_rgba(34,211,238,0.5)] transition-all shadow-2xl">
+                INITIALIZE FREE
+              </button>
+            </Link>
+            
+            <button className={cn(
+              "h-20 px-16 glass font-black uppercase text-[13px] tracking-[0.4em] rounded-full border transition-all flex items-center gap-5",
+              theme === 'dark' ? "text-white border-white/10 hover:bg-white/5" : "text-black border-black/10 hover:bg-black/5"
+            )}>
+              <Play className="h-5 w-5 fill-primary text-primary" />
+              <span>EXPERIENCE</span>
+            </button>
+          </motion.div>
+        </div>
+
+        {/* Static Dashboard Preview - No Hover Tilt */}
+        <div className="relative mt-24 px-4 max-w-7xl mx-auto">
+          <motion.div
+            style={{ 
+              rotateX: scrollRotateX, 
+              scale: scrollScale, 
+              opacity: scrollOpacity 
+            }}
+            className="relative z-10"
+          >
+            <div className={cn(
+              "relative rounded-2xl overflow-hidden border p-3 shadow-2xl transition-all",
+              theme === 'dark' 
+                ? "border-white/10 bg-black/40 shadow-black/20" 
+                : "border-black/5 bg-white shadow-black/10"
+            )}>
+              <div className={cn(
+                "rounded-xl overflow-hidden relative group",
+                theme === 'dark' ? "bg-black/60" : "bg-gray-50"
+              )}>
+                <img 
+                  src={dashboardImage}
+                  alt="TaskMate Interface"
+                  className="w-full h-auto opacity-95 transition-opacity duration-1000"
+                />
+              </div>
+            </div>
+
+            {/* Core Glow */}
+            <div className="absolute -bottom-40 left-1/2 -translate-x-1/2 w-[95%] h-80 bg-primary/30 blur-[200px] -z-10 rounded-full animate-pulse-slow" />
+          </motion.div>
         </div>
       </div>
     </section>
   );
 };
+
+const cn = (...classes: any[]) => classes.filter(Boolean).join(' ');
 
 export default HeroSection;

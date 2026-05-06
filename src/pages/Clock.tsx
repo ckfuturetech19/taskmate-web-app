@@ -1,638 +1,369 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import AppLayout from '@/components/app/AppLayout';
 import { useTaskContext } from '@/contexts/TaskContext';
-import { usePremium } from '@/contexts/PremiumContext';
-import { Task } from '@/types/task';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Timer, Play, Pause, Square, RotateCcw, Check, Clock as ClockIcon } from 'lucide-react';
+import { Timer, Play, Pause, RotateCcw, Check, Clock as ClockIcon, Brain, Zap, Globe, ShieldCheck, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format } from 'date-fns';
 import PremiumGate from '@/components/premium/PremiumGate';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Task } from '@/types/task';
 
-type TimerMode = 'direct' | 'task' | 'clock';
+type TimerMode = 'clock' | 'pomodoro' | 'stopwatch';
 
 const Clock = () => {
-  const location = useLocation();
   const navigate = useNavigate();
   const { getPersonalTasks, updateTask } = useTaskContext();
-  const { isPremium } = usePremium();
   const personalTasks = getPersonalTasks();
   
-  // Get tasks with focus timers enabled
-  const tasksWithTimers = useMemo(() => {
-    return personalTasks.filter(t => t.focusTimerEnabled && !t.isCompleted);
-  }, [personalTasks]);
-
-  // Timer mode
-  const [mode, setMode] = useState<TimerMode>('direct');
-
-  // Direct Timer State (counts up from 0)
-  const [directTimerSeconds, setDirectTimerSeconds] = useState(0);
-  const [isDirectTimerRunning, setIsDirectTimerRunning] = useState(false);
-  const [directTimerInterval, setDirectTimerInterval] = useState<NodeJS.Timeout | null>(null);
-
-  // Task Timer State (counts down from task duration)
-  const initialTaskId = location.state?.taskId;
-  const [selectedTask, setSelectedTask] = useState<Task | null>(() => {
-    if (initialTaskId) {
-      return tasksWithTimers.find(t => t.id === initialTaskId) || null;
-    }
-    return tasksWithTimers.length > 0 ? tasksWithTimers[0] : null;
-  });
-
+  const [mode, setMode] = useState<TimerMode>(() => (localStorage.getItem('focus_mode') as TimerMode) || 'clock');
   const [isRunning, setIsRunning] = useState(false);
-  const [isPaused, setIsPaused] = useState(false);
-  const [remainingSeconds, setRemainingSeconds] = useState(0);
-  const [taskTimerInterval, setTaskTimerInterval] = useState<NodeJS.Timeout | null>(null);
-
-  // System Clock State
+  
+  // 1. All State Declarations First
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [pomoSeconds, setPomoSeconds] = useState(25 * 60);
+  const [isWork, setIsWork] = useState(true);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [stopwatchSeconds, setStopwatchSeconds] = useState(0);
 
-  // Load direct timer from localStorage
+  // 2. Persistence Loading
   useEffect(() => {
-    const saved = localStorage.getItem('direct_timer_seconds');
-    const running = localStorage.getItem('direct_timer_running');
-    if (saved) {
-      setDirectTimerSeconds(parseInt(saved, 10));
+    const savedStopwatch = localStorage.getItem('focus_stopwatch_seconds');
+    const savedPomo = localStorage.getItem('focus_pomo_seconds');
+    const savedTaskId = localStorage.getItem('focus_selected_task_id');
+    
+    if (savedStopwatch) setStopwatchSeconds(parseInt(savedStopwatch));
+    if (savedPomo) setPomoSeconds(parseInt(savedPomo));
+    if (savedTaskId) {
+      const task = personalTasks.find(t => t.id === savedTaskId);
+      if (task) {
+        setSelectedTask(task);
+        // If task has saved remaining seconds, prioritize that
+        if (task.focusTimerRemainingSeconds && task.focusTimerRemainingSeconds > 0) {
+          setPomoSeconds(task.focusTimerRemainingSeconds);
+        }
+      }
     }
-    if (running === 'true' && saved) {
-      setIsDirectTimerRunning(true);
-    }
-  }, []);
+  }, [personalTasks.length]); // Re-run if tasks load later
 
-  // Direct Timer Logic (counts up)
+  // 3. Persistence Saving (Local Only)
   useEffect(() => {
-    if (isDirectTimerRunning) {
-      const id = setInterval(() => {
-        setDirectTimerSeconds((prev) => {
-          const newValue = prev + 1;
-          localStorage.setItem('direct_timer_seconds', newValue.toString());
-          return newValue;
-        });
-      }, 1000);
-      setDirectTimerInterval(id);
-      return () => clearInterval(id);
-    } else if (directTimerInterval) {
-      clearInterval(directTimerInterval);
-      setDirectTimerInterval(null);
-    }
-  }, [isDirectTimerRunning]);
+    localStorage.setItem('focus_mode', mode);
+    localStorage.setItem('focus_stopwatch_seconds', stopwatchSeconds.toString());
+    localStorage.setItem('focus_pomo_seconds', pomoSeconds.toString());
+    if (selectedTask) localStorage.setItem('focus_selected_task_id', selectedTask.id || '');
+  }, [mode, stopwatchSeconds, pomoSeconds, selectedTask]);
 
-  // System Clock Update
+  // Global Tick
   useEffect(() => {
     const id = setInterval(() => {
       setCurrentTime(new Date());
+      if (isRunning) {
+        if (mode === 'pomodoro') {
+          setPomoSeconds(prev => {
+            const nextVal = prev <= 1 ? 0 : prev - 1;
+            
+            if (nextVal === 0) {
+              setIsRunning(false);
+              if (selectedTask?.id) {
+                updateTask(selectedTask.id, { 
+                  isCompleted: true,
+                  focusTimerRemainingSeconds: 0 
+                });
+              }
+              return isWork ? 5 * 60 : 25 * 60;
+            }
+
+            // Optional: Periodically sync to DB every 10 seconds to avoid too many API calls
+            if (nextVal % 10 === 0 && selectedTask?.id) {
+               updateTask(selectedTask.id, { focusTimerRemainingSeconds: nextVal });
+            }
+
+            return nextVal;
+          });
+        } else if (mode === 'stopwatch') {
+          setStopwatchSeconds(prev => prev + 1);
+        }
+      }
     }, 1000);
     return () => clearInterval(id);
-  }, []);
-
-  // Initialize task timer when task is selected
-  useEffect(() => {
-    if (selectedTask && mode === 'task' && !isRunning && remainingSeconds === 0) {
-      // Check if task has saved remaining time
-      const savedTime = selectedTask.focusTimerRemainingSeconds;
-      if (savedTime && savedTime > 0) {
-        setRemainingSeconds(savedTime);
-      } else {
-        const duration = (selectedTask.focusDurationMinutes || 25) * 60;
-        setRemainingSeconds(duration);
-      }
-    }
-  }, [selectedTask, mode, isRunning]);
-
-  const handleCompleteTask = () => {
-    if (selectedTask?.id) {
-      updateTask(selectedTask.id, {
-        isCompleted: true,
-        focusTimerIsRunning: false,
-        focusTimerStartTime: undefined,
-        focusTimerRemainingSeconds: undefined,
-      });
-      // Navigate back or select next task
-      const nextTask = tasksWithTimers.find(t => t.id !== selectedTask.id && !t.isCompleted);
-      if (nextTask) {
-        setSelectedTask(nextTask);
-        const duration = (nextTask.focusDurationMinutes || 25) * 60;
-        setRemainingSeconds(duration);
-      } else {
-        setSelectedTask(null);
-        setRemainingSeconds(0);
-      }
-    }
-  };
-
-  // Task Timer countdown logic
-  useEffect(() => {
-    if (isRunning && !isPaused && remainingSeconds > 0 && mode === 'task') {
-      const id = setInterval(() => {
-        setRemainingSeconds((prev) => {
-          if (prev <= 1) {
-            setIsRunning(false);
-            if (selectedTask) {
-              handleCompleteTask();
-            }
-            return 0;
-          }
-          const newValue = prev - 1;
-          // Update task with remaining time
-          if (selectedTask?.id) {
-            updateTask(selectedTask.id, {
-              focusTimerRemainingSeconds: newValue,
-            });
-          }
-          return newValue;
-        });
-      }, 1000);
-      setTaskTimerInterval(id);
-      return () => clearInterval(id);
-    } else if (taskTimerInterval) {
-      clearInterval(taskTimerInterval);
-      setTaskTimerInterval(null);
-    }
-  }, [isRunning, isPaused, remainingSeconds, selectedTask, mode]);
+  }, [isRunning, mode, isWork, selectedTask]);
 
   const formatTime = (seconds: number) => {
-    const hours = Math.floor(seconds / 3600);
-    const minutes = Math.floor((seconds % 3600) / 60);
-    const secs = seconds % 60;
-    
-    if (hours > 0) {
-      return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-    }
-    return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    const h = Math.floor(seconds / 3600);
+    const m = Math.floor((seconds % 3600) / 60);
+    const s = seconds % 60;
+    return `${h > 0 ? h.toString().padStart(2, '0') + ':' : ''}${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
   };
 
-  // Direct Timer Controls
-  const toggleDirectTimer = () => {
-    setIsDirectTimerRunning(!isDirectTimerRunning);
-    localStorage.setItem('direct_timer_running', (!isDirectTimerRunning).toString());
-  };
+  const progress = mode === 'pomodoro' ? (pomoSeconds / (isWork ? 25 * 60 : 5 * 60)) * 100 : 0;
 
-  const stopDirectTimer = () => {
-    setIsDirectTimerRunning(false);
-    setDirectTimerSeconds(0);
-    localStorage.setItem('direct_timer_seconds', '0');
-    localStorage.setItem('direct_timer_running', 'false');
-  };
-
-  const resetDirectTimer = () => {
-    setDirectTimerSeconds(0);
-    localStorage.setItem('direct_timer_seconds', '0');
-  };
-
-  // Task Timer Controls
-  const handleStart = () => {
-    if (selectedTask && remainingSeconds > 0) {
-      setIsRunning(true);
-      setIsPaused(false);
-      
-      if (selectedTask.id) {
-        updateTask(selectedTask.id, {
-          focusTimerIsRunning: true,
-          focusTimerStartTime: new Date().toISOString(),
-          focusTimerRemainingSeconds: remainingSeconds,
-        });
-      }
-    }
-  };
-
-  const handlePause = () => {
-    setIsPaused(true);
-    setIsRunning(false);
-    
-    if (selectedTask?.id) {
-      updateTask(selectedTask.id, {
-        focusTimerIsRunning: false,
-        focusTimerRemainingSeconds: remainingSeconds,
-      });
-    }
-  };
-
-  const handleResume = () => {
-    setIsPaused(false);
-    setIsRunning(true);
-    
-    if (selectedTask?.id) {
-      updateTask(selectedTask.id, {
-        focusTimerIsRunning: true,
-      });
-    }
-  };
-
-  const handleStop = () => {
-    setIsRunning(false);
-    setIsPaused(false);
-    
-    if (selectedTask?.id) {
-      updateTask(selectedTask.id, {
-        focusTimerIsRunning: false,
-        focusTimerStartTime: undefined,
-        focusTimerRemainingSeconds: undefined,
-      });
-    }
-    
-    if (selectedTask) {
-      const duration = (selectedTask.focusDurationMinutes || 25) * 60;
-      setRemainingSeconds(duration);
-    }
-  };
-
-  const handleReset = () => {
-    setIsRunning(false);
-    setIsPaused(false);
-    
-    if (selectedTask) {
-      const duration = (selectedTask.focusDurationMinutes || 25) * 60;
-      setRemainingSeconds(duration);
-      
-      if (selectedTask.id) {
-        updateTask(selectedTask.id, {
-          focusTimerIsRunning: false,
-          focusTimerStartTime: undefined,
-          focusTimerRemainingSeconds: undefined,
-        });
-      }
-    }
-  };
-
-  const hours = Math.floor(remainingSeconds / 3600);
-  const minutes = Math.floor((remainingSeconds % 3600) / 60);
-  const secs = remainingSeconds % 60;
-
-  const directHours = Math.floor(directTimerSeconds / 3600);
-  const directMinutes = Math.floor((directTimerSeconds % 3600) / 60);
-  const directSecs = directTimerSeconds % 60;
+  const focusTasks = useMemo(() => {
+    return personalTasks.filter(t => !t.isCompleted);
+  }, [personalTasks]);
 
   return (
-    <AppLayout title="Focus Timer">
+    <AppLayout title="Temporal Center">
       <PremiumGate 
-        feature="Focus Timer" 
-        description="Focus timer and task-based timers are premium features. Upgrade to unlock."
+        feature="Temporal Command" 
+        description="Access advanced temporal synchronization and focus modules."
         variant="dialog"
       >
-        <div className="w-full max-w-full space-y-4 sm:space-y-6">
-          {/* Mode Selection Tabs */}
-          <Tabs value={mode} onValueChange={(v) => setMode(v as TimerMode)} className="w-full">
-          <TabsList className="grid w-full grid-cols-3 h-auto p-1 bg-muted/50">
-            <TabsTrigger value="direct" className="gap-1.5 sm:gap-2 text-xs sm:text-sm py-2.5 sm:py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-              <Timer className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              <span className="hidden sm:inline">Direct Timer</span>
-              <span className="sm:hidden">Direct</span>
-            </TabsTrigger>
-            <TabsTrigger value="task" className="gap-1.5 sm:gap-2 text-xs sm:text-sm py-2.5 sm:py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-              <Timer className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              <span className="hidden sm:inline">Task Timer</span>
-              <span className="sm:hidden">Task</span>
-            </TabsTrigger>
-            <TabsTrigger value="clock" className="gap-1.5 sm:gap-2 text-xs sm:text-sm py-2.5 sm:py-3 data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">
-              <ClockIcon className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-              <span className="hidden sm:inline">System Clock</span>
-              <span className="sm:hidden">Clock</span>
-            </TabsTrigger>
-          </TabsList>
+        <div className="min-h-[80vh] flex flex-col items-center justify-center py-6 sm:py-12 relative overflow-hidden">
+          
+          {/* Background Ambient Glows */}
+          <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-primary/5 blur-[120px] rounded-full pointer-events-none" />
+          <div className="absolute bottom-1/4 right-1/4 w-[400px] h-[400px] bg-secondary/5 blur-[100px] rounded-full pointer-events-none" />
 
-          {/* Direct Timer Mode */}
-          <TabsContent value="direct" className="mt-4 sm:mt-6">
-            <div className="w-full">
-              <Card className="w-full p-4 sm:p-6 md:p-8 lg:p-10 bg-gradient-to-br from-primary/10 via-primary/5 to-background border-primary/30 shadow-lg">
-                <div className="space-y-6 sm:space-y-8 md:space-y-10 max-w-4xl mx-auto">
-                  <div className="text-center space-y-2">
-                    <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-primary">
-                      Direct Timer
-                    </h2>
-                    <p className="text-sm sm:text-base text-muted-foreground">Casual timer that counts up from 0</p>
-                  </div>
-
-                  <div className="flex items-center justify-center py-4 sm:py-6 md:py-8">
-                    <div className="relative w-full flex items-center justify-center">
-                      <div className={cn(
-                        "text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl font-mono font-bold transition-all duration-300 text-center",
-                        isDirectTimerRunning
-                          ? "text-primary drop-shadow-lg"
-                          : "text-foreground"
-                      )}>
-                        {formatTime(directTimerSeconds)}
-                      </div>
-                      {isDirectTimerRunning && (
-                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                          <div className="h-24 w-24 sm:h-32 sm:w-32 md:h-40 md:w-40 border-4 border-primary border-t-transparent rounded-full animate-spin opacity-20" />
-                        </div>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="flex justify-center gap-3 sm:gap-4 md:gap-6 flex-wrap">
-                    <div className="text-center p-3 sm:p-4 rounded-xl bg-card border border-primary/20 shadow-sm min-w-[80px] sm:min-w-[100px]">
-                      <div className="text-xl sm:text-2xl md:text-3xl font-bold text-primary mb-1">
-                        {directHours}
-                      </div>
-                      <div className="text-xs sm:text-sm text-muted-foreground">Hours</div>
-                    </div>
-                    <div className="text-center p-3 sm:p-4 rounded-xl bg-card border border-primary/20 shadow-sm min-w-[80px] sm:min-w-[100px]">
-                      <div className="text-xl sm:text-2xl md:text-3xl font-bold text-primary mb-1">
-                        {directMinutes}
-                      </div>
-                      <div className="text-xs sm:text-sm text-muted-foreground">Minutes</div>
-                    </div>
-                    <div className="text-center p-3 sm:p-4 rounded-xl bg-card border border-primary/20 shadow-sm min-w-[80px] sm:min-w-[100px]">
-                      <div className="text-xl sm:text-2xl md:text-3xl font-bold text-primary mb-1">
-                        {directSecs}
-                      </div>
-                      <div className="text-xs sm:text-sm text-muted-foreground">Seconds</div>
-                    </div>
-                  </div>
-
-                  <div className="flex justify-center gap-2 sm:gap-3 flex-wrap pt-2">
-                    <Button
-                      size="lg"
-                      onClick={toggleDirectTimer}
-                      className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 transition-all duration-300 hover:scale-105 min-w-[120px] sm:min-w-[140px]"
-                    >
-                      {isDirectTimerRunning ? <Pause className="h-4 w-4 sm:h-5 sm:w-5" /> : <Play className="h-4 w-4 sm:h-5 sm:w-5" />}
-                      {isDirectTimerRunning ? 'Pause' : 'Start'}
-                    </Button>
-                    <Button
-                      size="lg"
-                      variant="outline"
-                      onClick={stopDirectTimer}
-                      className="gap-2 border-primary/30 hover:bg-primary/10 hover:border-primary/50 transition-all duration-300 min-w-[100px] sm:min-w-[120px]"
-                    >
-                      <Square className="h-4 w-4 sm:h-5 sm:w-5" />
-                      Stop
-                    </Button>
-                    <Button
-                      size="lg"
-                      variant="outline"
-                      onClick={resetDirectTimer}
-                      className="gap-2 border-primary/30 hover:bg-primary/10 hover:border-primary/50 transition-all duration-300 min-w-[100px] sm:min-w-[120px]"
-                    >
-                      <RotateCcw className="h-4 w-4 sm:h-5 sm:w-5" />
-                      Reset
-                    </Button>
-                  </div>
-                </div>
-              </Card>
-            </div>
-          </TabsContent>
-
-          {/* Task Timer Mode */}
-          <TabsContent value="task" className="mt-4 sm:mt-6">
-            {tasksWithTimers.length === 0 ? (
-              <Card className="p-8 sm:p-12 text-center bg-gradient-to-br from-primary/10 via-primary/5 to-background border-primary/30 shadow-lg">
-                <div className="relative inline-block mb-4 sm:mb-6">
-                  <Timer className="h-12 w-12 sm:h-16 sm:w-16 mx-auto text-primary/50" />
-                  <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-transparent rounded-full blur-xl" />
-                </div>
-                <h3 className="text-lg sm:text-xl md:text-2xl font-semibold mb-2 text-primary">
-                  No Focus Timers
-                </h3>
-                <p className="text-sm sm:text-base text-muted-foreground mb-6 max-w-md mx-auto">
-                  Enable focus timer when creating a task to use this feature.
-                </p>
-                <Button 
-                  onClick={() => navigate('/tasks')}
-                  className="bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 transition-all duration-300 hover:scale-105"
-                >
-                  Go to Tasks
-                </Button>
-              </Card>
-            ) : (
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-                <div className="lg:col-span-2">
-                  <Card className="w-full p-4 sm:p-6 md:p-8 lg:p-10 bg-gradient-to-br from-primary/10 via-primary/5 to-background border-primary/30 shadow-lg">
-                    {selectedTask ? (
-                      <div className="space-y-6 sm:space-y-8 md:space-y-10 max-w-4xl mx-auto">
-                        <div className="text-center space-y-2">
-                          <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-primary break-words">
-                            {selectedTask.title}
-                          </h2>
-                          <p className="text-sm sm:text-base text-muted-foreground">
-                            Focus Duration: {selectedTask.focusDurationMinutes || 25} minutes
-                          </p>
-                        </div>
-
-                        <div className="flex items-center justify-center py-4 sm:py-6 md:py-8">
-                          <div className="relative w-full flex items-center justify-center">
-                            <div className={cn(
-                              "text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl font-mono font-bold transition-all duration-300 text-center",
-                              remainingSeconds === 0 
-                                ? "text-destructive" 
-                                : isRunning 
-                                ? "text-primary drop-shadow-lg"
-                                : "text-foreground"
-                            )}>
-                              {formatTime(remainingSeconds)}
-                            </div>
-                            {isRunning && (
-                              <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                                <div className="h-24 w-24 sm:h-32 sm:w-32 md:h-40 md:w-40 border-4 border-primary border-t-transparent rounded-full animate-spin opacity-20" />
-                              </div>
-                            )}
-                          </div>
-                        </div>
-
-                        <div className="flex justify-center gap-3 sm:gap-4 md:gap-6 flex-wrap">
-                          <div className="text-center p-3 sm:p-4 rounded-xl bg-card border border-primary/20 shadow-sm min-w-[80px] sm:min-w-[100px]">
-                            <div className="text-xl sm:text-2xl md:text-3xl font-bold text-primary mb-1">
-                              {hours}
-                            </div>
-                            <div className="text-xs sm:text-sm text-muted-foreground">Hours</div>
-                          </div>
-                          <div className="text-center p-3 sm:p-4 rounded-xl bg-card border border-primary/20 shadow-sm min-w-[80px] sm:min-w-[100px]">
-                            <div className="text-xl sm:text-2xl md:text-3xl font-bold text-primary mb-1">
-                              {minutes}
-                            </div>
-                            <div className="text-xs sm:text-sm text-muted-foreground">Minutes</div>
-                          </div>
-                          <div className="text-center p-3 sm:p-4 rounded-xl bg-card border border-primary/20 shadow-sm min-w-[80px] sm:min-w-[100px]">
-                            <div className="text-xl sm:text-2xl md:text-3xl font-bold text-primary mb-1">
-                              {secs}
-                            </div>
-                            <div className="text-xs sm:text-sm text-muted-foreground">Seconds</div>
-                          </div>
-                        </div>
-
-                        <div className="flex justify-center gap-2 sm:gap-3 flex-wrap pt-2">
-                          {!isRunning && !isPaused && (
-                            <Button
-                              size="lg"
-                              onClick={handleStart}
-                              disabled={remainingSeconds === 0}
-                              className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 transition-all duration-300 hover:scale-105 min-w-[120px] sm:min-w-[140px]"
-                            >
-                              <Play className="h-4 w-4 sm:h-5 sm:w-5" />
-                              Start
-                            </Button>
-                          )}
-                          {isRunning && !isPaused && (
-                            <Button
-                              size="lg"
-                              variant="outline"
-                              onClick={handlePause}
-                              className="gap-2 border-primary/30 hover:bg-primary/10 hover:border-primary/50 transition-all duration-300 min-w-[100px] sm:min-w-[120px]"
-                            >
-                              <Pause className="h-4 w-4 sm:h-5 sm:w-5" />
-                              Pause
-                            </Button>
-                          )}
-                          {isPaused && (
-                            <Button
-                              size="lg"
-                              onClick={handleResume}
-                              className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground shadow-lg shadow-primary/20 transition-all duration-300 hover:scale-105 min-w-[120px] sm:min-w-[140px]"
-                            >
-                              <Play className="h-4 w-4 sm:h-5 sm:w-5" />
-                              Resume
-                            </Button>
-                          )}
-                          {(isRunning || isPaused) && (
-                            <>
-                              <Button
-                                size="lg"
-                                variant="outline"
-                                onClick={handleStop}
-                                className="gap-2 border-primary/30 hover:bg-primary/10 hover:border-primary/50 transition-all duration-300 min-w-[100px] sm:min-w-[120px]"
-                              >
-                                <Square className="h-4 w-4 sm:h-5 sm:w-5" />
-                                Stop
-                              </Button>
-                              <Button
-                                size="lg"
-                                variant="outline"
-                                onClick={handleReset}
-                                className="gap-2 border-primary/30 hover:bg-primary/10 hover:border-primary/50 transition-all duration-300 min-w-[100px] sm:min-w-[120px]"
-                              >
-                                <RotateCcw className="h-4 w-4 sm:h-5 sm:w-5" />
-                                Reset
-                              </Button>
-                            </>
-                          )}
-                          <Button
-                            size="lg"
-                            variant="outline"
-                            onClick={handleCompleteTask}
-                            className="gap-2 border-primary/30 hover:bg-primary/10 hover:border-primary/50 transition-all duration-300 min-w-[100px] sm:min-w-[120px]"
-                          >
-                            <Check className="h-4 w-4 sm:h-5 sm:w-5" />
-                            Complete
-                          </Button>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="text-center py-12 sm:py-16">
-                        <Timer className="h-12 w-12 sm:h-16 sm:w-16 mx-auto mb-4 text-muted-foreground opacity-50" />
-                        <p className="text-sm sm:text-base text-muted-foreground">Select a task to start timer</p>
+          <div className="w-full max-w-[1400px] mx-auto relative z-10 px-4">
+            
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+              
+              {/* Left Column - The Massive Immersion Clock */}
+              <div className="lg:col-span-8 flex flex-col items-center justify-center min-h-[500px]">
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={mode}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    exit={{ opacity: 0, x: 20 }}
+                    transition={{ type: "spring", damping: 25, stiffness: 200 }}
+                    className="relative"
+                  >
+                    {/* Progress Ring for Pomodoro */}
+                    {mode === 'pomodoro' && (
+                      <div className="absolute inset-[-60px] pointer-events-none">
+                        <svg className="w-full h-full rotate-[-90deg]">
+                          <circle
+                            cx="50%"
+                            cy="50%"
+                            r="48%"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="1"
+                            className="text-white/5"
+                          />
+                          <motion.circle
+                            cx="50%"
+                            cy="50%"
+                            r="48%"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="3"
+                            strokeDasharray="100 100"
+                            initial={{ strokeDashoffset: 100 }}
+                            animate={{ strokeDashoffset: 100 - progress }}
+                            className="text-primary drop-shadow-[0_0_15px_rgba(var(--primary-rgb),0.6)]"
+                          />
+                        </svg>
                       </div>
                     )}
-                  </Card>
-                </div>
 
-                <div className="lg:col-span-1">
-                  <Card className="h-full bg-gradient-to-br from-primary/10 via-background to-primary/5 border-primary/30 shadow-lg">
-                    <CardContent className="p-4 sm:p-6">
-                      <h3 className="font-semibold mb-4 text-primary text-base sm:text-lg">
-                        Tasks with Focus Timer
-                      </h3>
-                      <div className="space-y-2 max-h-[400px] sm:max-h-[500px] lg:max-h-[600px] overflow-y-auto">
-                        {tasksWithTimers.map((task) => (
-                          <div
-                            key={task.id}
-                            onClick={() => {
-                              if (!isRunning) {
-                                setSelectedTask(task);
-                                const duration = (task.focusDurationMinutes || 25) * 60;
-                                setRemainingSeconds(duration);
-                                setIsPaused(false);
-                              }
-                            }}
-                            className={cn(
-                              "p-3 sm:p-4 rounded-lg border cursor-pointer transition-all duration-300",
-                              selectedTask?.id === task.id
-                                ? "bg-primary/20 border-primary shadow-md shadow-primary/10"
-                                : "hover:bg-primary/10 border-primary/20 hover:border-primary/40 hover:shadow-sm bg-card",
-                              isRunning && selectedTask?.id !== task.id && "opacity-50 cursor-not-allowed"
-                            )}
-                          >
-                            <div className="flex items-start justify-between gap-2">
-                              <div className="flex-1 min-w-0">
-                                <p className={cn(
-                                  "font-medium text-sm sm:text-base truncate",
-                                  selectedTask?.id === task.id ? "text-primary" : "text-foreground"
-                                )}>
-                                  {task.title}
-                                </p>
-                                <div className="flex items-center gap-2 mt-1">
-                                  <Timer className={cn(
-                                    "h-3.5 w-3.5 sm:h-4 sm:w-4",
-                                    selectedTask?.id === task.id ? "text-primary" : "text-muted-foreground"
-                                  )} />
-                                  <p className="text-xs sm:text-sm text-muted-foreground">
-                                    {task.focusDurationMinutes || 25} min
-                                  </p>
-                                </div>
-                              </div>
-                              {task.focusTimerIsRunning && (
-                                <div className="h-2 w-2 rounded-full bg-primary animate-pulse shadow-lg shadow-primary/50 flex-shrink-0 mt-1" />
-                              )}
-                            </div>
-                          </div>
-                        ))}
+                    {/* High-Fidelity Time Display */}
+                    <div className="text-center">
+                      <div className="text-[10rem] sm:text-[12rem] md:text-[14rem] font-black tracking-tighter text-foreground leading-none font-jakarta flex items-center justify-center gap-4 drop-shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+                        {mode === 'clock' ? (
+                          <>
+                            <span className="tabular-nums">{format(currentTime, 'HH')}</span>
+                            <span className="text-primary/20 animate-pulse">:</span>
+                            <span className="tabular-nums">{format(currentTime, 'mm')}</span>
+                          </>
+                        ) : (
+                          <span className="tabular-nums">
+                            {formatTime(mode === 'pomodoro' ? pomoSeconds : stopwatchSeconds)}
+                          </span>
+                        )}
                       </div>
-                    </CardContent>
-                  </Card>
-                </div>
+                      
+                      <div className="mt-8 flex flex-col items-center">
+                        <div className="h-px w-32 bg-gradient-to-r from-transparent via-primary/50 to-transparent mb-4" />
+                        <div className="space-y-2">
+                          <p className="text-lg sm:text-xl font-black text-primary/60 uppercase tracking-[0.6em] italic drop-shadow-sm">
+                            {mode === 'clock' ? format(currentTime, 'EEEE, MMMM dd') : 
+                             mode === 'pomodoro' ? (isWork ? 'Deep Work Mission' : 'Recharge Phase') : 'Mission Elapsed Time'}
+                          </p>
+                          {mode === 'pomodoro' && selectedTask && (
+                            <motion.p 
+                              initial={{ opacity: 0 }} 
+                              animate={{ opacity: 1 }}
+                              className="text-sm font-bold text-foreground/40 uppercase tracking-[0.3em]"
+                            >
+                              Target: {selectedTask.title}
+                            </motion.p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </motion.div>
+                </AnimatePresence>
               </div>
-            )}
-          </TabsContent>
 
-          {/* System Clock Mode */}
-          <TabsContent value="clock" className="mt-4 sm:mt-6">
-            <Card className="w-full p-4 sm:p-6 md:p-8 lg:p-10 bg-gradient-to-br from-primary/10 via-primary/5 to-background border-primary/30 shadow-lg">
-              <div className="space-y-6 sm:space-y-8 md:space-y-10 max-w-4xl mx-auto">
-                <div className="text-center space-y-2">
-                  <h2 className="text-xl sm:text-2xl md:text-3xl font-bold text-primary">
-                    System Clock
-                  </h2>
-                  <p className="text-sm sm:text-base text-muted-foreground">Current time</p>
+              {/* Right Column - Tactical Sidebar */}
+              <div className="lg:col-span-4 space-y-8 max-h-[70vh] overflow-y-auto pr-2 custom-scrollbar">
+                
+                {/* 1. Mode Selector */}
+                <div className="glass p-2 rounded-[2rem] border-white/10 flex flex-col gap-2">
+                  {(['clock', 'pomodoro', 'stopwatch'] as TimerMode[]).map((m) => (
+                    <button
+                      key={m}
+                      onClick={() => { setMode(m); setIsRunning(false); }}
+                      className={cn(
+                        "w-full px-6 py-4 rounded-2xl transition-all duration-500 font-black text-xs uppercase tracking-[0.2em] flex items-center justify-between group",
+                        mode === m 
+                          ? "bg-primary text-primary-foreground shadow-xl shadow-primary/30" 
+                          : "text-muted-foreground hover:text-foreground hover:bg-white/5"
+                      )}
+                    >
+                      <div className="flex items-center gap-3">
+                        {m === 'clock' && <Globe className="h-4 w-4" />}
+                        {m === 'pomodoro' && <Brain className="h-4 w-4" />}
+                        {m === 'stopwatch' && <Timer className="h-4 w-4" />}
+                        {m}
+                      </div>
+                      <ChevronRight className={cn("h-4 w-4 transition-transform group-hover:translate-x-1", mode === m ? "opacity-100" : "opacity-0")} />
+                    </button>
+                  ))}
                 </div>
 
-                <div className="flex items-center justify-center py-4 sm:py-6 md:py-8">
-                  <div className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl xl:text-9xl font-mono font-bold text-foreground text-center">
-                    {format(currentTime, 'HH:mm:ss')}
+                {/* 2. Objective Selection (Only in Pomodoro) */}
+                <AnimatePresence>
+                  {mode === 'pomodoro' && (
+                    <motion.div
+                      initial={{ opacity: 0, height: 0 }}
+                      animate={{ opacity: 1, height: 'auto' }}
+                      exit={{ opacity: 0, height: 0 }}
+                      className="space-y-4 overflow-hidden"
+                    >
+                      <div className="flex items-center justify-between px-2">
+                        <h4 className="font-black text-[10px] uppercase tracking-[0.4em] text-primary/60">Objective Queue</h4>
+                        <div className="h-1 w-12 bg-primary/20 rounded-full" />
+                      </div>
+                      <div className="space-y-2">
+                        {focusTasks.length > 0 ? (
+                          focusTasks.map(task => (
+                            <button
+                              key={task.id}
+                              onClick={() => {
+                                setSelectedTask(task);
+                                setPomoSeconds(25 * 60);
+                                setIsRunning(false);
+                              }}
+                              className={cn(
+                                "w-full p-4 rounded-2xl border text-left transition-all duration-300 group",
+                                selectedTask?.id === task.id
+                                  ? "bg-primary/20 border-primary shadow-lg shadow-primary/10"
+                                  : "bg-white/5 border-white/5 hover:bg-white/10"
+                              )}
+                            >
+                              <p className={cn("text-xs font-bold uppercase tracking-wider truncate", selectedTask?.id === task.id ? "text-primary" : "text-foreground")}>
+                                {task.title}
+                              </p>
+                              <div className="flex items-center gap-2 mt-1 opacity-40">
+                                <Timer className="h-3 w-3" />
+                                <span className="text-[10px] font-black uppercase">25m Target</span>
+                              </div>
+                            </button>
+                          ))
+                        ) : (
+                          <div className="p-8 glass rounded-2xl border-dashed border-white/10 text-center">
+                            <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest">No Active Objectives</p>
+                          </div>
+                        )}
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* 3. Tactical Actions */}
+                <AnimatePresence mode="wait">
+                  {mode !== 'clock' && (
+                    <motion.div
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -10 }}
+                      className="space-y-4"
+                    >
+                      <Button
+                        size="lg"
+                        disabled={mode === 'pomodoro' && !selectedTask}
+                        onClick={() => setIsRunning(!isRunning)}
+                        className={cn(
+                          "w-full h-20 rounded-[2rem] transition-all duration-500 font-black text-sm tracking-[0.3em] uppercase group relative overflow-hidden",
+                          isRunning 
+                            ? "bg-white/5 border border-white/10 text-foreground" 
+                            : "bg-primary text-primary-foreground shadow-2xl shadow-primary/40",
+                          mode === 'pomodoro' && !selectedTask && "opacity-50 grayscale"
+                        )}
+                      >
+                        <div className="flex items-center gap-3 relative z-10">
+                          {isRunning ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5 translate-x-0.5" />}
+                          {isRunning ? 'SUSPEND' : 'INITIALIZE'}
+                        </div>
+                        {!isRunning && <div className="absolute inset-0 bg-gradient-to-tr from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />}
+                      </Button>
+
+                      <div className="grid grid-cols-2 gap-4">
+                        <Button
+                          variant="ghost"
+                          onClick={() => {
+                            setIsRunning(false);
+                            if (mode === 'pomodoro') setPomoSeconds(25 * 60);
+                            else setStopwatchSeconds(0);
+                          }}
+                          className="h-16 rounded-[1.5rem] glass border-white/5 text-muted-foreground hover:text-foreground font-black text-[10px] tracking-widest uppercase"
+                        >
+                          <RotateCcw className="h-4 w-4 mr-2" /> RESET
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          onClick={() => mode === 'pomodoro' && setPomoSeconds(pomoSeconds + 60)}
+                          className="h-16 rounded-[1.5rem] glass border-white/5 text-muted-foreground hover:text-primary font-black text-[10px] tracking-widest uppercase"
+                        >
+                          <Zap className="h-4 w-4 mr-2" /> ADD MIN
+                        </Button>
+                      </div>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+
+                {/* 4. Status Matrix */}
+                <div className="space-y-4 pt-4 pb-12">
+                  <div className="flex items-center justify-between px-2">
+                    <h4 className="font-black text-[10px] uppercase tracking-[0.4em] text-muted-foreground">Mission Matrix</h4>
+                    <div className="h-1 w-12 bg-primary/20 rounded-full" />
+                  </div>
+                  
+                  <div className="grid grid-cols-1 gap-3">
+                    <Card className="glass-dark p-4 rounded-2xl border-white/5 flex items-center gap-4 group hover:border-primary/20 transition-colors">
+                      <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                        <ShieldCheck className="h-5 w-5" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-0.5">Network Status</p>
+                        <p className="text-xs font-bold text-foreground uppercase tracking-tighter flex items-center gap-2">
+                          Encrypted <div className="h-1 w-1 rounded-full bg-emerald-500 animate-pulse" />
+                        </p>
+                      </div>
+                    </Card>
+
+                    <Card className="glass-dark p-4 rounded-2xl border-white/5 flex items-center gap-4 group hover:border-primary/20 transition-colors">
+                      <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                        <Zap className="h-5 w-5" />
+                      </div>
+                      <div className="flex-1">
+                        <p className="text-[9px] font-black text-muted-foreground uppercase tracking-widest mb-0.5">Temporal Sync</p>
+                        <p className="text-xs font-bold text-foreground uppercase tracking-tighter">Active Node</p>
+                      </div>
+                    </Card>
                   </div>
                 </div>
 
-                <div className="flex justify-center gap-3 sm:gap-4 md:gap-6 flex-wrap">
-                  <div className="text-center p-3 sm:p-4 rounded-xl bg-card border border-primary/20 shadow-sm min-w-[80px] sm:min-w-[100px]">
-                    <div className="text-xl sm:text-2xl md:text-3xl font-bold text-primary mb-1">
-                      {format(currentTime, 'HH')}
-                    </div>
-                    <div className="text-xs sm:text-sm text-muted-foreground">Hours</div>
-                  </div>
-                  <div className="text-center p-3 sm:p-4 rounded-xl bg-card border border-primary/20 shadow-sm min-w-[80px] sm:min-w-[100px]">
-                    <div className="text-xl sm:text-2xl md:text-3xl font-bold text-primary mb-1">
-                      {format(currentTime, 'mm')}
-                    </div>
-                    <div className="text-xs sm:text-sm text-muted-foreground">Minutes</div>
-                  </div>
-                  <div className="text-center p-3 sm:p-4 rounded-xl bg-card border border-primary/20 shadow-sm min-w-[80px] sm:min-w-[100px]">
-                    <div className="text-xl sm:text-2xl md:text-3xl font-bold text-primary mb-1">
-                      {format(currentTime, 'ss')}
-                    </div>
-                    <div className="text-xs sm:text-sm text-muted-foreground">Seconds</div>
-                  </div>
-                </div>
-
-                <div className="text-center pt-2">
-                  <p className="text-base sm:text-lg md:text-xl text-muted-foreground">{format(currentTime, 'EEEE, MMMM d, yyyy')}</p>
-                </div>
               </div>
-            </Card>
-          </TabsContent>
-        </Tabs>
+            </div>
+
+          </div>
         </div>
       </PremiumGate>
     </AppLayout>

@@ -4,7 +4,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Pencil, Trash2, Calendar, Repeat, Users, Bell } from 'lucide-react';
+import { Pencil, Trash2, Calendar, Repeat, Users, Bell, Sparkles, ChevronRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useTaskContext } from '@/contexts/TaskContext';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -22,6 +22,7 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 interface TaskCardProps {
   task: Task;
@@ -31,342 +32,165 @@ interface TaskCardProps {
   readOnly?: boolean;
 }
 
-const priorityConfig: Record<PriorityLevel, { label: string; className: string }> = {
-  none: { label: 'None', className: 'bg-gray-200 text-gray-400' },
-  low: { label: 'Low', className: 'bg-muted text-muted-foreground' },
-  medium: { label: 'Medium', className: 'bg-chart-1/20 text-chart-1' },
-  high: { label: 'High', className: 'bg-destructive/20 text-destructive' },
-};
-
-// Helper function to calculate luminance and determine text color
-const getTextColor = (backgroundColor: string): string => {
-  try {
-    // Convert hex to RGB
-    const hex = backgroundColor.replace('#', '');
-    if (hex.length !== 6) return '#000000'; // Fallback for invalid hex
-    
-    const r = parseInt(hex.substring(0, 2), 16) / 255;
-    const g = parseInt(hex.substring(2, 4), 16) / 255;
-    const b = parseInt(hex.substring(4, 6), 16) / 255;
-    
-    // Calculate relative luminance (WCAG formula)
-    const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
-    
-    // Return black for light colors, white for dark colors
-    return luminance > 0.5 ? '#000000' : '#FFFFFF';
-  } catch {
-    return '#000000'; // Fallback
-  }
-};
-
-// Helper to convert hex to rgba with opacity
-const hexToRgba = (hex: string, opacity: number): string => {
-  try {
-    const cleanHex = hex.replace('#', '');
-    if (cleanHex.length !== 6) return hex; // Fallback
-    
-    const r = parseInt(cleanHex.substring(0, 2), 16);
-    const g = parseInt(cleanHex.substring(2, 4), 16);
-    const b = parseInt(cleanHex.substring(4, 6), 16);
-    return `rgba(${r}, ${g}, ${b}, ${opacity})`;
-  } catch {
-    return hex; // Fallback
-  }
+const priorityConfig: Record<PriorityLevel, { label: string; color: string; glow: string }> = {
+  none: { label: 'Standard', color: 'text-muted-foreground', glow: 'shadow-white/5' },
+  low: { label: 'Low', color: 'text-blue-400', glow: 'shadow-blue-500/10' },
+  medium: { label: 'Medium', color: 'text-amber-400', glow: 'shadow-amber-500/10' },
+  high: { label: 'Critical', color: 'text-rose-400', glow: 'shadow-rose-500/10' },
 };
 
 const TaskCard = ({ task, onToggleComplete, onEdit, onDelete, readOnly = false }: TaskCardProps) => {
   const { groups, categories } = useTaskContext();
   const { theme } = useTheme();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const priorityLevel = task.priorityLevel || 'none';
-  const priority = priorityConfig[priorityLevel as PriorityLevel] || priorityConfig.none;
+  const priority = priorityConfig[task.priorityLevel as PriorityLevel] || priorityConfig.none;
   const dueDate = safeParseDate(task.dueDate);
   const isOverdue = dueDate && safeIsPast(dueDate) && !safeIsToday(dueDate) && !task.isCompleted;
   const taskGroup = task.groupId ? groups.find(g => g.id === task.groupId) : null;
   const taskCategory = task.categoryId ? categories.find(c => c.id === task.categoryId) : null;
 
-  const handleDelete = () => {
-    onDelete(task.id);
-    setShowDeleteDialog(false);
-  };
-
   const reminder = safeParseDate(task.reminder);
-  const reminderTime = reminder ? safeFormat(reminder, 'MMM d, h:mm a', '') : null;
-
-  // ✅ Get color from colorIndex based on theme (matching Flutter sync)
-  // Get paletteIndex from user preferences (defaults to 0 - Classic)
-  const paletteIndex = getPaletteIndex();
-  const taskColor = task.colorIndex !== undefined 
-    ? getTaskColor(task.colorIndex, paletteIndex, theme)
-    : (task.color || undefined);
-
-  // ✅ Calculate colors for palette-colored card (matching Flutter)
-  const cardBackgroundColor = taskColor ? hexToRgba(taskColor, 0.9) : undefined;
-  const cardBorderColor = taskColor ? hexToRgba(taskColor, 0.3) : undefined;
-  const textColor = taskColor ? getTextColor(taskColor) : undefined;
+  const reminderTime = reminder ? safeFormat(reminder, 'h:mm a', '') : null;
 
   return (
-    <Card 
-      className={cn(
-        "transition-all duration-300 relative overflow-hidden cursor-pointer rounded-xl group",
-        "hover:shadow-xl hover:shadow-primary/10 hover:-translate-y-1 hover:scale-[1.01]",
-        "animate-fade-in",
-        task.isCompleted && "opacity-60"
-      )}
-      style={{
-        backgroundColor: cardBackgroundColor,
-        borderColor: cardBorderColor,
-        borderWidth: taskColor ? 1 : undefined,
-        boxShadow: taskColor ? '0 2px 8px rgba(0, 0, 0, 0.1)' : undefined,
-      }}
-      onClick={readOnly || !onEdit ? undefined : () => onEdit(task)} // Make entire card clickable like Flutter
-      className={readOnly || !onEdit ? '' : 'cursor-pointer'}
+    <motion.div
+      layout
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      whileHover={{ y: -4, scale: 1.01 }}
+      className="group relative"
     >
-      <CardContent className="p-3 sm:p-4 md:p-5">
-        <div className="flex items-start gap-2 sm:gap-3">
-          <div
-            className="mt-1 shrink-0 p-0.5 rounded-[2px]"
-            style={{
-              backgroundColor: textColor ? `${textColor}20` : undefined,
-            }}
-          >
-            <div onClick={(e) => e.stopPropagation()}>
-              <Checkbox
-                checked={task.isCompleted}
-                onCheckedChange={readOnly || !onToggleComplete ? undefined : () => onToggleComplete(task.id)}
-                disabled={readOnly || !onToggleComplete}
-                className="shrink-0"
-                style={{
-                  color: textColor || undefined,
-                  borderColor: textColor ? `${textColor}60` : undefined
-                }}
-              />
-            </div>
-          </div>
-          <div className="flex-1 min-w-0">
-            <div className="flex items-start justify-between gap-2">
-              <div className="flex items-center gap-2 flex-1 min-w-0">
-                <h3 
-                  className={cn(
-                    "font-medium text-sm sm:text-base break-words flex-1",
-                    task.isCompleted && "line-through opacity-70"
-                  )}
-                  style={{ color: textColor || undefined }}
-                >
-                  {task.title}
-                </h3>
-                {/* Group task indicator - matching Flutter style exactly */}
-                {taskGroup && (
-                  <div
-                    className="flex items-center gap-1.5 shrink-0 ml-1 px-1.5 py-0.5 rounded-md"
-                    style={{
-                      // Match Flutter: Get.theme.colorScheme.surface.withOpacity(0.12)
-                      backgroundColor: theme === 'dark' 
-                        ? 'rgba(255, 255, 255, 0.12)' 
-                        : 'rgba(0, 0, 0, 0.12)',
-                    }}
+      <Card 
+        className={cn(
+          "glass rounded-3xl border-white/5 overflow-hidden transition-all duration-300",
+          "hover:border-white/10 hover:shadow-2xl",
+          priority.glow,
+          task.isCompleted && "opacity-60 grayscale-[0.5]"
+        )}
+        onClick={() => !readOnly && onEdit?.(task)}
+      >
+        <CardContent className="p-5">
+          <div className="flex items-start gap-4">
+            {/* Action Zone */}
+            <div className="flex flex-col items-center gap-3 pt-1">
+              <div onClick={(e) => e.stopPropagation()} className="relative flex items-center justify-center">
+                <Checkbox
+                  checked={task.isCompleted}
+                  onCheckedChange={() => onToggleComplete?.(task.id)}
+                  className="h-6 w-6 rounded-lg border-2 border-primary/30 data-[state=checked]:bg-primary data-[state=checked]:border-primary transition-all duration-500"
+                />
+                {task.isCompleted && (
+                  <motion.div 
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    className="absolute inset-0 pointer-events-none flex items-center justify-center"
                   >
-                    <Avatar 
-                      className="h-5 w-5 shrink-0" 
-                      style={{ 
-                        // Match Flutter: Get.theme.colorScheme.primary.withOpacity(0.9)
-                        backgroundColor: theme === 'dark'
-                          ? 'hsl(var(--primary))'
-                          : 'hsl(var(--primary))',
-                        opacity: 0.9,
-                      }}
-                    >
-                      <AvatarFallback 
-                        className="text-[10px] font-bold text-white"
-                      >
-                        {taskGroup.name
-                          .trim()
-                          .split(/\s+/)
-                          .map(word => word[0])
-                          .join('')
-                          .toUpperCase()
-                          .slice(0, 2)}
-                      </AvatarFallback>
-                    </Avatar>
-                    <span
-                      className="text-[11px] font-semibold truncate max-w-[80px]"
-                      style={{ color: textColor || undefined }}
-                    >
-                      {taskGroup.name}
-                    </span>
+                    <Sparkles className="h-4 w-4 text-white animate-pulse" />
+                  </motion.div>
+                )}
+              </div>
+            </div>
+
+            {/* Content Zone */}
+            <div className="flex-1 min-w-0 space-y-3">
+              <div className="flex items-start justify-between gap-3">
+                <div className="space-y-1">
+                  <h3 className={cn(
+                    "text-lg font-black tracking-tight transition-all duration-500 break-words",
+                    task.isCompleted ? "line-through text-muted-foreground" : "text-foreground"
+                  )}>
+                    {task.title}
+                  </h3>
+                  
+                  {taskGroup && (
+                    <div className="flex items-center gap-2 px-2 py-0.5 rounded-full bg-white/5 border border-white/5 w-fit">
+                      <Users className="h-3 w-3 text-primary" />
+                      <span className="text-[10px] font-black uppercase tracking-tighter text-muted-foreground">{taskGroup.name}</span>
+                    </div>
+                  )}
+                </div>
+
+                <Badge variant="outline" className={cn("rounded-full border-white/5 font-black text-[10px] uppercase tracking-widest px-3 py-1", priority.color, "bg-white/5")}>
+                  {priority.label}
+                </Badge>
+              </div>
+
+              {task.description && (
+                <p className="text-xs text-muted-foreground font-bold line-clamp-2 leading-relaxed">
+                  {task.description}
+                </p>
+              )}
+
+              {/* Meta Info */}
+              <div className="flex flex-wrap items-center gap-4 pt-1">
+                {dueDate && (
+                  <div className={cn("flex items-center gap-2 text-[10px] font-black uppercase tracking-widest", isOverdue ? "text-rose-500" : "text-muted-foreground")}>
+                    <Calendar className="h-3.5 w-3.5" />
+                    <span>{safeFormat(dueDate, 'MMM d', '')}</span>
+                  </div>
+                )}
+                
+                {reminderTime && (
+                  <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-primary">
+                    <Bell className="h-3.5 w-3.5" />
+                    <span>{reminderTime}</span>
+                  </div>
+                )}
+
+                {taskCategory && (
+                  <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-muted-foreground">
+                    <ChevronRight className="h-3.5 w-3.5" />
+                    <span>{taskCategory.name}</span>
                   </div>
                 )}
               </div>
-              <Badge 
-                className="shrink-0 text-xs border" 
-                variant="outline"
-                style={{ 
-                  borderColor: textColor ? `${textColor}40` : undefined,
-                  backgroundColor: textColor ? `${textColor}15` : undefined,
-                  color: textColor || undefined
-                }}
-              >
-                {priority.label}
-              </Badge>
             </div>
-            {task.description && (
-              <p 
-                className="text-sm mt-1 line-clamp-2"
-                style={{ color: textColor || undefined }}
-              >
-                {task.description}
-              </p>
-            )}
-            <div className="flex items-center gap-4 mt-3 flex-wrap">
-              {dueDate && (
-                <div 
-                  className="flex items-center gap-1.5 text-xs"
-                  style={{ 
-                    color: isOverdue 
-                      ? (textColor === '#FFFFFF' ? '#ff6b6b' : '#dc2626')
-                      : (textColor || undefined)
-                  }}
-                >
-                  <Calendar className="h-3.5 w-3.5" style={{ color: textColor || undefined }} />
-                  <span>{safeFormat(dueDate, 'MMM d, yyyy', 'No date')}</span>
-                </div>
-              )}
-              {reminderTime && (
-                <div 
-                  className="flex items-center gap-1.5 text-xs"
-                  style={{ color: textColor || undefined }}
-                >
-                  <Bell className="h-3.5 w-3.5" style={{ color: textColor || undefined }} />
-                  <span>{reminderTime}</span>
-                </div>
-              )}
-              {task.recurrenceType && task.recurrenceType !== 'none' && (
-                <div 
-                  className="flex items-center gap-1.5 text-xs"
-                  style={{ color: textColor || undefined }}
-                >
-                  <Repeat className="h-3.5 w-3.5" style={{ color: textColor || undefined }} />
-                  <span className="capitalize">
-                    {task.recurrenceType}
-                    {task.recurrenceFrequency && task.recurrenceFrequency > 1 && ` (${task.recurrenceFrequency})`}
-                  </span>
-                </div>
-              )}
-              {taskCategory && (
-                <Badge 
-                  variant="outline" 
-                  className="text-xs border"
-                  style={{ 
-                    borderColor: textColor ? `${textColor}40` : undefined,
-                    backgroundColor: textColor ? `${textColor}15` : undefined,
-                    color: textColor || undefined
-                  }}
-                >
-                  {taskCategory.icon && `${taskCategory.icon} `}{taskCategory.name}
-                </Badge>
-              )}
-            </div>
-            {task.tags && task.tags.length > 0 && (
-              <div className="flex flex-wrap gap-1.5 mt-2">
-                {task.tags.map((tag, idx) => (
-                  <Badge 
-                    key={idx} 
-                    variant="outline" 
-                    className="text-xs px-2 py-0 border"
-                    style={{ 
-                      borderColor: textColor ? `${textColor}40` : undefined,
-                      backgroundColor: textColor ? `${textColor}15` : undefined,
-                      color: textColor || undefined
-                    }}
-                  >
-                    #{tag}
-                  </Badge>
-                ))}
-              </div>
-            )}
-            {task.subtasks && task.subtasks.length > 0 && (
-              <div 
-                className="mt-2 text-xs flex items-center gap-1"
-                style={{ color: textColor || undefined }}
-              >
-                <Checkbox 
-                  className="h-3 w-3" 
-                  style={{ 
-                    color: textColor || undefined,
-                    borderColor: textColor ? `${textColor}60` : undefined
-                  }}
-                />
-                <span>{task.subtasks.filter(st => st.completed).length}/{task.subtasks.length} subtasks</span>
-              </div>
-            )}
-          </div>
-          {!readOnly && (onEdit || onDelete) && (
-            <div className="flex items-start gap-1 shrink-0 ml-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-              {onEdit && (
+
+            {/* Control Panel */}
+            {!readOnly && (
+              <div className="opacity-0 group-hover:opacity-100 transition-all duration-300 flex flex-col gap-1">
                 <Button
                   variant="ghost"
                   size="icon"
-                  className={cn(
-                    "h-8 w-8 sm:h-8 sm:w-8 transition-all duration-300",
-                    "hover:scale-110 hover:bg-primary/10",
-                    taskColor && "hover:opacity-80"
-                  )}
-                  onClick={(e) => {
-                    e.stopPropagation(); // Prevent card click
-                    onEdit(task);
-                  }}
-                  style={{ 
-                    color: textColor,
-                  }}
+                  className="h-9 w-9 rounded-xl hover:bg-white/5 hover:text-primary transition-all"
+                  onClick={(e) => { e.stopPropagation(); onEdit?.(task); }}
                 >
-                  <Pencil className="h-3.5 w-3.5 sm:h-4 sm:w-4 transition-transform duration-300 group-hover:rotate-12" />
+                  <Pencil className="h-4 w-4" />
                 </Button>
-              )}
-              {onDelete && (
                 <Button
-              variant="ghost"
-              size="icon"
-              className={cn(
-                "h-8 w-8 sm:h-8 sm:w-8 transition-all duration-300",
-                "hover:scale-110 hover:bg-destructive/10",
-                taskColor && "hover:opacity-80"
-              )}
-              onClick={(e) => {
-                e.stopPropagation(); // Prevent card click
-                setShowDeleteDialog(true);
-              }}
-                  style={{ 
-                    color: textColor === '#FFFFFF' ? '#ff6b6b' : '#dc2626',
-              }}
-            >
-                  <Trash2 className="h-3.5 w-3.5 sm:h-4 sm:w-4 transition-transform duration-300 group-hover:rotate-12" />
+                  variant="ghost"
+                  size="icon"
+                  className="h-9 w-9 rounded-xl hover:bg-rose-500/10 hover:text-rose-500 transition-all"
+                  onClick={(e) => { e.stopPropagation(); setShowDeleteDialog(true); }}
+                >
+                  <Trash2 className="h-4 w-4" />
                 </Button>
-              )}
-            </div>
-          )}
-        </div>
-      </CardContent>
+              </div>
+            )}
+          </div>
+        </CardContent>
+      </Card>
 
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent>
+        <AlertDialogContent className="glass rounded-[2rem] border-white/10 shadow-2xl">
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete Task?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to delete "{task.title}"? This action cannot be undone.
+            <AlertDialogTitle className="font-black tracking-tight text-2xl">TERMINATE TASK?</AlertDialogTitle>
+            <AlertDialogDescription className="text-muted-foreground font-bold">
+              This will permanently remove "{task.title}" from the Task Matrix.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogFooter className="gap-3">
+            <AlertDialogCancel className="rounded-2xl font-black">CANCEL</AlertDialogCancel>
             <AlertDialogAction
-              onClick={handleDelete}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => onDelete?.(task.id)}
+              className="rounded-2xl bg-rose-500 hover:bg-rose-600 font-black"
             >
-              Delete
+              DELETE
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </Card>
+    </motion.div>
   );
 };
 

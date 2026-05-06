@@ -1,5 +1,14 @@
 import api from './apiService';
 
+export interface NoteMember {
+  id: string;
+  userId: string;
+  user: {
+    displayName: string;
+    avatar?: string;
+  };
+}
+
 export interface Note {
   id: string;
   title: string;
@@ -7,10 +16,11 @@ export interface Note {
   ownerId: string;
   isGroup: boolean;
   inviteCode: string | null;
-  reminder: string | null; // Local time for UI display
-  reminderUtc: string | null; // UTC time for cron scheduling
+  reminder: string | null;
+  reminderUtc: string | null;
   createdAt: string;
   updatedAt: string;
+  members?: NoteMember[];
   _count?: {
     members: number;
   };

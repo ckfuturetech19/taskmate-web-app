@@ -9,10 +9,11 @@ import {
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Sun, Moon, LogOut, User, Menu } from 'lucide-react';
+import { Sun, Moon, LogOut, User, Menu, Search, Sparkles } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { NotificationBell } from './NotificationBell';
 import { cn } from '@/lib/utils';
+import { motion } from 'framer-motion';
 
 interface AppHeaderProps {
   title: string;
@@ -38,109 +39,92 @@ const AppHeader = ({ title, collapsed = false, onMenuClick }: AppHeaderProps) =>
   return (
     <header 
       className={cn(
-        "fixed top-0 right-0 h-14 sm:h-16 bg-background border-b border-border z-[60] transition-all duration-300",
-        "left-0",
-        // Desktop: Adjust left based on sidebar state
-        collapsed ? "lg:left-16" : "lg:left-64"
+        "fixed top-0 right-0 h-16 z-40 transition-all duration-500 ease-in-out px-4 sm:px-6",
+        collapsed ? "md:left-16" : "md:left-72",
+        "left-0"
       )}
-      style={{ pointerEvents: 'auto' }}
     >
-      <div className="h-full px-4 sm:px-6 flex items-center justify-between gap-4" style={{ pointerEvents: 'auto' }}>
-        {/* Left Side - Hamburger Menu (Mobile/Tablet) + Title */}
-        <div className="flex items-center gap-3 flex-1 min-w-0" style={{ pointerEvents: 'auto' }}>
-          {/* Hamburger Menu Button - Only visible on mobile/tablet */}
-          <button
-            onClick={(e) => {
-              e.preventDefault();
-              e.stopPropagation();
-              console.log('Hamburger menu clicked!', { onMenuClick: !!onMenuClick });
-              if (onMenuClick) {
-                console.log('Calling onMenuClick handler');
-                onMenuClick();
-              } else {
-                console.warn('onMenuClick handler is not defined!');
-              }
-            }}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter' || e.key === ' ') {
-                e.preventDefault();
-                e.stopPropagation();
-                console.log('Hamburger menu activated via keyboard');
-                if (onMenuClick) {
-                  onMenuClick();
-                }
-              }
-            }}
-            className={cn(
-              "lg:hidden h-9 w-9 shrink-0 z-[60] relative",
-              "flex items-center justify-center",
-              "rounded-md hover:bg-accent hover:text-accent-foreground",
-              "transition-colors cursor-pointer",
-              "focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
-              "bg-transparent border-none outline-none"
-            )}
-            style={{ pointerEvents: 'auto' }}
-            aria-label="Open navigation menu"
-            aria-expanded="false"
-            type="button"
-          >
-            <Menu className="h-5 w-5 pointer-events-none" />
-          </button>
-          
-          {/* Page Title - Always visible */}
-          <h1 className="text-lg sm:text-xl font-semibold text-foreground truncate">
-            {title}
-          </h1>
-        </div>
+      <div className="h-full glass rounded-2xl border-white/10 mt-2 flex items-center justify-between px-5 shadow-xl relative overflow-hidden">
+        {/* Background Glow */}
+        <div className="absolute top-0 right-0 w-32 h-32 bg-primary/10 blur-[50px] pointer-events-none" />
 
-        {/* Right Side Icons */}
-        <div className="flex items-center gap-3 shrink-0">
-          <NotificationBell />
+        {/* Left Side */}
+        <div className="flex items-center gap-4 flex-1">
           <Button
             variant="ghost"
             size="icon"
-            onClick={toggleTheme}
-            className="h-9 w-9"
+            onClick={onMenuClick}
+            className="lg:hidden h-9 w-9 rounded-xl hover:bg-white/5"
           >
-            {theme === 'light' ? (
-              <Moon className="h-5 w-5" />
-            ) : (
-              <Sun className="h-5 w-5" />
-            )}
+            <Menu className="h-5 w-5" />
           </Button>
+          
+
+          <motion.div 
+            initial={{ opacity: 0, x: -10 }}
+            animate={{ opacity: 1, x: 0 }}
+            className="flex items-center gap-3"
+          >
+            <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
+            <h1 className="text-xs font-black uppercase tracking-[0.2em] text-muted-foreground">
+              {title}
+            </h1>
+          </motion.div>
+        </div>
+
+        {/* Right Side */}
+        <div className="flex items-center gap-4">
+          <div className="hidden sm:flex items-center gap-2 px-3 py-1 rounded-xl bg-white/5 border border-white/5">
+            <Sparkles className="h-3 w-3 text-primary" />
+            <span className="text-[9px] font-black uppercase tracking-widest text-primary">Pro Active</span>
+          </div>
+
           <div className="flex items-center gap-2">
+            <NotificationBell />
+            
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={toggleTheme}
+              className="h-9 w-9 rounded-xl hover:bg-white/5"
+            >
+              {theme === 'light' ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
+            </Button>
+
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="h-9 w-9 rounded-full p-0">
-                  <Avatar className="h-9 w-9">
-                    <AvatarImage src={undefined} alt={user?.name || 'User'} />
-                    <AvatarFallback className="bg-primary text-primary-foreground text-sm">
-                      {getInitials(user?.name)}
+                <button className="flex items-center gap-3 pl-2 pr-1 py-1 rounded-xl hover:bg-white/5 transition-all group">
+                  <div className="text-right hidden lg:block">
+                    <p className="text-xs font-black text-foreground group-hover:text-primary transition-colors">
+                      {user?.name || 'Commander'}
+                    </p>
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-tighter">
+                      Commander
+                    </p>
+                  </div>
+                  <Avatar className="h-9 w-9 rounded-xl border-2 border-white/10 ring-2 ring-primary/20 transition-all group-hover:ring-primary/50">
+                    <AvatarFallback className="bg-gradient-to-br from-primary to-secondary text-white font-black rounded-none text-xs">
+                      {getInitials(user?.name || 'CM')}
                     </AvatarFallback>
                   </Avatar>
-                </Button>
+                </button>
               </DropdownMenuTrigger>
-              <DropdownMenuContent align="end" className="w-56">
-                <div className="px-2 py-1.5">
-                  <p className="text-sm font-medium text-foreground">{user?.name || 'User'}</p>
-                  <p className="text-xs text-muted-foreground">{user?.email || ''}</p>
+              <DropdownMenuContent align="end" className="w-64 glass rounded-3xl border-white/10 p-2 shadow-2xl mt-4">
+                <div className="p-4 rounded-2xl bg-white/5 mb-2">
+                  <p className="text-sm font-black text-foreground">{user?.name || 'Commander'}</p>
+                  <p className="text-xs text-muted-foreground truncate">{user?.email}</p>
                 </div>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => navigate('/settings')}>
-                  <User className="h-4 w-4 mr-2" />
-                  Settings
+                <DropdownMenuItem onClick={() => navigate('/settings')} className="rounded-xl h-11 font-bold focus:bg-primary/10">
+                  <User className="h-4 w-4 mr-3 text-primary" />
+                  Profile Configuration
                 </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={handleSignOut} className="text-destructive">
-                  <LogOut className="h-4 w-4 mr-2" />
-                  Sign out
+                <DropdownMenuSeparator className="bg-white/5" />
+                <DropdownMenuItem onClick={handleSignOut} className="rounded-xl h-11 font-bold text-destructive focus:bg-destructive/10">
+                  <LogOut className="h-4 w-4 mr-3" />
+                  Terminate Session
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            <div className="hidden sm:block">
-              <p className="text-sm font-medium text-foreground">{user?.name || 'User'}</p>
-              <p className="text-xs text-muted-foreground">{user?.email || ''}</p>
-            </div>
           </div>
         </div>
       </div>

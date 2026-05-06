@@ -18,19 +18,27 @@ import {
   Code,
   Type,
   Strikethrough,
-  ListTodo
+  ListTodo,
+  Maximize2,
+  Minimize2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
 
+import { NoteMember } from '@/services/noteService';
+
 interface NoteEditorProps {
   content: string;
   onChange: (content: string) => void;
   editable?: boolean;
+  currentUserName?: string | null;
+  isFullscreen?: boolean;
+  onToggleFullscreen?: () => void;
+  onFocusChange?: (focused: boolean) => void;
 }
 
-const MenuBar = ({ editor }: { editor: any }) => {
+const MenuBar = ({ editor, onToggleFullscreen, isFullscreen }: { editor: any, onToggleFullscreen?: () => void, isFullscreen?: boolean }) => {
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
 
@@ -185,12 +193,27 @@ const MenuBar = ({ editor }: { editor: any }) => {
             label="Quote"
           />
         </div>
+
+        {onToggleFullscreen && (
+          <>
+            <Separator orientation="vertical" className="h-6" />
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={onToggleFullscreen}
+              className="h-9 w-9 p-0 transition-all duration-200 rounded-lg text-foreground/70 hover:bg-muted hover:text-foreground"
+              title={isFullscreen ? "Exit Focus Mode" : "Enter Focus Mode"}
+            >
+              {isFullscreen ? <Minimize2 className="h-4 w-4" /> : <Maximize2 className="h-4 w-4" />}
+            </Button>
+          </>
+        )}
       </div>
     </div>
   );
 };
 
-const NoteEditor = ({ content, onChange, editable = true }: NoteEditorProps) => {
+const NoteEditor = ({ content, onChange, editable = true, currentUserName, isFullscreen, onToggleFullscreen, onFocusChange }: NoteEditorProps) => {
   const editor = useEditor({
     extensions: [
       StarterKit.configure({
@@ -199,7 +222,29 @@ const NoteEditor = ({ content, onChange, editable = true }: NoteEditorProps) => 
         },
       }),
       TaskList,
-      TaskItem.configure({
+      TaskItem.extend({
+        addAttributes() {
+          return {
+            ...this.parent?.(),
+            completedBy: {
+              default: null,
+              parseHTML: element => element.getAttribute('data-completed-by'),
+              renderHTML: attributes => {
+                if (!attributes.completedBy) return {};
+                return { 'data-completed-by': attributes.completedBy };
+              },
+            },
+            completedAt: {
+              default: null,
+              parseHTML: element => element.getAttribute('data-completed-at'),
+              renderHTML: attributes => {
+                if (!attributes.completedAt) return {};
+                return { 'data-completed-at': attributes.completedAt };
+              },
+            },
+          }
+        },
+      }).configure({
         nested: true,
       }),
       Placeholder.configure({
@@ -209,8 +254,37 @@ const NoteEditor = ({ content, onChange, editable = true }: NoteEditorProps) => 
     content: content,
     editable: editable,
     onUpdate: ({ editor }) => {
+      // Find checked items without metadata and add them
+      const { state, dispatch } = editor.view;
+      const { tr } = state;
+      let modified = false;
+
+      state.doc.descendants((node, pos) => {
+        if (node.type.name === 'taskItem' && node.attrs.checked && !node.attrs.completedBy) {
+          tr.setNodeMarkup(pos, undefined, {
+            ...node.attrs,
+            completedBy: currentUserName || 'Someone',
+            completedAt: new Date().toISOString(),
+          });
+          modified = true;
+        } else if (node.type.name === 'taskItem' && !node.attrs.checked && node.attrs.completedBy) {
+          tr.setNodeMarkup(pos, undefined, {
+            ...node.attrs,
+            completedBy: null,
+            completedAt: null,
+          });
+          modified = true;
+        }
+      });
+
+      if (modified) {
+        dispatch(tr);
+      }
+
       onChange(editor.getHTML());
     },
+    onFocus: () => onFocusChange?.(true),
+    onBlur: () => onFocusChange?.(false),
     editorProps: {
       attributes: {
         class: 'prose prose-sm sm:prose-base dark:prose-invert max-w-none min-h-[500px] px-6 sm:px-8 py-6 focus:outline-none leading-relaxed',
@@ -228,7 +302,7 @@ const NoteEditor = ({ content, onChange, editable = true }: NoteEditorProps) => 
 
   return (
     <div className="flex flex-col h-full bg-gradient-to-b from-background to-background/80 rounded-lg border border-border overflow-hidden shadow-sm">
-      {editable && <MenuBar editor={editor} />}
+      {editable && <MenuBar editor={editor} onToggleFullscreen={onToggleFullscreen} isFullscreen={isFullscreen} />}
       <div className="flex-1 overflow-y-auto custom-scrollbar bg-background/40">
         <EditorContent editor={editor} />
       </div>

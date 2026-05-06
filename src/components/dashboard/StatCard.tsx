@@ -1,144 +1,154 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { LucideIcon, TrendingUp, TrendingDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useState } from 'react';
+import { motion } from 'framer-motion';
 
 interface StatCardProps {
   title: string;
-  value: number;
+  value: number | string;
   icon: LucideIcon;
   className?: string;
   trend?: 'up' | 'down';
   trendValue?: number;
   trendText?: string;
-  variant?: 'default' | 'destructive' | 'primary';
+  variant?: 'default' | 'destructive' | 'primary' | 'accent' | 'purple';
   delay?: number;
   subtitle?: string;
 }
 
-const StatCard = ({ title, value, icon: Icon, className, trend, trendValue, trendText, variant = 'default', delay = 0, subtitle }: StatCardProps) => {
-  const [isHovered, setIsHovered] = useState(false);
+const StatCard = ({ 
+  title, 
+  value, 
+  icon: Icon, 
+  className, 
+  trend, 
+  trendValue, 
+  trendText, 
+  variant = 'default', 
+  delay = 0, 
+  subtitle 
+}: StatCardProps) => {
   
   const variantStyles = {
     primary: {
-      card: 'text-primary-foreground border-primary/20 bg-primary shadow-primary/20',
-      iconBg: 'bg-white/20',
-      iconColor: 'text-primary-foreground',
-      value: 'text-primary-foreground',
-      title: 'text-primary-foreground/90',
-      gradient: 'linear-gradient(135deg, #1E6F43, #2FAE72)',
+      card: 'border-primary/20 bg-primary/10 hover:bg-primary/20',
+      iconBg: 'bg-primary/20',
+      iconColor: 'text-primary',
+      glow: 'shadow-primary/20',
+    },
+    purple: {
+      card: 'border-purple-500/20 bg-purple-500/10 hover:bg-purple-500/20',
+      iconBg: 'bg-purple-500/20',
+      iconColor: 'text-purple-400',
+      glow: 'shadow-purple-500/20',
+    },
+    accent: {
+      card: 'border-cyan-500/20 bg-cyan-500/10 hover:bg-cyan-500/20',
+      iconBg: 'bg-cyan-500/20',
+      iconColor: 'text-cyan-400',
+      glow: 'shadow-cyan-500/20',
     },
     default: {
-      card: 'bg-card/50 backdrop-blur-md border-border/50 hover:border-primary/50 shadow-sm',
-      iconBg: 'bg-primary/10',
-      iconColor: 'text-primary',
-      value: 'text-foreground',
-      title: 'text-muted-foreground',
-      gradient: 'none',
+      card: 'glass border-white/10 hover:border-primary/30',
+      iconBg: 'bg-white/5',
+      iconColor: 'text-foreground',
+      glow: 'shadow-black/20',
     },
     destructive: {
-      card: 'bg-card/50 backdrop-blur-md border-border/50 hover:border-destructive/50 shadow-sm',
-      iconBg: 'bg-destructive/10',
+      card: 'border-destructive/20 bg-destructive/10 hover:bg-destructive/20',
+      iconBg: 'bg-destructive/20',
       iconColor: 'text-destructive',
-      value: 'text-destructive',
-      title: 'text-muted-foreground',
-      gradient: 'none',
+      glow: 'shadow-destructive/20',
     },
   };
 
   const styles = variantStyles[variant];
 
   return (
-    <Card 
-      className={cn(
-        "relative overflow-hidden group cursor-pointer transition-all duration-500",
-        "hover:shadow-2xl hover:-translate-y-1.5",
-        "animate-slide-in-up rounded-2xl border",
-        styles.card,
-        className
-      )}
-      style={{ 
-        animationDelay: `${delay}ms`,
-        animationFillMode: 'both',
-        background: styles.gradient !== 'none' ? styles.gradient : undefined
-      }}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.5, delay: delay / 1000 }}
+      whileHover={{ y: -5, scale: 1.02 }}
+      className="perspective"
     >
-      {/* Decorative background glow */}
-      {isHovered && variant !== 'primary' && (
-        <div className="absolute -right-4 -top-4 w-24 h-24 bg-primary/5 blur-3xl rounded-full transition-all duration-1000 animate-pulse" />
-      )}
-
-      <CardContent className="p-5 sm:p-6 relative z-10">
-        <div className="flex items-start justify-between gap-4">
-          <div className="flex-1 min-w-0">
-            <p className={cn(
-              "text-xs sm:text-sm font-semibold uppercase tracking-wider mb-2",
-              styles.title
-            )}>
-              {title}
-            </p>
-            <div className="flex items-baseline gap-2 flex-wrap mb-1">
-              <p className={cn(
-                "text-3xl sm:text-4xl font-black transition-all duration-500",
-                isHovered && "scale-105 origin-left",
-                styles.value
-              )}>
-                {typeof value === 'number' ? value.toLocaleString() : value}
-              </p>
-            </div>
-            {trend && (
-              <div className="flex items-center gap-2 mt-3">
-                <div className={cn(
-                  "flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase",
-                  variant === 'primary'
-                    ? "bg-white/20 text-primary-foreground"
-                    : trend === 'up'
-                      ? "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20"
-                      : "bg-rose-500/10 text-rose-500 border border-rose-500/20"
-                )}>
-                  {trend === 'up' ? (
-                    <TrendingUp className="h-3 w-3" />
-                  ) : (
-                    <TrendingDown className="h-3 w-3" />
-                  )}
-                  {trendValue && <span>{trendValue}%</span>}
-                </div>
-                {trendText && (
-                  <p className={cn(
-                    "text-[10px] font-medium uppercase tracking-tight",
-                    variant === 'primary' ? "text-primary-foreground/70" : "text-muted-foreground/70"
-                  )}>
-                    {trendText}
-                  </p>
-                )}
-              </div>
-            )}
-            {subtitle && !trend && (
-              <p className={cn(
-                "text-xs mt-3 font-medium opacity-80",
-                variant === 'primary' ? "text-primary-foreground/80" : "text-muted-foreground"
-              )}>
-                {subtitle}
-              </p>
-            )}
-          </div>
-          <div className={cn(
-            "h-12 w-12 sm:h-14 sm:w-14 rounded-2xl flex items-center justify-center shrink-0 shadow-inner",
-            "transition-all duration-500 group-hover:rotate-6 group-hover:scale-110",
-            styles.iconBg
-          )}>
-            <Icon className={cn(
-              "h-6 w-6 sm:h-7 sm:w-7 transition-all duration-500",
-              isHovered && "scale-110",
-              styles.iconColor
-            )} />
-          </div>
+      <Card 
+        className={cn(
+          "relative overflow-hidden group cursor-pointer transition-all duration-500",
+          "rounded-3xl border cursor-tracking-card preserve-3d h-full",
+          styles.card,
+          styles.glow,
+          className
+        )}
+      >
+        {/* Background Gradient Mesh */}
+        <div className="absolute inset-0 opacity-10 group-hover:opacity-20 transition-opacity duration-500">
+          <div className={cn("absolute -top-10 -right-10 w-32 h-32 blur-3xl rounded-full", styles.iconBg)} />
         </div>
-      </CardContent>
-    </Card>
+
+        <CardContent className="p-6 relative z-10">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground mb-1 group-hover:text-primary transition-colors">
+                {title}
+              </p>
+              
+              <div className="flex items-baseline gap-2 flex-wrap mb-1">
+                <h2 className="text-3xl sm:text-4xl font-black tracking-tighter text-foreground group-hover:scale-105 transition-transform duration-500 origin-left">
+                  {typeof value === 'number' ? value.toLocaleString() : value}
+                </h2>
+              </div>
+
+              {trend && (
+                <div className="flex items-center gap-2 mt-4">
+                  <div className={cn(
+                    "flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-black uppercase",
+                    trend === 'up'
+                      ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20"
+                      : "bg-rose-500/10 text-rose-400 border border-rose-500/20"
+                  )}>
+                    {trend === 'up' ? <TrendingUp className="h-3 w-3" /> : <TrendingDown className="h-3 w-3" />}
+                    {trendValue && <span>{trendValue}%</span>}
+                  </div>
+                  {trendText && (
+                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-wider">
+                      {trendText}
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {subtitle && !trend && (
+                <p className="text-xs mt-4 font-bold text-muted-foreground uppercase tracking-widest opacity-80">
+                  {subtitle}
+                </p>
+              )}
+            </div>
+
+            <div className={cn(
+              "h-14 w-14 rounded-2xl flex items-center justify-center shrink-0 shadow-lg",
+              "transition-all duration-500 group-hover:rotate-12 group-hover:scale-110",
+              styles.iconBg
+            )}>
+              <Icon className={cn(
+                "h-7 w-7 transition-all duration-500",
+                styles.iconColor
+              )} />
+            </div>
+          </div>
+        </CardContent>
+
+        {/* Bottom border glow */}
+        <div className={cn(
+          "absolute bottom-0 left-0 w-full h-[2px] bg-gradient-to-r from-transparent via-primary to-transparent transform scale-x-0 group-hover:scale-x-100 transition-transform duration-700",
+          variant === 'purple' && "via-purple-500",
+          variant === 'accent' && "via-cyan-500",
+          variant === 'destructive' && "via-destructive"
+        )} />
+      </Card>
+    </motion.div>
   );
 };
 
 export default StatCard;
+
