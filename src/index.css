@@ -564,6 +564,7 @@ html {
   margin-bottom: 0.5rem;
   border-radius: 6px;
   transition: background-color 0.2s;
+  position: relative;
 }
 
 .ProseMirror ul[data-type="taskList"] li:hover {
@@ -613,6 +614,15 @@ html {
   word-break: break-word;
   margin: 0;
   line-height: 1.5;
+}
+
+/* Mobile-responsive adjustments for the completed-by badge */
+@media (max-width: 640px) {
+  .ProseMirror ul[data-type="taskList"] li[data-checked="true"][data-completed-by]::after {
+    font-size: 0.55rem;
+    padding: 0.1rem 0.35rem;
+    max-width: 80px;
+  }
 }
 
 /* Blockquote */
