@@ -4,6 +4,7 @@ import AppLayout from '@/components/app/AppLayout';
 import { Note, NoteService } from '@/services/noteService';
 import { socketService } from '@/services/socketService';
 import NoteEditor from '@/components/notes/NoteEditor';
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { toast } from '@/hooks/use-toast';
@@ -44,6 +45,7 @@ import { motion } from 'framer-motion';
 const NoteDetail = () => {
   const { noteId } = useParams<{ noteId: string }>();
   const navigate = useNavigate();
+  const { user } = useAuth();
   
   const [note, setNote] = useState<Note | null>(null);
   const [loading, setLoading] = useState(true);
@@ -278,7 +280,8 @@ const NoteDetail = () => {
                   <Loader2 className="h-4 w-4 animate-spin" />
                 ) : (
                   <FileDown className="h-4 w-4" />
-                )}\n                <span className="hidden sm:inline text-xs">PDF</span>
+                )}
+                <span className="hidden sm:inline text-xs">PDF</span>
               </Button>
             </motion.div>
 
@@ -453,7 +456,8 @@ const NoteDetail = () => {
                 setContent(newContent);
                 setIsDirty(true);
               }
-            }} 
+            }}
+            currentUserName={user?.name || 'Unknown'}
           />
         </motion.div>
       </motion.div>

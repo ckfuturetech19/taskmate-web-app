@@ -514,6 +514,7 @@ html {
   margin-bottom: 0.5rem;
   border-radius: 6px;
   transition: background-color 0.2s;
+  position: relative;
 }
 
 .ProseMirror ul[data-type="taskList"] li:hover {
@@ -523,6 +524,47 @@ html {
 .ProseMirror ul[data-type="taskList"] li[data-checked="true"] > div {
   opacity: 0.6;
   text-decoration: line-through;
+}
+
+/* Completed-by badge shown on the right side of completed tasks */
+.ProseMirror ul[data-type="taskList"] li[data-checked="true"][data-completed-by]::after {
+  content: "✓ " attr(data-completed-by);
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  margin-left: auto;
+  padding: 0.15rem 0.5rem;
+  font-size: 0.65rem;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: 0.02em;
+  color: hsl(142 65% 30%);
+  background: linear-gradient(135deg, hsl(142 50% 92%), hsl(142 40% 88%));
+  border: 1px solid hsl(142 40% 82%);
+  border-radius: 999px;
+  white-space: nowrap;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  animation: completedByFadeIn 0.3s ease-out;
+}
+
+/* Dark theme adjustment */
+.dark .ProseMirror ul[data-type="taskList"] li[data-checked="true"][data-completed-by]::after {
+  color: hsl(142 60% 70%);
+  background: linear-gradient(135deg, hsl(142 30% 18%), hsl(142 25% 22%));
+  border-color: hsl(142 30% 30%);
+}
+
+@keyframes completedByFadeIn {
+  from {
+    opacity: 0;
+    transform: translateX(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }
 
 .ProseMirror ul[data-type="taskList"] li > label {
@@ -551,6 +593,15 @@ html {
   word-break: break-word;
   margin: 0;
   line-height: 1.5;
+}
+
+/* Mobile-responsive adjustments for the completed-by badge */
+@media (max-width: 640px) {
+  .ProseMirror ul[data-type="taskList"] li[data-checked="true"][data-completed-by]::after {
+    font-size: 0.55rem;
+    padding: 0.1rem 0.35rem;
+    max-width: 80px;
+  }
 }
 
 /* Blockquote */
