@@ -1,26 +1,28 @@
 import { useEffect, useState } from 'react';
-import { useEditor, EditorContent } from '@tiptap/react';
+import { useEditor, EditorContent, Editor } from '@tiptap/react';
+import { BubbleMenu } from '@tiptap/react/menus';
 import StarterKit from '@tiptap/starter-kit';
 import TaskList from '@tiptap/extension-task-list';
 import TaskItem from '@tiptap/extension-task-item';
 import Placeholder from '@tiptap/extension-placeholder';
-import { 
-  Bold, 
-  Italic, 
-  List, 
-  ListOrdered, 
-  CheckSquare, 
-  Heading1, 
-  Heading2, 
-  Quote, 
-  Undo2, 
+import {
+  Bold,
+  Italic,
+  List,
+  ListOrdered,
+  CheckSquare,
+  Heading1,
+  Heading2,
+  Quote,
+  Undo2,
   Redo2,
   Code,
   Type,
   Strikethrough,
   ListTodo,
   Maximize2,
-  Minimize2
+  Minimize2,
+  PlusSquare
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -38,7 +40,7 @@ interface NoteEditorProps {
   onFocusChange?: (focused: boolean) => void;
 }
 
-const MenuBar = ({ editor, onToggleFullscreen, isFullscreen }: { editor: any, onToggleFullscreen?: () => void, isFullscreen?: boolean }) => {
+const MenuBar = ({ editor, onToggleFullscreen, isFullscreen }: { editor: Editor, onToggleFullscreen?: () => void, isFullscreen?: boolean }) => {
   const [canUndo, setCanUndo] = useState(false);
   const [canRedo, setCanRedo] = useState(false);
 
@@ -62,13 +64,19 @@ const MenuBar = ({ editor, onToggleFullscreen, isFullscreen }: { editor: any, on
 
   if (!editor) return null;
 
-  const ToolbarButton = ({ 
-    icon: Icon, 
-    action, 
-    active = false, 
+  const ToolbarButton = ({
+    icon: Icon,
+    action,
+    active = false,
     label,
-    disabled = false 
-  }: any) => (
+    disabled = false
+  }: {
+    icon: any;
+    action: () => void;
+    active?: boolean;
+    label: string;
+    disabled?: boolean;
+  }) => (
     <Button
       variant="ghost"
       size="sm"
@@ -81,8 +89,8 @@ const MenuBar = ({ editor, onToggleFullscreen, isFullscreen }: { editor: any, on
         "h-9 w-9 p-0 transition-all duration-200 rounded-lg",
         disabled
           ? "opacity-40 cursor-not-allowed text-muted-foreground"
-          : active 
-            ? "bg-primary/20 text-primary hover:bg-primary/30 shadow-sm" 
+          : active
+            ? "bg-primary/20 text-primary hover:bg-primary/30 shadow-sm"
             : "text-foreground/70 hover:bg-muted hover:text-foreground"
       )}
       title={label}
@@ -96,15 +104,15 @@ const MenuBar = ({ editor, onToggleFullscreen, isFullscreen }: { editor: any, on
       <div className="flex flex-wrap items-center gap-2 p-3">
         {/* Undo/Redo Group */}
         <div className="flex items-center gap-1">
-          <ToolbarButton 
-            icon={Undo2} 
-            action={() => editor.chain().focus().undo().run()} 
+          <ToolbarButton
+            icon={Undo2}
+            action={() => editor.chain().focus().undo().run()}
             disabled={!canUndo}
             label="Undo (Ctrl+Z)"
           />
-          <ToolbarButton 
-            icon={Redo2} 
-            action={() => editor.chain().focus().redo().run()} 
+          <ToolbarButton
+            icon={Redo2}
+            action={() => editor.chain().focus().redo().run()}
             disabled={!canRedo}
             label="Redo (Ctrl+Y)"
           />
@@ -114,21 +122,21 @@ const MenuBar = ({ editor, onToggleFullscreen, isFullscreen }: { editor: any, on
 
         {/* Heading Group */}
         <div className="flex items-center gap-1">
-          <ToolbarButton 
-            icon={Heading1} 
-            action={() => editor.chain().focus().toggleHeading({ level: 1 }).run()} 
+          <ToolbarButton
+            icon={Heading1}
+            action={() => editor.chain().focus().toggleHeading({ level: 1 }).run()}
             active={editor.isActive('heading', { level: 1 })}
             label="Heading 1"
           />
-          <ToolbarButton 
-            icon={Heading2} 
-            action={() => editor.chain().focus().toggleHeading({ level: 2 }).run()} 
+          <ToolbarButton
+            icon={Heading2}
+            action={() => editor.chain().focus().toggleHeading({ level: 2 }).run()}
             active={editor.isActive('heading', { level: 2 })}
             label="Heading 2"
           />
-          <ToolbarButton 
-            icon={Type} 
-            action={() => editor.chain().focus().setParagraph().run()} 
+          <ToolbarButton
+            icon={Type}
+            action={() => editor.chain().focus().setParagraph().run()}
             active={editor.isActive('paragraph')}
             label="Paragraph"
           />
@@ -138,27 +146,27 @@ const MenuBar = ({ editor, onToggleFullscreen, isFullscreen }: { editor: any, on
 
         {/* Text Formatting Group */}
         <div className="flex items-center gap-1">
-          <ToolbarButton 
-            icon={Bold} 
-            action={() => editor.chain().focus().toggleBold().run()} 
+          <ToolbarButton
+            icon={Bold}
+            action={() => editor.chain().focus().toggleBold().run()}
             active={editor.isActive('bold')}
             label="Bold (Ctrl+B)"
           />
-          <ToolbarButton 
-            icon={Italic} 
-            action={() => editor.chain().focus().toggleItalic().run()} 
+          <ToolbarButton
+            icon={Italic}
+            action={() => editor.chain().focus().toggleItalic().run()}
             active={editor.isActive('italic')}
             label="Italic (Ctrl+I)"
           />
-          <ToolbarButton 
-            icon={Strikethrough} 
-            action={() => editor.chain().focus().toggleStrike().run()} 
+          <ToolbarButton
+            icon={Strikethrough}
+            action={() => editor.chain().focus().toggleStrike().run()}
             active={editor.isActive('strike')}
             label="Strikethrough"
           />
-          <ToolbarButton 
-            icon={Code} 
-            action={() => editor.chain().focus().toggleCode().run()} 
+          <ToolbarButton
+            icon={Code}
+            action={() => editor.chain().focus().toggleCode().run()}
             active={editor.isActive('code')}
             label="Inline Code"
           />
@@ -168,27 +176,27 @@ const MenuBar = ({ editor, onToggleFullscreen, isFullscreen }: { editor: any, on
 
         {/* List Group */}
         <div className="flex items-center gap-1">
-          <ToolbarButton 
-            icon={List} 
-            action={() => editor.chain().focus().toggleBulletList().run()} 
+          <ToolbarButton
+            icon={List}
+            action={() => editor.chain().focus().toggleBulletList().run()}
             active={editor.isActive('bulletList')}
             label="Bullet List"
           />
-          <ToolbarButton 
-            icon={ListOrdered} 
-            action={() => editor.chain().focus().toggleOrderedList().run()} 
+          <ToolbarButton
+            icon={ListOrdered}
+            action={() => editor.chain().focus().toggleOrderedList().run()}
             active={editor.isActive('orderedList')}
             label="Numbered List"
           />
-          <ToolbarButton 
-            icon={ListTodo} 
-            action={() => editor.chain().focus().toggleTaskList().run()} 
+          <ToolbarButton
+            icon={ListTodo}
+            action={() => editor.chain().focus().toggleTaskList().run()}
             active={editor.isActive('taskList')}
             label="Checklist"
           />
-          <ToolbarButton 
-            icon={Quote} 
-            action={() => editor.chain().focus().toggleBlockquote().run()} 
+          <ToolbarButton
+            icon={Quote}
+            action={() => editor.chain().focus().toggleBlockquote().run()}
             active={editor.isActive('blockquote')}
             label="Quote"
           />
@@ -243,6 +251,34 @@ const NoteEditor = ({ content, onChange, editable = true, currentUserName, isFul
               },
             },
           }
+        },
+        addKeyboardShortcuts() {
+          const parentShortcuts = this.parent?.() || {};
+          return {
+            ...parentShortcuts,
+            Enter: () => {
+              if (this.editor.isActive('taskItem')) {
+                return this.editor.commands.setHardBreak();
+              }
+              return false;
+            },
+            Backspace: () => {
+              const { state } = this.editor;
+              const { selection } = state;
+              const { $anchor, empty } = selection;
+
+              if (empty && this.editor.isActive('taskItem')) {
+                if ($anchor.parentOffset === 0) {
+                  if ($anchor.parent.content.size > 0) {
+                    return true;
+                  } else {
+                    return this.editor.commands.liftListItem('taskItem');
+                  }
+                }
+              }
+              return false;
+            },
+          };
         },
       }).configure({
         nested: true,
@@ -303,7 +339,29 @@ const NoteEditor = ({ content, onChange, editable = true, currentUserName, isFul
   return (
     <div className="flex flex-col h-full bg-gradient-to-b from-background to-background/80 rounded-lg border border-border overflow-hidden shadow-sm">
       {editable && <MenuBar editor={editor} onToggleFullscreen={onToggleFullscreen} isFullscreen={isFullscreen} />}
-      <div className="flex-1 overflow-y-auto custom-scrollbar bg-background/40">
+      <div className="flex-1 overflow-y-auto custom-scrollbar bg-background/40 relative">
+        {editor && (
+          <BubbleMenu
+            editor={editor}
+            options={{ placement: 'bottom' }}
+            shouldShow={({ editor, state, from, to }) => {
+              return from === to && editor.isActive('taskItem');
+            }}
+          >
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={(e) => {
+                e.preventDefault();
+                editor.chain().focus().splitListItem('taskItem').run();
+              }}
+              className="h-8 shadow-md rounded-md flex items-center gap-1.5 bg-background border border-border hover:bg-muted text-foreground z-50"
+            >
+              <PlusSquare className="h-4 w-4 text-primary" />
+              <span className="font-medium text-xs">Add Task</span>
+            </Button>
+          </BubbleMenu>
+        )}
         <EditorContent editor={editor} />
       </div>
     </div>
