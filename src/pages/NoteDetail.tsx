@@ -317,41 +317,21 @@ const NoteDetail = () => {
 
   return (
     <AppLayout title={title || 'Note Detail'} isZenMode={isFullscreen}>
-      {/* Background Particles - Only show when not in fullscreen or as part of fullscreen background */}
+      {/* Optimized Background - Removed heavy particles for performance */}
       <div className={cn(
-        "absolute inset-0 pointer-events-none overflow-hidden z-0",
-        isFullscreen ? "fixed z-[99]" : ""
-      )}>
-        {[...Array(15)].map((_, i) => (
-          <motion.div
-            key={i}
-            className="absolute w-1.5 h-1.5 bg-primary/10 rounded-full blur-[1px]"
-            animate={{
-              y: ["0%", "100%", "0%"],
-              x: ["0%", "50%", "0%"],
-              opacity: [0.05, 0.15, 0.05],
-            }}
-            transition={{
-              duration: 30 + Math.random() * 40,
-              repeat: Infinity,
-              ease: "linear",
-              delay: Math.random() * -50
-            }}
-            style={{
-              left: `${Math.random() * 100}%`,
-              top: `${Math.random() * 100}%`,
-            }}
-          />
-        ))}
-      </div>
+        "absolute inset-0 pointer-events-none overflow-hidden z-0 bg-transparent",
+        isFullscreen ? "fixed z-[99] bg-background" : ""
+      )} />
 
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
         className={cn(
-          "max-w-6xl mx-auto space-y-6 relative z-10 transition-all duration-500",
-          isFullscreen ? "max-w-none w-full h-screen bg-background m-0 p-0 overflow-hidden rounded-none border-none" : "px-2 sm:px-4 pb-20"
+          "max-w-6xl mx-auto space-y-6 relative transition-all duration-500",
+          isFullscreen 
+            ? "z-[100] max-w-none w-full h-screen bg-background m-0 p-0 overflow-hidden rounded-none border-none" 
+            : "z-10 px-2 sm:px-4 pb-20"
         )}
       >
         {/* Compact Consolidated Header - Hide in Fullscreen */}
@@ -588,9 +568,9 @@ const NoteDetail = () => {
             </div>
           </div>
         </div>
-
-        )                                                     
-        }{/* Rich Text Editor Area with 3D Effect */}
+      )}
+      
+      {/* Rich Text Editor Area with 3D Effect */}
         <motion.div
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}

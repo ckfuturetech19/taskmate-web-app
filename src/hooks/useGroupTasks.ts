@@ -21,7 +21,13 @@ export const useGroupTasks = (userId: string | null, groups: Group[]) => {
         groups.map(async (group) => {
           try {
             const response = await api.get(`/groups/${group.id}/tasks`);
-            allTasks.push(...response.data);
+            if (Array.isArray(response.data)) {
+              allTasks.push(...response.data);
+            } else if (response.data && typeof response.data === 'object' && Array.isArray(response.data.tasks)) {
+              allTasks.push(...response.data.tasks);
+            } else {
+              console.error(`API /groups/${group.id}/tasks did not return an array:`, response.data);
+            }
           } catch (err) {
             console.error(`Error fetching tasks for group ${group.id}:`, err);
           }

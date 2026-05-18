@@ -14,7 +14,7 @@ export const useTaskOperations = () => {
   }, []);
 
   const addTask = useCallback(async (
-    taskData: Omit<Task, 'id' | 'createdAt' | 'userId' | 'completed'>
+    taskData: Omit<Task, 'id' | 'createdAt' | 'userId'>
   ) => {
     if (!user) throw new Error('User must be logged in');
 

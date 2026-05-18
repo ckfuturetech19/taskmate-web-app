@@ -19,11 +19,14 @@ import { CalendarDays, Clock, CheckCircle2, Plus, TrendingUp, AlertCircle, FileD
 import { safeIsToday, safeParseDate, safeIsPast } from '@/lib/dateUtils';
 import { toast } from '@/hooks/use-toast';
 import { motion } from 'framer-motion';
+import { useWorkspace } from '@/providers/WorkspaceProvider';
+import { WorkspaceDashboard } from '@/modules/workspace/WorkspaceDashboard';
 
 const Dashboard = () => {
   const { user } = useAuth();
   const { tasks, addTask, updateTask, deleteTask, toggleTaskComplete, getPersonalTasks } = useTaskContext();
   const { tasksCompleted, tasksCreated, currentStreak, completionRate: analyticsCompletionRate } = useAnalytics();
+  const { currentWorkspace } = useWorkspace();
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
@@ -116,7 +119,7 @@ const Dashboard = () => {
             <Button
               onClick={() => setDialogOpen(true)}
               size="lg"
-              className="rounded-2xl px-8 h-14 font-black transition-all hover:scale-105 active:scale-95 shadow-2xl shadow-primary/30 bg-primary hover:bg-primary/90 text-sm tracking-widest"
+              className="rounded-xl px-8 h-14 font-black transition-all hover:scale-105 active:scale-95 shadow-2xl shadow-primary/30 bg-primary hover:bg-primary/90 text-sm tracking-widest"
             >
               <Plus className="h-5 w-5 mr-2" />
               INITIATE TASK
@@ -169,7 +172,7 @@ const Dashboard = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="glass rounded-[2.5rem] border-white/10 overflow-hidden flex flex-col h-[380px]"
+            className="glass rounded-xl border-white/10 overflow-hidden flex flex-col h-[380px]"
           >
             <div className="p-6 border-b border-white/5 flex items-center justify-between">
               <h3 className="font-black text-sm tracking-tight flex items-center gap-2 uppercase italic text-muted-foreground">
@@ -216,7 +219,7 @@ const Dashboard = () => {
               tasks={personalTasks} 
               onAddTask={() => setDialogOpen(true)} 
               onStartTimer={(t) => console.log(t)} 
-              className="flex-1 rounded-[2.5rem]"
+              className="flex-1 rounded-xl"
             />
           </motion.div>
 
@@ -227,7 +230,7 @@ const Dashboard = () => {
             transition={{ delay: 0.4 }}
             className="h-[380px] flex flex-col"
           >
-            <TimeTrackerCard className="flex-1 rounded-[2.5rem]" />
+            <TimeTrackerCard className="flex-1 rounded-xl" />
           </motion.div>
         </div>
 
@@ -239,12 +242,12 @@ const Dashboard = () => {
           className="space-y-4"
         >
           <Tabs defaultValue="today" onValueChange={setActiveTab} className="w-full">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4 px-4 bg-white/5 p-4 rounded-[2rem] border border-white/10">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4 px-4 bg-white/5 p-4 rounded-xl border border-white/10">
               <div className="flex items-center gap-4">
                 <div className="h-10 w-2 bg-primary rounded-full shadow-[0_0_15px_rgba(var(--primary-rgb),0.5)]" />
                 <h3 className="font-black text-2xl tracking-tighter uppercase italic">Task Matrix</h3>
               </div>
-              <TabsList className="bg-white/5 border border-white/10 rounded-2xl h-12 p-1 min-w-[300px]">
+              <TabsList className="bg-white/5 border border-white/10 rounded-xl h-12 p-1 min-w-[300px]">
                 <TabsTrigger value="today" className="flex-1 rounded-xl px-6 text-[10px] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-black tracking-[0.2em]">TODAY</TabsTrigger>
                 <TabsTrigger value="upcoming" className="flex-1 rounded-xl px-6 text-[10px] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-black tracking-[0.2em]">UPCOMING</TabsTrigger>
                 <TabsTrigger value="overdue" className="flex-1 rounded-xl px-6 text-[10px] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-black tracking-[0.2em]">OVERDUE</TabsTrigger>
@@ -265,7 +268,7 @@ const Dashboard = () => {
                     </motion.div>
                   ))
                 ) : (
-                  <Card className="glass border-dashed border-white/20 rounded-[2.5rem] p-16 text-center col-span-full">
+                  <Card className="glass border-dashed border-white/20 rounded-xl p-16 text-center col-span-full">
                     <div className="h-20 w-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
                       <CheckCircle2 className="h-10 w-10 text-primary" />
                     </div>
@@ -290,7 +293,7 @@ const Dashboard = () => {
                     </motion.div>
                   ))
                 ) : (
-                  <Card className="glass border-dashed border-white/20 rounded-[2.5rem] p-16 text-center col-span-full">
+                  <Card className="glass border-dashed border-white/20 rounded-xl p-16 text-center col-span-full">
                     <div className="h-20 w-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
                       <CalendarDays className="h-10 w-10 text-primary" />
                     </div>
@@ -315,7 +318,7 @@ const Dashboard = () => {
                     </motion.div>
                   ))
                 ) : (
-                  <Card className="glass border-dashed border-white/20 rounded-[2.5rem] p-16 text-center col-span-full">
+                  <Card className="glass border-dashed border-white/20 rounded-xl p-16 text-center col-span-full">
                     <div className="h-20 w-20 bg-rose-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
                       <AlertCircle className="h-10 w-10 text-rose-500" />
                     </div>

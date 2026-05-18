@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
-import AppLayout from '@/components/app/AppLayout';
+import { useAuth } from '@/contexts/AuthContext';
 import { useTaskContext } from '@/contexts/TaskContext';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,10 +10,12 @@ import { format } from 'date-fns';
 import PremiumGate from '@/components/premium/PremiumGate';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Task } from '@/types/task';
+import AppLayout from '@/components/app/AppLayout';
 
 type TimerMode = 'clock' | 'pomodoro' | 'stopwatch';
 
 const Clock = () => {
+  const { user } = useAuth();
   const navigate = useNavigate();
   const { getPersonalTasks, updateTask } = useTaskContext();
   const personalTasks = getPersonalTasks();
@@ -111,7 +113,7 @@ const Clock = () => {
         description="Access advanced temporal synchronization and focus modules."
         variant="dialog"
       >
-        <div className="min-h-[80vh] flex flex-col items-center justify-center py-6 sm:py-12 relative overflow-hidden">
+        <div className="min-h-[85vh] flex flex-col items-center justify-center py-4 sm:py-12 relative overflow-hidden">
           
           {/* Background Ambient Glows */}
           <div className="absolute top-1/4 left-1/4 w-[500px] h-[500px] bg-primary/5 blur-[120px] rounded-full pointer-events-none" />
@@ -119,10 +121,10 @@ const Clock = () => {
 
           <div className="w-full max-w-[1400px] mx-auto relative z-10 px-4">
             
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 xl:gap-12 items-center">
               
               {/* Left Column - The Massive Immersion Clock */}
-              <div className="lg:col-span-8 flex flex-col items-center justify-center min-h-[500px]">
+              <div className="lg:col-span-8 flex flex-col items-center justify-center min-h-[300px] sm:min-h-[500px]">
                 <AnimatePresence mode="wait">
                   <motion.div
                     key={mode}
@@ -163,7 +165,12 @@ const Clock = () => {
 
                     {/* High-Fidelity Time Display */}
                     <div className="text-center">
-                      <div className="text-[10rem] sm:text-[12rem] md:text-[14rem] font-black tracking-tighter text-foreground leading-none font-jakarta flex items-center justify-center gap-4 drop-shadow-[0_20px_50px_rgba(0,0,0,0.5)]">
+                      <div className={cn(
+                        "font-black tracking-tighter text-foreground leading-none font-jakarta flex items-center justify-center gap-1 sm:gap-4 drop-shadow-[0_20px_50px_rgba(0,0,0,0.5)]",
+                        user?.isPro 
+                          ? "text-[4rem] xs:text-[5rem] sm:text-[6.5rem] md:text-[7.5rem] lg:text-[8.5rem] xl:text-[11rem] 2xl:text-[14rem]" 
+                          : "text-[3rem] xs:text-[4rem] sm:text-[5rem] md:text-[6rem] lg:text-[7rem]"
+                      )}>
                         {mode === 'clock' ? (
                           <>
                             <span className="tabular-nums">{format(currentTime, 'HH')}</span>
@@ -180,7 +187,7 @@ const Clock = () => {
                       <div className="mt-8 flex flex-col items-center">
                         <div className="h-px w-32 bg-gradient-to-r from-transparent via-primary/50 to-transparent mb-4" />
                         <div className="space-y-2">
-                          <p className="text-lg sm:text-xl font-black text-primary/60 uppercase tracking-[0.6em] italic drop-shadow-sm">
+                          <p className="text-base sm:text-xl font-black text-primary/60 uppercase tracking-[0.3em] sm:tracking-[0.6em] italic drop-shadow-sm">
                             {mode === 'clock' ? format(currentTime, 'EEEE, MMMM dd') : 
                              mode === 'pomodoro' ? (isWork ? 'Deep Work Mission' : 'Recharge Phase') : 'Mission Elapsed Time'}
                           </p>
@@ -201,7 +208,7 @@ const Clock = () => {
               </div>
 
               {/* Right Column - Tactical Sidebar */}
-              <div className="lg:col-span-4 space-y-8 max-h-[70vh] overflow-y-auto pr-2 custom-scrollbar">
+              <div className="lg:col-span-4 space-y-8 max-h-none lg:max-h-[70vh] overflow-y-auto pr-0 lg:pr-2 custom-scrollbar">
                 
                 {/* 1. Mode Selector */}
                 <div className="glass p-2 rounded-[2rem] border-white/10 flex flex-col gap-2">
@@ -290,7 +297,7 @@ const Clock = () => {
                         disabled={mode === 'pomodoro' && !selectedTask}
                         onClick={() => setIsRunning(!isRunning)}
                         className={cn(
-                          "w-full h-20 rounded-[2rem] transition-all duration-500 font-black text-sm tracking-[0.3em] uppercase group relative overflow-hidden",
+                          "w-full h-16 sm:h-20 rounded-[2rem] transition-all duration-500 font-black text-xs sm:text-sm tracking-[0.3em] uppercase group relative overflow-hidden",
                           isRunning 
                             ? "bg-white/5 border border-white/10 text-foreground" 
                             : "bg-primary text-primary-foreground shadow-2xl shadow-primary/40",
@@ -312,14 +319,14 @@ const Clock = () => {
                             if (mode === 'pomodoro') setPomoSeconds(25 * 60);
                             else setStopwatchSeconds(0);
                           }}
-                          className="h-16 rounded-[1.5rem] glass border-white/5 text-muted-foreground hover:text-foreground font-black text-[10px] tracking-widest uppercase"
+                          className="h-14 sm:h-16 rounded-[1.5rem] glass border-white/5 text-muted-foreground hover:text-foreground font-black text-[10px] tracking-widest uppercase"
                         >
                           <RotateCcw className="h-4 w-4 mr-2" /> RESET
                         </Button>
                         <Button
                           variant="ghost"
                           onClick={() => mode === 'pomodoro' && setPomoSeconds(pomoSeconds + 60)}
-                          className="h-16 rounded-[1.5rem] glass border-white/5 text-muted-foreground hover:text-primary font-black text-[10px] tracking-widest uppercase"
+                          className="h-14 sm:h-16 rounded-[1.5rem] glass border-white/5 text-muted-foreground hover:text-primary font-black text-[10px] tracking-widest uppercase"
                         >
                           <Zap className="h-4 w-4 mr-2" /> ADD MIN
                         </Button>

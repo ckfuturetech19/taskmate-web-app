@@ -111,7 +111,8 @@ const Tasks = () => {
           </div>
             
           <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
-            <Select value={selectedGroup} onValueChange={setSelectedGroup}>
+            {/* Group Filter - Hidden for now */}
+            {/* <Select value={selectedGroup} onValueChange={setSelectedGroup}>
               <SelectTrigger className="w-full sm:w-[200px] md:w-[220px] text-sm">
                 <SelectValue placeholder="All Tasks" />
               </SelectTrigger>
@@ -137,7 +138,7 @@ const Tasks = () => {
                   </>
                 )}
               </SelectContent>
-            </Select>
+            </Select> */}
 
             <Select value={showCompleted ? 'show' : 'hide'} onValueChange={(v) => setShowCompleted(v === 'show')}>
               <SelectTrigger className="w-full sm:w-[180px] md:w-[200px] text-sm">
@@ -212,8 +213,8 @@ const Tasks = () => {
           </div>
         )}
 
-        {/* Groups Section */}
-        {userGroups.length > 0 && (
+        {/* Groups Section - Hidden for now */}
+        {/* {userGroups.length > 0 && (
           <div className="space-y-4 pt-6 border-t">
             <div className="flex items-center justify-between">
               <h2 className="text-xl font-semibold flex items-center gap-2">
@@ -244,7 +245,7 @@ const Tasks = () => {
               </div>
             )}
           </div>
-        )}
+        )} */}
       </div>
 
       {isPremium && (

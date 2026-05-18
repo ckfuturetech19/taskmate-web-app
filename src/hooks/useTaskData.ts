@@ -12,7 +12,16 @@ export const useTaskData = (userId: string | null) => {
     if (!userId) return;
     try {
       const response = await api.get('/tasks');
-      setTasks(response.data);
+      // Ensure response.data is an array
+      if (Array.isArray(response.data)) {
+        setTasks(response.data);
+      } else if (response.data && typeof response.data === 'object' && Array.isArray(response.data.tasks)) {
+        // Handle cases where response is { tasks: [...] }
+        setTasks(response.data.tasks);
+      } else {
+        console.error('API /tasks did not return an array:', response.data);
+        setTasks([]);
+      }
       setError(null);
     } catch (err: any) {
       console.error('Error fetching tasks:', err);

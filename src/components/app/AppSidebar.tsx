@@ -1,6 +1,6 @@
 import logoImg from '../../assets/logo.png';
 import { NavLink, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, CheckSquare, BarChart3, Settings, ChevronLeft, ChevronRight, X, Shield, LogOut, Smartphone, Timer, Users, FileText, Sparkles } from 'lucide-react';
+import { LayoutDashboard, CheckSquare, BarChart3, Settings, ChevronLeft, ChevronRight, X, Shield, LogOut, Smartphone, Timer, Users, UserPlus, FileText, Sparkles } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -9,14 +9,25 @@ import { useTaskContext } from '@/contexts/TaskContext';
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '@/contexts/ThemeContext';
-
+import { WorkspaceSwitcher } from '@/modules/workspace/WorkspaceSwitcher';
+import { useWorkspace } from '@/providers/WorkspaceProvider';
+import { useWorkspaceInvitations } from '@/hooks/workspace/useWorkspace';
+import { Briefcase, MessageSquare, Bell as BellIcon } from 'lucide-react';
 const menuItems = [
   { icon: LayoutDashboard, label: 'Dashboard', path: '/dashboard' },
   { icon: CheckSquare, label: 'Tasks', path: '/tasks', showBadge: true },
   { icon: FileText, label: 'Notes', path: '/notes' },
   { icon: Users, label: 'Team', path: '/groups' },
+  // { icon: UserPlus, label: 'Invitations', path: '/invitations' },
   { icon: BarChart3, label: 'Analytics', path: '/analytics' },
   { icon: Timer, label: 'Clock', path: '/clock' },
+];
+
+const workspaceItems = [
+  { icon: LayoutDashboard, label: 'Workspace Dashboard', path: '/workspace/dashboard' },
+  { icon: Briefcase, label: 'Projects', path: '/projects' },
+  { icon: CheckSquare, label: 'Team Tasks', path: '/team-tasks' },
+  { icon: Settings, label: 'Workspace Settings', path: '/workspace-settings', role: ['OWNER', 'ADMIN'] },
 ];
 
 interface AppSidebarProps {
@@ -32,6 +43,8 @@ const AppSidebar = ({ mobileMenuOpen, onClose, collapsed, setCollapsed }: AppSid
   const navigate = useNavigate();
   const location = useLocation();
   const { theme } = useTheme();
+  const { currentWorkspace, role: userRole } = useWorkspace();
+  const { count: invitationCount } = useWorkspaceInvitations();
   
   const personalTasks = getPersonalTasks();
   const pendingTaskCount = personalTasks.filter(task => !task.isCompleted).length;
@@ -64,40 +77,32 @@ const AppSidebar = ({ mobileMenuOpen, onClose, collapsed, setCollapsed }: AppSid
         transition={{ type: 'spring', stiffness: 300, damping: 30 }}
         className={cn(
           "fixed left-0 top-0 h-full z-50 flex flex-col transition-all duration-500",
-          collapsed ? "p-2" : (window.innerWidth < 1024 ? "p-3" : "p-4"),
+          collapsed ? "p-1" : "p-2",
           "bg-transparent"
         )}
       >
-        <div className="h-full glass rounded-[2.5rem] border-white/10 flex flex-col overflow-hidden shadow-2xl relative">
+        <div className="h-full glass rounded-xl border-white/10 flex flex-col overflow-hidden shadow-2xl relative">
           
-          {/* Logo Section */}
-          <div className={cn(
-            "flex items-center gap-4 transition-all duration-300",
-            collapsed ? "justify-center p-3" : "p-6 justify-start"
-          )}>
-            <div className="relative group">
-              <div className="absolute inset-0 bg-primary/20 blur-lg rounded-full opacity-0 group-hover:opacity-100 transition-opacity" />
-              <img src={logoImg} alt="Logo" className={cn(
-                "relative z-10 group-hover:rotate-12 transition-transform duration-500",
-                collapsed ? "h-8 w-8" : "h-10 w-10"
-              )} />
-            </div>
+          {/* <WorkspaceSwitcher collapsed={collapsed} /> */}
+          <div className={cn("px-3 py-3 mb-1 flex items-center gap-3", collapsed && "px-1.5 justify-center")}>
+            <img src={logoImg} alt="Logo" className={cn("h-10 w-10 transition-transform duration-500 hover:rotate-12", collapsed && "h-8 w-8")} />
             {!collapsed && (
-              <motion.span 
-                initial={{ opacity: 0, x: -10 }}
-                animate={{ opacity: 1, x: 0 }}
-                className="font-black text-xl tracking-tighter text-foreground"
-              >
+              <span className="font-black text-xl tracking-tighter text-foreground leading-none">
                 TASK<span className="text-primary">MATE</span>
-              </motion.span>
+              </span>
             )}
           </div>
 
           {/* Navigation */}
           <nav className={cn(
-            "flex-1 space-y-2 mt-4 overflow-y-auto overflow-x-hidden transition-all duration-300",
+            "flex-1 space-y-2 overflow-y-auto overflow-x-hidden transition-all duration-300",
             collapsed ? "px-1" : "px-3"
           )}>
+            {!collapsed && (
+              <div className="px-4 mb-2 mt-4">
+                <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-50">Personal</p>
+              </div>
+            )}
             {menuItems.map((item) => {
               const isActive = location.pathname === item.path;
               return (
@@ -106,7 +111,7 @@ const AppSidebar = ({ mobileMenuOpen, onClose, collapsed, setCollapsed }: AppSid
                   to={item.path}
                   onClick={() => window.innerWidth < 768 && onClose()}
                   className={cn(
-                    "flex items-center rounded-2xl transition-all duration-300 group relative py-3.5",
+                    "flex items-center rounded-xl transition-all duration-300 group relative py-2.5",
                     collapsed ? "justify-center px-0 mx-auto w-12" : "justify-start px-4 gap-4",
                     isActive 
                       ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20" 
@@ -131,6 +136,11 @@ const AppSidebar = ({ mobileMenuOpen, onClose, collapsed, setCollapsed }: AppSid
                       {pendingTaskCount}
                     </Badge>
                   )}
+                  {item.label === 'Invitations' && invitationCount > 0 && !collapsed && (
+                    <Badge className="ml-auto bg-primary text-primary-foreground border-0 font-black">
+                      {invitationCount}
+                    </Badge>
+                  )}
                   {isActive && !collapsed && (
                     <motion.div 
                       layoutId="active-pill"
@@ -140,56 +150,77 @@ const AppSidebar = ({ mobileMenuOpen, onClose, collapsed, setCollapsed }: AppSid
                 </NavLink>
               );
             })}
+
+            {/* Workspace Specific Items - Hidden for now */}
+            {/* <div className="mt-8 pt-8 border-t border-white/5 space-y-2">
+              {!collapsed && (
+                <div className="px-4 mb-2 flex items-center justify-between">
+                  <p className="text-[10px] font-black text-muted-foreground uppercase tracking-widest opacity-50">Workspace</p>
+                  {currentWorkspace?.workspaceType === 'COMPANY' && (
+                    <Badge variant="outline" className="text-[8px] font-black uppercase tracking-tighter h-4 px-1 border-primary/20 text-primary">Active</Badge>
+                  )}
+                </div>
+              )}
+              
+              {workspaceItems.map((item) => {
+                // If it's a personal workspace, some items might be hidden or disabled
+                const isCompany = currentWorkspace?.workspaceType === 'COMPANY';
+                
+                // For role-restricted items, check permission
+                if (item.role && !item.role.includes(userRole || '')) return null;
+                
+                const isActive = location.pathname === item.path;
+                return (
+                  <NavLink 
+                    key={item.path} 
+                    to={item.path}
+                    onClick={() => window.innerWidth < 768 && onClose()}
+                    className={cn(
+                      "flex items-center rounded-xl transition-all duration-300 group relative py-2.5",
+                      collapsed ? "justify-center px-0 mx-auto w-12" : "justify-start px-4 gap-4",
+                      isActive 
+                        ? "bg-primary text-primary-foreground shadow-lg shadow-primary/20" 
+                        : cn(
+                            "hover:bg-black/5 dark:hover:bg-white/5",
+                            theme === 'dark' ? "text-muted-foreground hover:text-foreground" : "text-slate-600 hover:text-black font-bold"
+                          )
+                    )}
+                  >
+                    <item.icon className={cn("h-5 w-5 shrink-0 transition-transform group-hover:scale-110", isActive ? "text-primary-foreground" : "text-primary")} />
+                    {!collapsed && (
+                      <div className="flex flex-col">
+                        <span className="font-bold text-sm">
+                          {item.label}
+                        </span>
+                      </div>
+                    )}
+                    {isActive && !collapsed && (
+                      <motion.div 
+                        layoutId="active-pill-workspace"
+                        className="absolute left-0 w-1 h-6 bg-white rounded-r-full"
+                      />
+                    )}
+                  </NavLink>
+                );
+              })}
+            </div> */}
           </nav>
 
-          {/* User Profile / Logout */}
-          <div className="p-4 mt-auto space-y-4">
-            {!collapsed && (
-              <div className="p-4 rounded-3xl bg-white/5 border border-white/5 flex items-center gap-3">
-                <div className="h-10 w-10 rounded-2xl bg-gradient-to-br from-primary to-secondary flex items-center justify-center font-black text-white">
-                  {user?.name?.[0] || 'U'}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className={cn(
-                    "text-sm font-bold truncate",
-                    theme === 'dark' ? "text-foreground" : "text-black"
-                  )}>{user?.name || 'User'}</p>
-                  <p className="text-[10px] font-black text-primary uppercase tracking-widest">Premium</p>
-                </div>
-              </div>
-            )}
-            
-            <div className="space-y-2">
-              <Button 
-                variant="ghost" 
-                onClick={handleLogout}
-                className={cn(
-                  "w-full h-12 rounded-2xl transition-all gap-4",
-                  theme === 'dark' 
-                    ? "text-muted-foreground hover:bg-destructive/10 hover:text-destructive" 
-                    : "text-slate-600 hover:bg-destructive/5 hover:text-destructive",
-                  collapsed ? "justify-center px-0" : "justify-start px-4"
-                )}
-              >
-                <LogOut className="h-5 w-5 shrink-0" />
-                {!collapsed && <span className="font-bold text-sm">Sign Out</span>}
-              </Button>
-
-              <Button 
-                variant="ghost" 
-                onClick={() => setCollapsed(!collapsed)}
-                className={cn(
-                  "w-full h-12 rounded-2xl transition-all gap-4 hidden md:flex",
-                  theme === 'dark' 
-                    ? "text-muted-foreground hover:bg-white/5 hover:text-foreground" 
-                    : "text-slate-600 hover:bg-black/5 hover:text-black",
-                  collapsed ? "justify-center px-0" : "justify-start px-4"
-                )}
-              >
-                {collapsed ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
-                {!collapsed && <span className="font-bold text-sm">Collapse</span>}
-              </Button>
-            </div>
+          <div className="p-2 mt-auto">
+            <Button 
+              variant="ghost" 
+              onClick={() => setCollapsed(!collapsed)}
+              className={cn(
+                "w-full h-10 rounded-xl transition-all gap-4 hidden md:flex",
+                theme === 'dark' 
+                  ? "text-muted-foreground hover:bg-white/5 hover:text-foreground" 
+                  : "text-slate-600 hover:bg-black/5 hover:text-black",
+                collapsed ? "justify-center px-0" : "justify-start px-4"
+              )}
+            >
+              {collapsed ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
+              {!collapsed && <span className="font-bold text-sm">Collapse Sidebar</span>}
+            </Button>
           </div>
 
           {/* Decorative Elements */}

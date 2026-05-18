@@ -74,10 +74,12 @@ const AppHeader = ({ title, collapsed = false, onMenuClick }: AppHeaderProps) =>
 
         {/* Right Side */}
         <div className="flex items-center gap-4">
-          <div className="hidden sm:flex items-center gap-2 px-3 py-1 rounded-xl bg-white/5 border border-white/5">
-            <Sparkles className="h-3 w-3 text-primary" />
-            <span className="text-[9px] font-black uppercase tracking-widest text-primary">Pro Active</span>
-          </div>
+          {user?.isPro && (
+            <div className="hidden sm:flex items-center gap-2 px-3 py-1 rounded-xl bg-white/5 border border-white/5">
+              <Sparkles className="h-3 w-3 text-primary" />
+              <span className="text-[9px] font-black uppercase tracking-widest text-primary">Pro Active</span>
+            </div>
+          )}
 
           <div className="flex items-center gap-2">
             <NotificationBell />

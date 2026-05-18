@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Moon, Sun, Menu, X, ChevronRight } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
@@ -23,12 +23,19 @@ const LandingNav = () => {
     }
   };
 
+  const navigate = useNavigate();
+
   const navLinks = [
     { name: 'CORE', id: 'features' },
     { name: 'FLOW', id: 'how-it-works' },
     { name: 'PRICING', id: 'pricing' },
     { name: 'SUPPORT', id: 'faq' },
   ];
+
+  const handleAuthAction = (mode: 'signin' | 'signup') => {
+    setIsMobileMenuOpen(false);
+    navigate('/auth');
+  };
 
   return (
     <>
@@ -109,20 +116,22 @@ const LandingNav = () => {
               {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
             </button>
 
-            <Link to="/auth" className="hidden md:block">
-              <button className={cn(
-                "text-[11px] font-black tracking-[0.2em] uppercase transition-colors px-4",
+            <button 
+              onClick={() => handleAuthAction('signin')}
+              className={cn(
+                "hidden md:block text-[11px] font-black tracking-[0.2em] uppercase transition-colors px-4",
                 theme === 'dark' ? "text-white hover:text-cyan-400" : "text-black hover:text-cyan-600"
-              )}>
-                LOGIN
-              </button>
-            </Link>
+              )}
+            >
+              LOGIN
+            </button>
             
-            <Link to="/auth" className="hidden sm:block">
-              <button className="h-11 md:h-13 px-8 rounded-full bg-cyan-400 text-black text-[11px] font-black uppercase tracking-[0.2em] hover:bg-cyan-300 active:scale-95 transition-all shadow-lg shadow-cyan-500/20">
-                START FREE
-              </button>
-            </Link>
+            <button 
+              onClick={() => handleAuthAction('signup')}
+              className="hidden sm:block h-11 md:h-13 px-8 rounded-full bg-cyan-400 text-black text-[11px] font-black uppercase tracking-[0.2em] hover:bg-cyan-300 active:scale-95 transition-all shadow-lg shadow-cyan-500/20"
+            >
+              START FREE
+            </button>
 
             <Button 
               variant="ghost" 
@@ -164,19 +173,21 @@ const LandingNav = () => {
               ))}
               
               <div className="flex flex-col gap-4 mt-10">
-                <Link to="/auth" onClick={() => setIsMobileMenuOpen(false)}>
-                  <button className="w-full h-16 rounded-[1.5rem] bg-primary text-black font-black uppercase tracking-[0.3em] text-[12px]">
-                    START FREE NOW
-                  </button>
-                </Link>
-                <Link to="/auth" onClick={() => setIsMobileMenuOpen(false)}>
-                  <button className={cn(
+                <button 
+                  onClick={() => handleAuthAction('signup')}
+                  className="w-full h-16 rounded-[1.5rem] bg-primary text-black font-black uppercase tracking-[0.3em] text-[12px]"
+                >
+                  START FREE NOW
+                </button>
+                <button 
+                  onClick={() => handleAuthAction('signin')}
+                  className={cn(
                     "w-full h-16 rounded-[1.5rem] border font-black uppercase tracking-[0.3em] text-[12px]",
                     theme === 'dark' ? "border-white/10 text-white" : "border-black/10 text-black"
-                  )}>
-                    LOGIN TO ACCOUNT
-                  </button>
-                </Link>
+                  )}
+                >
+                  LOGIN TO ACCOUNT
+                </button>
               </div>
             </div>
           </motion.div>

@@ -7,6 +7,7 @@ import { useEffect, useRef } from 'react';
 const FeatureCard = ({ feature, index }: { feature: any, index: number }) => {
   const { theme } = useTheme();
   const cardRef = useRef<HTMLDivElement>(null);
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024;
   
   const x = useMotionValue(0);
   const y = useMotionValue(0);
@@ -18,7 +19,7 @@ const FeatureCard = ({ feature, index }: { feature: any, index: number }) => {
   const rotateY = useTransform(mouseX, [-200, 200], [-10, 10]);
 
   const handleMouseMove = (e: React.MouseEvent<HTMLDivElement>) => {
-    if (!cardRef.current) return;
+    if (isMobile || !cardRef.current) return;
     const rect = cardRef.current.getBoundingClientRect();
     const centerX = rect.left + rect.width / 2;
     const centerY = rect.top + rect.height / 2;
@@ -44,28 +45,28 @@ const FeatureCard = ({ feature, index }: { feature: any, index: number }) => {
         delay: feature.delay,
         ease: [0.16, 1, 0.3, 1]
       }}
-      style={{ rotateX, rotateY }}
+      style={{ rotateX: isMobile ? 0 : rotateX, rotateY: isMobile ? 0 : rotateY }}
       className="group preserve-3d cursor-tracking-card"
     >
       <div className={cn(
-        "h-full p-10 border transition-all duration-700 flex flex-col justify-between min-h-[480px] relative overflow-hidden rounded-[2.5rem]",
+        "h-full p-10 border transition-all duration-700 flex flex-col justify-between min-h-[400px] md:min-h-[480px] relative overflow-hidden rounded-[2.5rem]",
         theme === 'dark' 
           ? "bg-black/40 border-white/5 hover:border-primary/40 glow-primary/5 shadow-2xl" 
           : "bg-white border-black/5 hover:border-primary/20 shadow-xl shadow-black/5"
       )}>
         <div className="absolute inset-0 z-0 bg-noise opacity-[0.03] pointer-events-none" />
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-1000" />
+        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-1000 hidden md:block" />
         
         <div className="relative z-10">
           <div className={cn(
-            "h-20 w-20 rounded-2xl flex items-center justify-center mb-12 transition-all duration-700 relative",
+            "h-16 w-16 md:h-20 md:w-20 rounded-2xl flex items-center justify-center mb-8 md:mb-12 transition-all duration-700 relative",
             theme === 'dark' ? "bg-white/5 border border-white/10" : "bg-gray-50 border border-black/5"
           )}>
             <div className="absolute inset-0 bg-primary/20 rounded-2xl blur-xl opacity-0 group-hover:opacity-100 transition-opacity animate-pulse" />
-            <feature.icon className={cn("h-8 w-8 relative z-10 transition-colors", feature.color)} />
+            <feature.icon className={cn("h-6 w-6 md:h-8 md:w-8 relative z-10 transition-colors", feature.color)} />
           </div>
           
-          <div className="space-y-6">
+          <div className="space-y-4 md:space-y-6">
             <div className="flex items-center gap-3">
               <div className={cn("h-1.5 w-1.5 rounded-full", feature.color.replace('text-', 'bg-'))} />
               <span className={cn("text-[10px] font-black uppercase tracking-[0.3em]", theme === 'dark' ? "text-white/40" : "text-black/50")}>
@@ -73,13 +74,13 @@ const FeatureCard = ({ feature, index }: { feature: any, index: number }) => {
               </span>
             </div>
             <h3 className={cn(
-              "text-3xl font-black tracking-tighter leading-none transition-colors",
+              "text-2xl md:text-3xl font-black tracking-tighter leading-none transition-colors",
               theme === 'dark' ? "text-white" : "text-black"
             )}>
               {feature.title}
             </h3>
             <p className={cn(
-              "text-sm font-bold leading-relaxed transition-colors",
+              "text-xs md:text-sm font-bold leading-relaxed transition-colors",
               theme === 'dark' ? "text-white/40" : "text-black/50"
             )}>
               {feature.description}
@@ -87,10 +88,10 @@ const FeatureCard = ({ feature, index }: { feature: any, index: number }) => {
           </div>
         </div>
 
-        <div className="mt-12 relative z-10 flex items-center justify-between border-t pt-8 border-white/5">
+        <div className="mt-8 md:mt-12 relative z-10 flex items-center justify-between border-t pt-6 md:pt-8 border-white/5">
           <span className="text-[9px] font-black text-primary uppercase tracking-[0.3em]">NODE.0{index + 1}</span>
           <div className={cn(
-            "h-10 w-10 rounded-full flex items-center justify-center border transition-all duration-500",
+            "h-8 w-8 md:h-10 md:w-10 rounded-full flex items-center justify-center border transition-all duration-500",
             theme === 'dark' ? "border-white/10 text-white/40 group-hover:bg-primary group-hover:text-black group-hover:border-primary" : "border-black/10 text-black/40 group-hover:bg-primary group-hover:text-white group-hover:border-primary"
           )}>
             <ChevronRight className="h-4 w-4" />
@@ -139,6 +140,7 @@ const features = [
 const FeaturesSection = () => {
   const { theme } = useTheme();
   const sectionRef = useRef<HTMLDivElement>(null);
+  const isMobile = typeof window !== 'undefined' && window.innerWidth < 1024;
   
   const mouseX = useMotionValue(0);
   const mouseY = useMotionValue(0);
@@ -147,6 +149,7 @@ const FeaturesSection = () => {
   const springY = useSpring(mouseY, { stiffness: 80, damping: 25 });
 
   useEffect(() => {
+    if (isMobile) return;
     const handleMouseMove = (e: MouseEvent) => {
       if (!sectionRef.current) return;
       const rect = sectionRef.current.getBoundingClientRect();
@@ -156,33 +159,35 @@ const FeaturesSection = () => {
 
     window.addEventListener('mousemove', handleMouseMove);
     return () => window.removeEventListener('mousemove', handleMouseMove);
-  }, []);
+  }, [isMobile]);
 
   return (
     <section id="features" ref={sectionRef} className={cn(
       "py-24 md:py-48 px-4 relative overflow-hidden transition-colors duration-700 bg-transparent"
     )}>
-      {/* Antigravity Spotlight Overlay */}
-      <motion.div 
-        style={{ 
-          left: springX, 
-          top: springY,
-          translateX: '-50%',
-          translateY: '-50%',
-        }}
-        className={cn(
-          "absolute w-[800px] h-[800px] pointer-events-none z-0 blur-[120px] rounded-full opacity-40",
-          theme === 'dark' ? "bg-primary/20" : "bg-primary/10"
-        )}
-      />
+      {/* Antigravity Spotlight Overlay - Disabled on Mobile */}
+      {!isMobile && (
+        <motion.div 
+          style={{ 
+            left: springX, 
+            top: springY,
+            translateX: '-50%',
+            translateY: '-50%',
+          }}
+          className={cn(
+            "absolute w-[800px] h-[800px] pointer-events-none z-0 blur-[120px] rounded-full opacity-40",
+            theme === 'dark' ? "bg-primary/20" : "bg-primary/10"
+          )}
+        />
+      )}
 
       {/* Sharp Grid Architecture */}
       <div className="absolute inset-0 z-0">
         <div className={cn(
           "absolute inset-0",
           theme === 'dark' 
-            ? "bg-grid-pattern opacity-[0.07]" 
-            : "bg-[radial-gradient(circle,rgba(0,0,0,0.05)_1px,transparent_1px)] bg-[size:40px_40px]"
+            ? "bg-grid-pattern opacity-[0.05]" 
+            : "bg-[radial-gradient(circle,rgba(0,0,0,0.03)_1px,transparent_1px)] bg-[size:40px_40px]"
         )} />
         <div className={cn(
           "absolute inset-0 bg-gradient-to-b",

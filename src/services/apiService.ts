@@ -17,6 +17,12 @@ api.interceptors.request.use(
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+
+    const workspaceId = localStorage.getItem('taskmate_current_workspace');
+    if (workspaceId) {
+      config.headers['x-workspace-id'] = workspaceId;
+    }
+
     console.log(`[API Request] ${config.method?.toUpperCase()} ${config.url}`);
     return config;
   },

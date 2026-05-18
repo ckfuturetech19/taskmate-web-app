@@ -11,6 +11,7 @@ import { NotificationProvider } from "@/contexts/NotificationContext";
 import { PremiumProvider } from "@/contexts/PremiumContext";
 import AnalyticsProvider from "@/contexts/AnalyticsContext";
 import { initializeServiceWorkerHandler } from "@/lib/serviceWorkerHandler";
+import { WorkspaceProvider } from "@/providers/WorkspaceProvider";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import GlobalBackground from "@/components/landing/GlobalBackground";
 import CustomCursor from "@/components/landing/CustomCursor";
@@ -29,6 +30,14 @@ import Notes from "./pages/Notes";
 import NoteDetail from "./pages/NoteDetail";
 import NotFound from "./pages/NotFound";
 import Contact from "./pages/Contact";
+import ProjectListPage from "./pages/ProjectListPage";
+import { ProjectDetailsPage } from "./pages/ProjectDetailsPage";
+import TeamTaskListPage from "./pages/TeamTaskListPage";
+import { TaskDetailsPage } from "./pages/TaskDetailsPage";
+import WorkspaceSettingsPage from "./pages/WorkspaceSettingsPage";
+import WorkspaceDashboardPage from "./pages/WorkspaceDashboardPage";
+import { WorkspaceNotifications } from "./modules/notifications/WorkspaceNotifications";
+import { WorkspaceInvitations } from "./modules/notifications/WorkspaceInvitations";
 import { AnimatePresence } from "framer-motion";
 
 const queryClient = new QueryClient();
@@ -81,6 +90,30 @@ const AppContent = () => {
           <Route path="/notes/:noteId" element={
             <ProtectedRoute><NoteDetail /></ProtectedRoute>
           } />
+          <Route path="/projects" element={
+            <ProtectedRoute><ProjectListPage /></ProtectedRoute>
+          } />
+          <Route path="/projects/:id" element={
+            <ProtectedRoute><ProjectDetailsPage /></ProtectedRoute>
+          } />
+          <Route path="/team-tasks" element={
+            <ProtectedRoute><TeamTaskListPage /></ProtectedRoute>
+          } />
+          <Route path="/team-tasks/:id" element={
+            <ProtectedRoute><TaskDetailsPage /></ProtectedRoute>
+          } />
+          <Route path="/workspace-settings" element={
+            <ProtectedRoute><WorkspaceSettingsPage /></ProtectedRoute>
+          } />
+          <Route path="/workspace/dashboard" element={
+            <ProtectedRoute><WorkspaceDashboardPage /></ProtectedRoute>
+          } />
+          <Route path="/reminders" element={
+            <ProtectedRoute><WorkspaceNotifications /></ProtectedRoute>
+          } />
+          <Route path="/invitations" element={
+            <ProtectedRoute><WorkspaceInvitations /></ProtectedRoute>
+          } />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </AnimatePresence>
@@ -98,9 +131,10 @@ const App = () => {
   <QueryClientProvider client={queryClient}>
     <ThemeProvider>
       <AuthProvider>
-        <PremiumProvider>
-          <NotificationProvider>
-            <TaskProvider>
+        <WorkspaceProvider>
+          <PremiumProvider>
+            <NotificationProvider>
+              <TaskProvider>
               <AnalyticsProvider>
                 <TooltipProvider>
                   <Toaster />
@@ -113,7 +147,8 @@ const App = () => {
             </TaskProvider>
           </NotificationProvider>
         </PremiumProvider>
-      </AuthProvider>
+      </WorkspaceProvider>
+    </AuthProvider>
     </ThemeProvider>
   </QueryClientProvider>
   );

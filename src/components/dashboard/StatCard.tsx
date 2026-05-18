@@ -75,7 +75,7 @@ const StatCard = ({
       <Card 
         className={cn(
           "relative overflow-hidden group cursor-pointer transition-all duration-500",
-          "rounded-3xl border cursor-tracking-card preserve-3d h-full",
+          "rounded-xl border cursor-tracking-card preserve-3d h-full",
           styles.card,
           styles.glow,
           className
@@ -126,7 +126,7 @@ const StatCard = ({
             </div>
 
             <div className={cn(
-              "h-14 w-14 rounded-2xl flex items-center justify-center shrink-0 shadow-lg",
+              "h-14 w-14 rounded-xl flex items-center justify-center shrink-0 shadow-lg",
               "transition-all duration-500 group-hover:rotate-12 group-hover:scale-110",
               styles.iconBg
             )}>

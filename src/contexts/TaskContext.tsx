@@ -53,8 +53,10 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
   const { createNextRecurrence } = useRecurrence(addTaskOp);
   
   const tasks = useMemo(() => {
-    const all = [...personalTasks, ...groupTasks];
-    return deduplicateTasks(all.filter(t => !t.isDeleted));
+    const personal = Array.isArray(personalTasks) ? personalTasks : [];
+    const groups = Array.isArray(groupTasks) ? groupTasks : [];
+    const all = [...personal, ...groups];
+    return deduplicateTasks(all.filter(t => t && !t.isDeleted));
   }, [personalTasks, groupTasks]);
 
   const fetchGroups = useCallback(async () => {

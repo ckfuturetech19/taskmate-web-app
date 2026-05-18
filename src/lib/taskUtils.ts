@@ -112,7 +112,6 @@ export const parseTaskFromFirebase = (
     id: docId,
     title: data.title || '',
     description: data.description || undefined,
-    completed: isCompleted,
     isCompleted: isCompleted,
     isCompletedToday: parseBool(data.isCompletedToday),
     userId: data.userId || userId,
@@ -122,7 +121,6 @@ export const parseTaskFromFirebase = (
     reminder: parseDate(data.reminder),
     reminderUtc: parseDate(data.reminderUtc),
     lastCompletedDate: parseDate(data.lastCompletedDate),
-    priority: parsePriorityLevel(data.priorityLevel),
     priorityLevel: parsePriorityLevel(data.priorityLevel),
     groupId: hasValidGroupId ? data.groupId : undefined,
     recurrenceType: (data.recurrenceType || data.recurrence || 'none') as RecurrenceType,
@@ -152,13 +150,15 @@ export const parseTaskFromFirebase = (
  * Filter out deleted tasks and return only active tasks
  */
 export const filterActiveTasks = (tasks: Task[]): Task[] => {
-  return tasks.filter(task => !task.isDeleted);
+  if (!Array.isArray(tasks)) return [];
+  return tasks.filter(task => task && !task.isDeleted);
 };
 
 /**
  * Deduplicate tasks by ID (keeps the most recent version)
  */
 export const deduplicateTasks = (tasks: Task[]): Task[] => {
+  if (!Array.isArray(tasks)) return [];
   const taskMap = new Map<string, Task>();
   
   tasks.forEach(task => {

@@ -24,11 +24,17 @@ const AppLayout = ({ children, title, isZenMode }: AppLayoutProps) => {
   
   return (
     <div className="min-h-screen bg-transparent relative overflow-x-hidden">
-      {/* Premium Background Elements */}
-      <div className="fixed inset-0 pointer-events-none z-0">
-        <div className="absolute top-[-10%] right-[-10%] w-[40%] h-[40%] bg-primary/5 rounded-full blur-[120px] animate-pulse-glow" />
-        <div className="absolute bottom-[-10%] left-[-10%] w-[40%] h-[40%] bg-secondary/5 rounded-full blur-[120px] animate-pulse-glow" style={{ animationDelay: '3s' }} />
-        <div className="absolute inset-0 bg-dot-pattern opacity-[0.15]" />
+      {/* Optimized Background Elements - Lightweight and Static for Mobile/Low-end */}
+      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden">
+        <div className={cn(
+          "absolute top-[-5%] right-[-5%] w-[30%] h-[30%] rounded-full blur-[100px] opacity-[0.03]",
+          "bg-primary"
+        )} />
+        <div className={cn(
+          "absolute bottom-[-5%] left-[-5%] w-[30%] h-[30%] rounded-full blur-[100px] opacity-[0.03]",
+          "bg-secondary"
+        )} />
+        <div className="absolute inset-0 bg-dot-pattern opacity-[0.05]" />
       </div>
 
       <MobileAppBanner />
@@ -45,8 +51,7 @@ const AppLayout = ({ children, title, isZenMode }: AppLayoutProps) => {
 
       <div className={cn(
         "flex flex-col min-h-screen transition-all duration-500 ease-in-out relative z-10",
-        isZenMode ? "ml-0" : (collapsed ? "md:ml-20" : "md:ml-72"),
-        "ml-0"
+        isZenMode ? "ml-0" : (collapsed ? "md:ml-20" : "md:ml-72")
       )}>
         {!isZenMode && (
           <AppHeader 

@@ -62,7 +62,7 @@ const TaskCard = ({ task, onToggleComplete, onEdit, onDelete, readOnly = false }
     >
       <Card 
         className={cn(
-          "glass rounded-3xl border-white/5 overflow-hidden transition-all duration-300",
+          "glass rounded-xl border-white/5 overflow-hidden transition-all duration-300",
           "hover:border-white/10 hover:shadow-2xl",
           priority.glow,
           task.isCompleted && "opacity-60 grayscale-[0.5]"
@@ -77,7 +77,8 @@ const TaskCard = ({ task, onToggleComplete, onEdit, onDelete, readOnly = false }
                 <Checkbox
                   checked={task.isCompleted}
                   onCheckedChange={() => onToggleComplete?.(task.id)}
-                  className="h-6 w-6 rounded-lg border-2 border-primary/30 data-[state=checked]:bg-primary data-[state=checked]:border-primary transition-all duration-500"
+                  disabled={readOnly}
+                  className="h-6 w-6 rounded-lg border-2 border-primary/30 data-[state=checked]:bg-primary data-[state=checked]:border-primary transition-all duration-500 disabled:opacity-50 disabled:cursor-not-allowed"
                 />
                 {task.isCompleted && (
                   <motion.div 
@@ -172,7 +173,7 @@ const TaskCard = ({ task, onToggleComplete, onEdit, onDelete, readOnly = false }
       </Card>
 
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
-        <AlertDialogContent className="glass rounded-[2rem] border-white/10 shadow-2xl">
+        <AlertDialogContent className="glass rounded-xl border-white/10 shadow-2xl">
           <AlertDialogHeader>
             <AlertDialogTitle className="font-black tracking-tight text-2xl">TERMINATE TASK?</AlertDialogTitle>
             <AlertDialogDescription className="text-muted-foreground font-bold">
@@ -180,10 +181,10 @@ const TaskCard = ({ task, onToggleComplete, onEdit, onDelete, readOnly = false }
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="gap-3">
-            <AlertDialogCancel className="rounded-2xl font-black">CANCEL</AlertDialogCancel>
+            <AlertDialogCancel className="rounded-xl font-black">CANCEL</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => onDelete?.(task.id)}
-              className="rounded-2xl bg-rose-500 hover:bg-rose-600 font-black"
+              className="rounded-xl bg-rose-500 hover:bg-rose-600 font-black"
             >
               DELETE
             </AlertDialogAction>

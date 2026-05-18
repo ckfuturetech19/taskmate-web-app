@@ -12,6 +12,8 @@ class SocketService {
 
     console.log('📡 Socket.io: Connecting to', SOCKET_URL);
     this.socket = io(SOCKET_URL, {
+      path: "/socket.io/",
+      transports: ['polling', 'websocket'],
       autoConnect: true,
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,

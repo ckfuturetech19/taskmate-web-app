@@ -37,78 +37,34 @@ const UpgradePrompt = ({
   };
 
   return (
-    <div className={`w-full max-w-6xl mx-auto ${variant === 'page' ? 'py-12' : 'py-6'}`}>
-      <div className="text-center mb-12">
-        <h2 className="text-3xl font-bold mb-4">Choose Your Plan</h2>
-        <p className="text-muted-foreground max-w-2xl mx-auto">
-          Unlock the full potential of TaskMate with our premium features. 
-          Sync across all devices and get advanced analytics.
-        </p>
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 px-4">
-        {plans.map((plan, index) => {
-          const Icon = planIcons[plan.id] || Sparkles;
-          const isFeatured = plan.id === 'yearly';
-
-          return (
-            <motion.div
-              key={plan.id}
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ delay: index * 0.1 }}
-            >
-              <Card className={`relative h-full flex flex-col overflow-hidden border-2 ${isFeatured ? 'border-primary shadow-xl shadow-primary/10 scale-105 z-10' : 'border-border'}`}>
-                {isFeatured && (
-                  <div className="absolute top-0 right-0 bg-primary text-primary-foreground text-[10px] font-bold px-3 py-1 rounded-bl-lg uppercase tracking-wider">
-                    Best Value
-                  </div>
-                )}
-                
-                <CardHeader className="text-center pb-2">
-                  <div className={`mx-auto p-3 rounded-2xl bg-muted/50 mb-4 ${planColors[plan.id]}`}>
-                    <Icon className="h-8 w-8" />
-                  </div>
-                  <CardTitle className="text-xl font-bold">{plan.name}</CardTitle>
-                  <p className="text-sm text-primary font-semibold mt-1">{plan.tag}</p>
-                </CardHeader>
-
-                <CardContent className="flex-1 flex flex-col pt-4">
-                  <ul className="space-y-3 mb-8 flex-1">
-                    {[
-                      'Real-time Cloud Sync',
-                      'Task Reminders',
-                      plan.id !== 'free' ? 'Advanced Analytics' : 'Basic Analytics',
-                      plan.id !== 'free' ? 'Group Collaborations' : 'Single User Only',
-                      plan.id !== 'free' ? 'Custom Themes' : 'Default Theme',
-                    ].map((item, i) => (
-                      <li key={i} className="flex items-start gap-3 text-sm">
-                        <Check className={`h-4 w-4 mt-0.5 ${i < 2 || plan.id !== 'free' ? 'text-primary' : 'text-muted-foreground/30'}`} />
-                        <span className={i < 2 || plan.id !== 'free' ? 'text-foreground' : 'text-muted-foreground/50'}>{item}</span>
-                      </li>
-                    ))}
-                  </ul>
-
-                  <Button 
-                    onClick={handleUpgrade}
-                    variant={isFeatured ? 'default' : 'outline'}
-                    className={`w-full h-11 rounded-xl font-bold transition-all active:scale-[0.98] ${isPremium && plan.id !== 'free' ? 'opacity-50 pointer-events-none' : ''}`}
-                  >
-                    {plan.id === 'free' ? 'Current Plan' : isPremium ? 'Subscribed' : 'Get Started'}
-                  </Button>
-                </CardContent>
-              </Card>
-            </motion.div>
-          );
-        })}
-      </div>
-
-      {feature && (
-        <div className="mt-12 p-6 rounded-2xl bg-primary/5 border border-primary/20 text-center">
-          <p className="font-semibold text-primary">Note: {feature} is a Premium feature.</p>
-          {description && <p className="text-sm text-muted-foreground mt-1">{description}</p>}
+    <div className={`w-full max-w-6xl mx-auto px-4 ${variant === 'page' ? 'py-12' : 'py-2'}`}>
+      <motion.div 
+        initial={{ opacity: 0, y: -10 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="glass rounded-2xl border-primary/20 p-4 flex flex-col sm:flex-row items-center justify-between gap-4 shadow-lg group hover:border-primary/40 transition-all"
+      >
+        <div className="flex items-center gap-4 text-center sm:text-left">
+          <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center text-primary shrink-0 group-hover:scale-110 transition-transform">
+            <Sparkles className="h-5 w-5" />
+          </div>
+          <div>
+            <p className="text-xs font-black uppercase tracking-widest text-primary mb-0.5">
+              Tactical Limitation Active
+            </p>
+            <p className="text-[11px] font-bold text-muted-foreground leading-tight">
+              {description || "Upgrade to Pro to unlock write access and full synchronization."}
+            </p>
+          </div>
         </div>
-      )}
+
+        <Button 
+          onClick={handleUpgrade}
+          size="sm"
+          className="h-10 px-6 rounded-xl bg-primary text-primary-foreground font-black text-[10px] tracking-widest uppercase hover:scale-[1.02] active:scale-[0.98] transition-all"
+        >
+          Upgrade Node
+        </Button>
+      </motion.div>
     </div>
   );
 };

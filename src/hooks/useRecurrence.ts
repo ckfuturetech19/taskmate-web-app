@@ -5,7 +5,7 @@ import { Task } from '@/types/task';
  * Hook for handling recurrence task logic
  * Prevents creating duplicate recurrence instances
  */
-export const useRecurrence = (addTaskFn: (task: Omit<Task, 'id' | 'createdAt' | 'userId' | 'completed'>) => Promise<string | void>) => {
+export const useRecurrence = (addTaskFn: (task: Omit<Task, 'id' | 'createdAt' | 'userId'>) => Promise<string | void>) => {
 
   const calculateNextDueDate = useCallback((task: Task): Date | null => {
     if (!task.dueDate || !task.recurrenceType || task.recurrenceType === 'none') {
@@ -80,7 +80,7 @@ export const useRecurrence = (addTaskFn: (task: Omit<Task, 'id' | 'createdAt' | 
     }
 
     // Create next recurrence instance
-    const nextTask: Omit<Task, 'id' | 'createdAt' | 'userId' | 'completed'> = {
+    const nextTask: Omit<Task, 'id' | 'createdAt' | 'userId'> = {
       title: completedTask.title,
       description: completedTask.description,
       dueDate: nextDueDate.toISOString(),

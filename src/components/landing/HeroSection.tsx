@@ -1,6 +1,6 @@
 import dashboardDarkImg from '@/assets/dashboardDark.png';
 import dashboardLightImg from '@/assets/dashboardLight.png';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Play, ChevronRight } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
@@ -35,6 +35,7 @@ const Typewriter = ({ text, delay = 0, className }: { text: string, delay?: numb
 const HeroSection = () => {
   const { theme } = useTheme();
   const containerRef = useRef<HTMLDivElement>(null);
+  const navigate = useNavigate();
   
   const { scrollYProgress } = useScroll({
     target: containerRef,
@@ -123,11 +124,12 @@ const HeroSection = () => {
             transition={{ duration: 1, delay: 0.4 }}
             className="flex flex-col sm:flex-row gap-10 items-center"
           >
-            <Link to="/auth">
-              <button className="h-20 px-16 bg-primary text-black font-black uppercase text-[13px] tracking-[0.4em] rounded-full hover:shadow-[0_0_50px_rgba(34,211,238,0.5)] transition-all shadow-2xl">
-                INITIALIZE FREE
-              </button>
-            </Link>
+            <button 
+              onClick={() => navigate('/auth')}
+              className="h-20 px-16 bg-primary text-black font-black uppercase text-[13px] tracking-[0.4em] rounded-full hover:shadow-[0_0_50px_rgba(34,211,238,0.5)] transition-all shadow-2xl"
+            >
+              INITIALIZE FREE
+            </button>
             
             <button className={cn(
               "h-20 px-16 glass font-black uppercase text-[13px] tracking-[0.4em] rounded-full border transition-all flex items-center gap-5",
@@ -139,12 +141,12 @@ const HeroSection = () => {
           </motion.div>
         </div>
 
-        {/* Static Dashboard Preview - No Hover Tilt */}
+        {/* Static Dashboard Preview - Performance Optimized */}
         <div className="relative mt-24 px-4 max-w-7xl mx-auto">
           <motion.div
             style={{ 
-              rotateX: scrollRotateX, 
-              scale: scrollScale, 
+              rotateX: window.innerWidth > 768 ? scrollRotateX : 0, 
+              scale: window.innerWidth > 768 ? scrollScale : 1, 
               opacity: scrollOpacity 
             }}
             className="relative z-10"
@@ -160,15 +162,18 @@ const HeroSection = () => {
                 theme === 'dark' ? "bg-black/60" : "bg-gray-50"
               )}>
                 <img 
-                  src={dashboardImage}
-                  alt="TaskMate Interface"
-                  className="w-full h-auto opacity-95 transition-opacity duration-1000"
+                   src={dashboardImage}
+                   alt="TaskMate Interface"
+                   className="w-full h-auto opacity-95 transition-opacity duration-1000"
                 />
               </div>
             </div>
 
-            {/* Core Glow */}
-            <div className="absolute -bottom-40 left-1/2 -translate-x-1/2 w-[95%] h-80 bg-primary/30 blur-[200px] -z-10 rounded-full animate-pulse-slow" />
+            {/* Core Glow - Static on mobile for performance */}
+            <div className={cn(
+              "absolute -bottom-40 left-1/2 -translate-x-1/2 w-[95%] h-80 bg-primary/20 blur-[200px] -z-10 rounded-full",
+              window.innerWidth > 768 ? "animate-pulse-slow" : "opacity-50"
+            )} />
           </motion.div>
         </div>
       </div>
