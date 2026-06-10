@@ -750,3 +750,136 @@ html {
   0% { background-position: 200% 0; }
   100% { background-position: -200% 0; }
 }
+
+/* 🌟 Aurora Glassmorphism Theme Additions */
+:root {
+  /* Default light theme custom variables */
+  --aurora-bg-primary: #F8F5FF;
+  --aurora-bg-secondary: #FFFFFF;
+  --aurora-bg-tertiary: #F0EBF8;
+  --aurora-bg-card: rgba(255, 255, 255, 0.9);
+  --aurora-bg-glass: rgba(248, 245, 255, 0.8);
+  --aurora-text-primary: #1A0F2E;
+  --aurora-text-secondary: #4A3F6B;
+  --aurora-text-muted: #8A7FAA;
+  --aurora-border: rgba(139, 101, 200, 0.10);
+  --aurora-border-hover: rgba(139, 101, 200, 0.40);
+  --aurora-nav-bg: rgba(248, 245, 255, 0.90);
+  --aurora-card-shadow: 0 8px 32px rgba(139, 101, 200, 0.12);
+  --aurora-glow-purple: rgba(139, 101, 200, 0.07);
+  --aurora-glow-teal: rgba(74, 191, 184, 0.07);
+  --aurora-glow-pink: rgba(240, 96, 122, 0.07);
+  --aurora-scrollbar-thumb: #C4B8E8;
+  --aurora-scrollbar-thumb-hover: #8B65C8;
+
+  --aurora-orange: #F5A87B;
+  --aurora-pink: #F0607A;
+  --aurora-purple: #8B65C8;
+  --aurora-teal: #4ABFB8;
+  --aurora-grad-primary: linear-gradient(135deg, #F5A87B, #F0607A, #8B65C8, #4ABFB8);
+  --aurora-grad-cta: linear-gradient(135deg, #F0607A, #8B65C8);
+}
+
+.dark {
+  /* Dark theme custom variables */
+  --aurora-bg-primary: #0F0A1A;
+  --aurora-bg-secondary: #1A1228;
+  --aurora-bg-tertiary: #241B35;
+  --aurora-bg-card: rgba(26, 18, 40, 0.8);
+  --aurora-bg-glass: rgba(26, 18, 40, 0.5);
+  --aurora-text-primary: #F0EEF8;
+  --aurora-text-secondary: #B8B0D4;
+  --aurora-text-muted: #7A7090;
+  --aurora-border: rgba(255, 255, 255, 0.07);
+  --aurora-border-hover: rgba(139, 101, 200, 0.35);
+  --aurora-nav-bg: rgba(15, 10, 26, 0.85);
+  --aurora-card-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+  --aurora-glow-purple: rgba(139, 101, 200, 0.15);
+  --aurora-glow-teal: rgba(74, 191, 184, 0.10);
+  --aurora-glow-pink: rgba(240, 96, 122, 0.10);
+  --aurora-scrollbar-thumb: #241B35;
+  --aurora-scrollbar-thumb-hover: #8B65C8;
+}
+
+/* Aurora Animation Keyframes */
+@keyframes aurora-rotate {
+  0% { transform: translate(-50%, -50%) rotate(0deg) scale(1); }
+  50% { transform: translate(-50%, -50%) rotate(180deg) scale(1.1); }
+  100% { transform: translate(-50%, -50%) rotate(360deg) scale(1); }
+}
+
+@keyframes particle-float {
+  0%, 100% { transform: translate(0, 0); opacity: 0.2; }
+  33% { transform: translate(30px, -50px); opacity: 0.5; }
+  66% { transform: translate(-20px, 40px); opacity: 0.2; }
+}
+
+@keyframes chip-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+
+@keyframes scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(calc(-50% - 12px)); }
+}
+
+@keyframes voice-wave {
+  0%, 100% { height: 8px; }
+  50% { height: var(--peak, 40px); }
+}
+
+@keyframes pricing-glow {
+  0%, 100% { box-shadow: 0 0 20px rgba(139, 101, 200, 0.2), var(--aurora-card-shadow); }
+  50% { box-shadow: 0 0 40px rgba(139, 101, 200, 0.4), var(--aurora-card-shadow); }
+}
+
+/* Classes */
+.aurora-blob {
+  position: absolute;
+  width: 900px;
+  height: 900px;
+  filter: blur(140px);
+  border-radius: 50%;
+  animation: aurora-rotate 60s infinite linear;
+  opacity: 0.15;
+  pointer-events: none;
+}
+
+.aurora-particle {
+  position: absolute;
+  border-radius: 50%;
+  animation: particle-float 15s infinite ease-in-out;
+  pointer-events: none;
+}
+
+.aurora-floating-chip {
+  animation: chip-float 5s infinite ease-in-out;
+}
+
+.aurora-marquee-container {
+  mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+  -webkit-mask-image: linear-gradient(to right, transparent, black 10%, black 90%, transparent);
+}
+
+.aurora-marquee-track {
+  display: flex;
+  gap: 24px;
+  animation: scroll 40s linear infinite;
+  width: max-content;
+}
+
+.aurora-marquee-track:hover {
+  animation-play-state: paused;
+}
+
+.aurora-wave-bar {
+  width: 4px;
+  background: var(--aurora-purple);
+  border-radius: 2px;
+  animation: voice-wave 1.2s infinite ease-in-out;
+}
+
+.aurora-pro-card-glow {
+  animation: pricing-glow 4s infinite ease-in-out;
+}

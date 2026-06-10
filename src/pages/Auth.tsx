@@ -1,6 +1,6 @@
 import logoImg from '../assets/logo.png';
 import { useEffect, useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/AuthContext';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Button } from '@/components/ui/button';
@@ -8,10 +8,9 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Separator } from '@/components/ui/separator';
-import { Loader2, Sparkles, ShieldCheck, Zap, Globe, KeyRound, ArrowRight, Mail, User, Lock } from 'lucide-react';
+import { Loader2, Sparkles, Zap, Globe, ArrowRight, Mail, User, Lock, Eye, EyeOff } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 
 const Auth = () => {
@@ -25,13 +24,16 @@ const Auth = () => {
   
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
   
   const [signInEmail, setSignInEmail] = useState('');
   const [signInPassword, setSignInPassword] = useState('');
+  const [showSignInPassword, setShowSignInPassword] = useState(false);
   
   const [signUpEmail, setSignUpEmail] = useState('');
   const [signUpPassword, setSignUpPassword] = useState('');
   const [signUpName, setSignUpName] = useState('');
+  const [showSignUpPassword, setShowSignUpPassword] = useState(false);
   
   useEffect(() => {
     if (user) {
@@ -41,12 +43,12 @@ const Auth = () => {
 
   const handleGoogleSignIn = async () => {
     try {
-      setLoading(true);
+      setGoogleLoading(true);
       await signInWithGoogle();
     } catch (error: any) {
       toast({ title: 'Sign in failed', description: error.message, variant: 'destructive' });
     } finally {
-      setLoading(false);
+      setGoogleLoading(false);
     }
   };
 
@@ -84,7 +86,7 @@ const Auth = () => {
   };
 
   const GoogleIcon = () => (
-    <svg className="h-5 w-5" viewBox="0 0 24 24">
+    <svg className="h-5 w-5 mr-2" viewBox="0 0 24 24">
       <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4" />
       <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853" />
       <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05" />
@@ -93,31 +95,26 @@ const Auth = () => {
   );
 
   return (
-    <motion.div 
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="min-h-screen w-full flex bg-transparent relative overflow-hidden font-jakarta"
-    >
+    <div className="min-h-screen w-full flex bg-transparent relative overflow-hidden font-sans">
       {/* Left Panel: Purposeful Content */}
       <div className="flex-1 hidden lg:flex flex-col justify-center px-16 xl:px-24 relative z-10">
         <motion.div 
           initial={{ opacity: 0, x: -50 }}
           animate={{ opacity: 1, x: 0 }}
           transition={{ duration: 1 }}
-          className="space-y-12"
+          className="space-y-12 text-left"
         >
           <div className="flex items-center gap-4">
             <div className={cn(
-              "p-3 rounded-[1.2rem] shadow-2xl shadow-primary/30",
-              theme === 'dark' ? "bg-primary" : "bg-primary/10"
+              "p-3 rounded-[1.2rem] shadow-2xl transition-all",
+              theme === 'dark' ? "bg-gradient-to-r from-[#F0607A] to-[#8B65C8]" : "bg-primary/10"
             )}>
-              <img src={logoImg} alt="Logo" className="h-8 w-8" />
+              <img src={logoImg} alt="Logo" className="h-8 w-8 invert brightness-200" />
             </div>
             <span className={cn(
               "text-3xl font-black tracking-tighter",
               theme === 'dark' ? "text-white" : "text-black"
-            )}>TASK<span className="text-primary">MATE</span></span>
+            )}>TASK<span className="text-[#8B65C8]">MATE</span></span>
           </div>
 
           <div className="space-y-6">
@@ -126,9 +123,9 @@ const Auth = () => {
               theme === 'dark' ? "text-white" : "text-black"
             )}>
               UNIFIED <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-secondary">ECOSYSTEM</span>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#F0607A] to-[#8B65C8]">ECOSYSTEM</span>
             </h1>
-            <p className="text-xl text-muted-foreground font-bold max-w-lg leading-relaxed uppercase tracking-widest">
+            <p className="text-xl text-[var(--aurora-text-secondary)] font-bold max-w-lg leading-relaxed uppercase tracking-widest">
               Manage personal tasks, collaborative notes, and shared circles in one high-performance terminal.
             </p>
           </div>
@@ -146,13 +143,13 @@ const Auth = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.5 + (i * 0.1) }}
                 className={cn(
-                  "p-6 rounded-[2rem] border transition-all group",
-                  theme === 'dark' ? "glass-dark border-white/5 hover:border-primary/20" : "bg-white/40 border-black/5 hover:border-primary/50 shadow-sm"
+                  "p-6 rounded-[2rem] border transition-all hover:scale-105 duration-300",
+                  theme === 'dark' ? "bg-[var(--aurora-bg-secondary)] border-white/5 hover:border-[#8B65C8]/40" : "bg-white/40 border-black/5 hover:border-[#8B65C8]/40 shadow-sm"
                 )}
               >
-                <f.icon className="h-8 w-8 text-primary mb-4" />
-                <h3 className="font-black text-sm uppercase tracking-widest mb-1">{f.label}</h3>
-                <p className="text-xs text-muted-foreground font-bold">{f.desc}</p>
+                <f.icon className="h-8 w-8 text-[#8B65C8] mb-4" />
+                <h3 className="font-black text-sm uppercase tracking-widest mb-1 text-[var(--aurora-text-primary)]">{f.label}</h3>
+                <p className="text-xs text-[var(--aurora-text-muted)] font-bold">{f.desc}</p>
               </motion.div>
             ))}
           </div>
@@ -160,7 +157,7 @@ const Auth = () => {
       </div>
 
       {/* Right Panel: Auth Gate */}
-      <div className="flex-1 flex flex-col justify-center items-center p-6 relative z-10 perspective">
+      <div className="flex-1 flex flex-col justify-center items-center p-6 relative z-10 perspective-[2000px]">
         <motion.div 
           initial={{ opacity: 0, scale: 0.9, rotateY: 20 }}
           animate={{ opacity: 1, scale: 1, rotateY: 0 }}
@@ -168,152 +165,216 @@ const Auth = () => {
           className="w-full max-w-[500px]"
         >
           <div className="mb-12 text-center lg:hidden">
-            <div className="inline-block p-4 bg-primary rounded-3xl mb-6 shadow-2xl shadow-primary/40">
-              <img src={logoImg} alt="Logo" className="h-10 w-10" />
+            <div className="inline-block p-4 bg-gradient-to-r from-[#F0607A] to-[#8B65C8] rounded-3xl mb-6 shadow-2xl">
+              <img src={logoImg} alt="Logo" className="h-10 w-10 invert brightness-200" />
             </div>
-            <h2 className="text-5xl font-black tracking-tighter">TASKMATE</h2>
+            <h2 className="text-5xl font-black tracking-tighter text-[var(--aurora-text-primary)]">TASKMATE</h2>
           </div>
 
-          <Card className="glass rounded-[3rem] border-white/10 overflow-hidden shadow-2xl">
+          <Card className="bg-[var(--aurora-bg-secondary)] rounded-[3rem] border border-[var(--aurora-border)] overflow-hidden shadow-2xl hover:border-[#8B65C8]/30 transition-all duration-500">
             <CardContent className="p-8 sm:p-12">
               <Tabs defaultValue="signin" className="w-full">
                 <TabsList className={cn(
                   "grid w-full grid-cols-2 h-14 p-1.5 rounded-2xl mb-12",
-                  theme === 'dark' ? "glass-dark" : "bg-black/5 border border-black/5"
+                  theme === 'dark' ? "bg-white/5" : "bg-black/5 border border-black/5"
                 )}>
-                  <TabsTrigger value="signin" className="rounded-xl font-black text-xs uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">ACCESS</TabsTrigger>
-                  <TabsTrigger value="signup" className="rounded-xl font-black text-xs uppercase tracking-widest data-[state=active]:bg-primary data-[state=active]:text-primary-foreground">CREATE</TabsTrigger>
+                  <TabsTrigger value="signin" className="rounded-xl font-black text-xs uppercase tracking-widest data-[state=active]:bg-[#8B65C8] data-[state=active]:text-white">ACCESS</TabsTrigger>
+                  <TabsTrigger value="signup" className="rounded-xl font-black text-xs uppercase tracking-widest data-[state=active]:bg-[#8B65C8] data-[state=active]:text-white">CREATE</TabsTrigger>
                 </TabsList>
 
                 {/* Sign In Tab */}
-                <TabsContent value="signin" className="mt-0 space-y-8">
-                  <div className="space-y-6">
-                    <div className="space-y-3">
-                      <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground ml-1">Terminal Identity</Label>
-                      <div className="relative">
-                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                        <Input 
-                          type="email" 
-                          placeholder="ENTER_EMAIL"
-                          value={signInEmail}
-                          onChange={(e) => setSignInEmail(e.target.value)}
-                          className={cn(
-                            "h-14 rounded-2xl border pl-12 font-bold tracking-wider transition-all",
-                            theme === 'dark' ? "glass-dark border-white/5" : "bg-black/5 border-black/5 focus:bg-white"
-                          )}
-                          autoComplete="off"
-                        />
+                <TabsContent value="signin" className="mt-0">
+                  <form onSubmit={handleEmailSignIn} className="space-y-8 text-left">
+                    <div className="space-y-6">
+                      <div className="space-y-3">
+                        <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-[var(--aurora-text-muted)] ml-1">Terminal Identity</Label>
+                        <div className="relative">
+                          <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-[var(--aurora-text-muted)]" />
+                          <Input 
+                            type="email" 
+                            placeholder="ENTER_EMAIL"
+                            value={signInEmail}
+                            onChange={(e) => setSignInEmail(e.target.value)}
+                            className={cn(
+                              "h-14 rounded-2xl border pl-12 font-bold tracking-wider transition-all",
+                              theme === 'dark' ? "bg-white/5 border-white/5" : "bg-black/5 border-black/5 focus:bg-white"
+                            )}
+                            autoComplete="username"
+                            required
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-3">
+                        <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-[var(--aurora-text-muted)] ml-1">Access Key</Label>
+                        <div className="relative">
+                          <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-[var(--aurora-text-muted)]" />
+                          <Input 
+                            type={showSignInPassword ? "text" : "password"} 
+                            placeholder="••••••••"
+                            value={signInPassword}
+                            onChange={(e) => setSignInPassword(e.target.value)}
+                            className={cn(
+                              "h-14 rounded-2xl border pl-12 pr-12 font-bold tracking-wider transition-all",
+                              theme === 'dark' ? "bg-white/5 border-white/5" : "bg-black/5 border-black/5 focus:bg-white"
+                            )}
+                            autoComplete="current-password"
+                            required
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowSignInPassword(!showSignInPassword)}
+                            className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--aurora-text-muted)] hover:text-[#8B65C8] transition-colors"
+                          >
+                            {showSignInPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                          </button>
+                        </div>
                       </div>
                     </div>
-                    <div className="space-y-3">
-                      <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground ml-1">Access Key</Label>
-                      <div className="relative">
-                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                        <Input 
-                          type="password" 
-                          placeholder="••••••••"
-                          value={signInPassword}
-                          onChange={(e) => setSignInPassword(e.target.value)}
-                          className={cn(
-                            "h-14 rounded-2xl border pl-12 font-bold tracking-wider transition-all",
-                            theme === 'dark' ? "glass-dark border-white/5" : "bg-black/5 border-black/5 focus:bg-white"
-                          )}
-                          autoComplete="off"
-                        />
-                      </div>
-                    </div>
-                  </div>
 
-                  <Button 
-                    onClick={handleEmailSignIn}
-                    className="w-full h-16 rounded-2xl bg-primary hover:bg-primary/90 text-primary-foreground font-black text-sm tracking-[0.2em] shadow-2xl shadow-primary/20 group"
-                    disabled={loading}
-                  >
-                    {loading ? <Loader2 className="animate-spin h-5 w-5" /> : (
-                      <>
-                        INITIALIZE SESSION
-                        <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
-                      </>
-                    )}
-                  </Button>
+                    <Button 
+                      type="submit"
+                      className="w-full h-16 rounded-2xl bg-gradient-to-r from-[#F0607A] to-[#8B65C8] text-white hover:scale-105 active:scale-95 transition-all font-black text-sm tracking-[0.2em] shadow-2xl shadow-[#F0607A]/20"
+                      disabled={loading}
+                    >
+                      {loading ? (
+                        <span className="flex items-center gap-2">
+                          <Loader2 className="animate-spin h-5 w-5" />
+                          INITIALIZING...
+                        </span>
+                      ) : (
+                        <span className="flex items-center justify-center">
+                          INITIALIZE SESSION
+                          <ArrowRight className="ml-2 h-5 w-5" />
+                        </span>
+                      )}
+                    </Button>
+                  </form>
                 </TabsContent>
 
                 {/* Create Account Tab */}
-                <TabsContent value="signup" className="mt-0 space-y-8">
-                  <div className="space-y-6">
-                    <div className="space-y-3">
-                      <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground ml-1">Display Name</Label>
-                      <div className="relative">
-                        <User className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                        <Input 
-                          type="text" 
-                          placeholder="YOUR_NAME"
-                          value={signUpName}
-                          onChange={(e) => setSignUpName(e.target.value)}
-                          className={cn(
-                            "h-14 rounded-2xl border pl-12 font-bold tracking-wider transition-all",
-                            theme === 'dark' ? "glass-dark border-white/5" : "bg-black/5 border-black/5 focus:bg-white"
-                          )}
-                          autoComplete="off"
-                        />
+                <TabsContent value="signup" className="mt-0">
+                  <form onSubmit={handleEmailSignUp} className="space-y-8 text-left">
+                    <div className="space-y-6">
+                      <div className="space-y-3">
+                        <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-[var(--aurora-text-muted)] ml-1">Display Name</Label>
+                        <div className="relative">
+                          <User className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-[var(--aurora-text-muted)]" />
+                          <Input 
+                            type="text" 
+                            placeholder="YOUR_NAME"
+                            value={signUpName}
+                            onChange={(e) => setSignUpName(e.target.value)}
+                            className={cn(
+                              "h-14 rounded-2xl border pl-12 font-bold tracking-wider transition-all",
+                              theme === 'dark' ? "bg-white/5 border-white/5" : "bg-black/5 border-black/5 focus:bg-white"
+                            )}
+                            autoComplete="name"
+                            required
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-3">
+                        <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-[var(--aurora-text-muted)] ml-1">New Identity</Label>
+                        <div className="relative">
+                          <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-[var(--aurora-text-muted)]" />
+                          <Input 
+                            type="email" 
+                            placeholder="EMAIL_ADDRESS"
+                            value={signUpEmail}
+                            onChange={(e) => setSignUpEmail(e.target.value)}
+                            className={cn(
+                              "h-14 rounded-2xl border pl-12 font-bold tracking-wider transition-all",
+                              theme === 'dark' ? "bg-white/5 border-white/5" : "bg-black/5 border-black/5 focus:bg-white"
+                            )}
+                            autoComplete="email"
+                            required
+                          />
+                        </div>
+                      </div>
+                      <div className="space-y-3">
+                        <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-[var(--aurora-text-muted)] ml-1">Secure Key</Label>
+                        <div className="relative">
+                          <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-[var(--aurora-text-muted)]" />
+                          <Input 
+                            type={showSignUpPassword ? "text" : "password"} 
+                            placeholder="••••••••"
+                            value={signUpPassword}
+                            onChange={(e) => setSignUpPassword(e.target.value)}
+                            className={cn(
+                              "h-14 rounded-2xl border pl-12 pr-12 font-bold tracking-wider transition-all",
+                              theme === 'dark' ? "bg-white/5 border-white/5" : "bg-black/5 border-black/5 focus:bg-white"
+                            )}
+                            autoComplete="new-password"
+                            required
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowSignUpPassword(!showSignUpPassword)}
+                            className="absolute right-4 top-1/2 -translate-y-1/2 text-[var(--aurora-text-muted)] hover:text-[#8B65C8] transition-colors"
+                          >
+                            {showSignUpPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                          </button>
+                        </div>
                       </div>
                     </div>
-                    <div className="space-y-3">
-                      <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground ml-1">New Identity</Label>
-                      <div className="relative">
-                        <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                        <Input 
-                          type="email" 
-                          placeholder="EMAIL_ADDRESS"
-                          value={signUpEmail}
-                          onChange={(e) => setSignUpEmail(e.target.value)}
-                          className={cn(
-                            "h-14 rounded-2xl border pl-12 font-bold tracking-wider transition-all",
-                            theme === 'dark' ? "glass-dark border-white/5" : "bg-black/5 border-black/5 focus:bg-white"
-                          )}
-                          autoComplete="off"
-                        />
-                      </div>
-                    </div>
-                    <div className="space-y-3">
-                      <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-muted-foreground ml-1">Secure Key</Label>
-                      <div className="relative">
-                        <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                        <Input 
-                          type="password" 
-                          placeholder="••••••••"
-                          value={signUpPassword}
-                          onChange={(e) => setSignUpPassword(e.target.value)}
-                          className={cn(
-                            "h-14 rounded-2xl border pl-12 font-bold tracking-wider transition-all",
-                            theme === 'dark' ? "glass-dark border-white/5" : "bg-black/5 border-black/5 focus:bg-white"
-                          )}
-                          autoComplete="off"
-                        />
-                      </div>
-                    </div>
-                  </div>
 
-                  <Button 
-                    onClick={handleEmailSignUp}
-                    className="w-full h-16 rounded-2xl bg-secondary hover:bg-secondary/90 text-white font-black text-sm tracking-[0.2em] shadow-2xl shadow-secondary/20 group"
-                    disabled={loading}
-                  >
-                    {loading ? <Loader2 className="animate-spin h-5 w-5" /> : (
-                      <>
-                        CREATE ACCOUNT
-                        <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
-                      </>
-                    )}
-                  </Button>
+                    <Button 
+                      type="submit"
+                      className="w-full h-16 rounded-2xl bg-gradient-to-r from-[#F0607A] to-[#8B65C8] text-white hover:scale-105 active:scale-95 transition-all font-black text-sm tracking-[0.2em] shadow-2xl shadow-[#F0607A]/20"
+                      disabled={loading}
+                    >
+                      {loading ? (
+                        <span className="flex items-center gap-2">
+                          <Loader2 className="animate-spin h-5 w-5" />
+                          CREATING...
+                        </span>
+                      ) : (
+                        <span className="flex items-center justify-center">
+                          CREATE ACCOUNT
+                          <ArrowRight className="ml-2 h-5 w-5" />
+                        </span>
+                      )}
+                    </Button>
+                  </form>
                 </TabsContent>
               </Tabs>
+
+              {/* Google Sign In Option */}
+              <div className="mt-8">
+                <div className="relative mb-6">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t border-[var(--aurora-border)]" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-[var(--aurora-bg-secondary)] px-3 text-[var(--aurora-text-muted)] font-bold">Or continue with</span>
+                  </div>
+                </div>
+
+                <Button 
+                  type="button" 
+                  onClick={handleGoogleSignIn}
+                  disabled={googleLoading}
+                  className={cn(
+                    "w-full h-14 rounded-2xl border font-bold hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center",
+                    theme === 'dark' ? "bg-white/5 border-white/10 text-white hover:bg-white/10" : "bg-white border-black/10 text-black hover:bg-black/5 shadow-xs"
+                  )}
+                >
+                  {googleLoading ? (
+                    <Loader2 className="animate-spin h-5 w-5" />
+                  ) : (
+                    <>
+                      <GoogleIcon />
+                      Google Identity
+                    </>
+                  )}
+                </Button>
+              </div>
 
             </CardContent>
           </Card>
         </motion.div>
       </div>
-    </motion.div>
+    </div>
   );
 };
 

@@ -1,19 +1,21 @@
-import { Link, useNavigate } from 'react-router-dom';
-import { Button } from '@/components/ui/button';
-import { Moon, Sun, Menu, X, ChevronRight } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useTheme } from '@/contexts/ThemeContext';
-import { motion, useScroll, useMotionValueEvent, AnimatePresence } from 'framer-motion';
-import { useState } from 'react';
+import { Sun, Moon, Menu, X } from 'lucide-react';
 
 const LandingNav = () => {
   const { theme, toggleTheme } = useTheme();
-  const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const { scrollY } = useScroll();
+  const [isScrolled, setIsScrolled] = useState(false);
+  const navigate = useNavigate();
 
-  useMotionValueEvent(scrollY, "change", (latest) => {
-    setIsScrolled(latest > 50);
-  });
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 50);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
 
   const scrollToSection = (id: string) => {
     const element = document.getElementById(id);
@@ -23,180 +25,89 @@ const LandingNav = () => {
     }
   };
 
-  const navigate = useNavigate();
-
-  const navLinks = [
-    { name: 'CORE', id: 'features' },
-    { name: 'FLOW', id: 'how-it-works' },
-    { name: 'PRICING', id: 'pricing' },
-    { name: 'SUPPORT', id: 'faq' },
-  ];
-
-  const handleAuthAction = (mode: 'signin' | 'signup') => {
-    setIsMobileMenuOpen(false);
-    navigate('/auth');
-  };
-
   return (
     <>
-      <motion.nav 
-        initial={{ y: -100, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-        className="fixed top-0 left-0 right-0 z-50 flex justify-center py-6 px-4"
+      <nav 
+        id="navbar" 
+        className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 py-4 px-6 lg:px-12 flex items-center justify-between ${
+          isScrolled 
+            ? 'shadow-lg border-b bg-[var(--aurora-nav-bg)] border-[var(--aurora-border)]' 
+            : 'bg-transparent border-b border-transparent'
+        }`}
+        style={{
+          backdropFilter: isScrolled ? 'blur(12px)' : 'none',
+          WebkitBackdropFilter: isScrolled ? 'blur(12px)' : 'none',
+        }}
       >
-        <div className={cn(
-          "flex items-center justify-between w-full max-w-7xl h-16 md:h-20 px-6 md:px-10 transition-all duration-700 rounded-full border",
-          isScrolled || isMobileMenuOpen
-            ? theme === 'dark'
-              ? "glass-dark border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.5)] scale-[0.98]" 
-              : "bg-white/80 backdrop-blur-xl border-black/5 shadow-[0_20px_50px_rgba(0,0,0,0.1)] scale-[0.98]"
-            : "bg-transparent border-transparent"
-        )}>
-          {/* Brand */}
-          <Link to="/" className="flex items-center gap-5 group">
-            <motion.div 
-              initial={{ rotate: -10, scale: 0.9 }}
-              animate={{ rotate: 0, scale: 1 }}
-              whileHover={{ scale: 1.1, rotate: 5 }}
-              className={cn(
-                "h-12 w-12 md:h-14 md:w-14 rounded-2xl flex items-center justify-center relative overflow-hidden transition-all duration-500",
-                theme === 'dark' 
-                  ? "bg-gradient-to-br from-primary/20 to-secondary/20 border border-primary/30 glow-primary" 
-                  : "bg-white border border-primary/20 shadow-xl"
-              )}
-            >
-              <div className="absolute inset-0 bg-gradient-to-tr from-white/10 to-transparent pointer-events-none" />
-              <img src="/logo.png" alt="TaskMate" className="h-7 w-7 md:h-8 md:w-8 relative z-10" />
-              <div className="absolute inset-0 bg-primary/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
-            </motion.div>
-
-            <div className="flex flex-col">
-              <span className={cn(
-                "text-xl md:text-2xl font-black tracking-tighter leading-none transition-colors",
-                theme === 'dark' ? "text-white" : "text-black"
-              )}>
-                TASK<span className="text-primary italic">MATE</span>
-              </span>
-              <div className="flex items-center gap-1.5 mt-1">
-                <span className="h-1.5 w-1.5 rounded-full bg-primary animate-pulse" />
-                <span className="text-[9px] font-black text-muted-foreground tracking-[0.3em] uppercase">Enterprise 2.0</span>
-              </div>
-            </div>
-          </Link>
-          
-          {/* Navigation Links */}
-          <div className="hidden lg:flex items-center gap-10">
-            {navLinks.map((link) => (
-              <button 
-                key={link.id}
-                onClick={() => scrollToSection(link.id)}
-                className={cn(
-                  "text-[11px] font-black transition-all tracking-[0.3em] uppercase py-2 relative group",
-                  theme === 'dark' ? "text-white/50 hover:text-cyan-400" : "text-black/50 hover:text-cyan-600"
-                )}
-              >
-                {link.name}
-                <span className="absolute bottom-0 left-1/2 -translate-x-1/2 w-0 h-[2px] bg-cyan-400 group-hover:w-full transition-all duration-500" />
-              </button>
-            ))}
-          </div>
-          
-          {/* Actions */}
-          <div className="flex items-center gap-4">
-            <button 
-              onClick={toggleTheme}
-              className={cn(
-                "h-10 w-10 rounded-full flex items-center justify-center transition-all border",
-                theme === 'dark' 
-                  ? "glass border-white/10 text-white/70 hover:text-cyan-400" 
-                  : "bg-black/5 border-black/10 text-black/70 hover:text-cyan-600"
-              )}
-            >
-              {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
-            </button>
-
-            <button 
-              onClick={() => handleAuthAction('signin')}
-              className={cn(
-                "hidden md:block text-[11px] font-black tracking-[0.2em] uppercase transition-colors px-4",
-                theme === 'dark' ? "text-white hover:text-cyan-400" : "text-black hover:text-cyan-600"
-              )}
-            >
-              LOGIN
-            </button>
-            
-            <button 
-              onClick={() => handleAuthAction('signup')}
-              className="hidden sm:block h-11 md:h-13 px-8 rounded-full bg-cyan-400 text-black text-[11px] font-black uppercase tracking-[0.2em] hover:bg-cyan-300 active:scale-95 transition-all shadow-lg shadow-cyan-500/20"
-            >
-              START FREE
-            </button>
-
-            <Button 
-              variant="ghost" 
-              size="icon" 
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className={cn("lg:hidden h-10 w-10", theme === 'dark' ? "text-white" : "text-black")}
-            >
-              {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-            </Button>
-          </div>
+        <div className="flex items-center gap-2 cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+          <svg className="w-10 h-10" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="40" height="40" rx="10" fill="url(#logoGradNav)"></rect>
+            <defs>
+              <linearGradient id="logoGradNav" x1="0" y1="40" x2="40" y2="0">
+                <stop offset="0%" stop-color="#F5A87B"></stop>
+                <stop offset="30%" stop-color="#F0607A"></stop>
+                <stop offset="65%" stop-color="#8B65C8"></stop>
+                <stop offset="100%" stop-color="#4ABFB8"></stop>
+              </linearGradient>
+            </defs>
+            <circle cx="20" cy="20" r="11" stroke="white" stroke-width="2.5" fill="none"></circle>
+            <path d="M14 20.5L18 24.5L26 16" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></path>
+          </svg>
+          <span className="text-xl font-bold tracking-tight text-[var(--aurora-text-primary)]">TaskMate AI</span>
         </div>
-      </motion.nav>
+
+        {/* Desktop Menu */}
+        <div className="hidden md:flex items-center gap-8">
+          <button onClick={() => scrollToSection('features')} className="text-sm font-medium text-[var(--aurora-text-secondary)] hover:text-[var(--aurora-purple)] transition-colors">Features</button>
+          <button onClick={() => scrollToSection('how-it-works')} className="text-sm font-medium text-[var(--aurora-text-secondary)] hover:text-[var(--aurora-purple)] transition-colors">How it works</button>
+          <button onClick={() => scrollToSection('pricing')} className="text-sm font-medium text-[var(--aurora-text-secondary)] hover:text-[var(--aurora-purple)] transition-colors">Pricing</button>
+          <button onClick={() => scrollToSection('faq')} className="text-sm font-medium text-[var(--aurora-text-secondary)] hover:text-[var(--aurora-purple)] transition-colors">FAQ</button>
+        </div>
+
+        {/* Desktop Actions */}
+        <div className="flex items-center gap-4">
+          <button 
+            onClick={toggleTheme} 
+            className="p-2.5 rounded-xl bg-[var(--aurora-bg-secondary)] border border-[var(--aurora-border)] hover:bg-[var(--aurora-bg-tertiary)] transition-all text-[var(--aurora-text-primary)]"
+            aria-label="Toggle theme"
+          >
+            {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+          </button>
+          <button 
+            onClick={() => navigate('/auth')} 
+            className="hidden md:block text-sm font-bold text-[var(--aurora-text-primary)] hover:text-[var(--aurora-purple)] transition-colors"
+          >
+            Sign in
+          </button>
+          <button 
+            onClick={() => navigate('/auth')} 
+            className="px-6 py-2.5 bg-gradient-to-r from-[#F0607A] to-[#8B65C8] text-white text-sm font-bold rounded-full shadow-lg hover:scale-105 active:scale-95 transition-all"
+          >
+            Download Free →
+          </button>
+          <button 
+            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} 
+            className="md:hidden p-2 text-2xl text-[var(--aurora-text-primary)]"
+            aria-label="Toggle mobile menu"
+          >
+            {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+          </button>
+        </div>
+      </nav>
 
       {/* Mobile Menu */}
-      <AnimatePresence>
-        {isMobileMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-            className={cn(
-              "fixed inset-0 z-40 lg:hidden pt-32 px-6",
-              theme === 'dark' ? "bg-black/95 backdrop-blur-2xl" : "bg-white/95 backdrop-blur-2xl"
-            )}
-          >
-            <div className="flex flex-col gap-8">
-              {navLinks.map((link) => (
-                <button 
-                  key={link.id}
-                  onClick={() => scrollToSection(link.id)}
-                  className={cn(
-                    "text-4xl font-black tracking-tighter text-left py-2 border-b transition-all",
-                    theme === 'dark' ? "text-white border-white/5 hover:text-primary" : "text-black border-black/5 hover:text-primary"
-                  )}
-                >
-                  {link.name}
-                </button>
-              ))}
-              
-              <div className="flex flex-col gap-4 mt-10">
-                <button 
-                  onClick={() => handleAuthAction('signup')}
-                  className="w-full h-16 rounded-[1.5rem] bg-primary text-black font-black uppercase tracking-[0.3em] text-[12px]"
-                >
-                  START FREE NOW
-                </button>
-                <button 
-                  onClick={() => handleAuthAction('signin')}
-                  className={cn(
-                    "w-full h-16 rounded-[1.5rem] border font-black uppercase tracking-[0.3em] text-[12px]",
-                    theme === 'dark' ? "border-white/10 text-white" : "border-black/10 text-black"
-                  )}
-                >
-                  LOGIN TO ACCOUNT
-                </button>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {isMobileMenuOpen && (
+        <div className="fixed inset-0 z-40 bg-[var(--aurora-bg-primary)] p-8 pt-24 md:hidden flex flex-col gap-6">
+          <button onClick={() => scrollToSection('features')} className="text-2xl font-bold text-[var(--aurora-text-primary)] text-left hover:text-[var(--aurora-purple)] transition-colors">Features</button>
+          <button onClick={() => scrollToSection('how-it-works')} className="text-2xl font-bold text-[var(--aurora-text-primary)] text-left hover:text-[var(--aurora-purple)] transition-colors">How it works</button>
+          <button onClick={() => scrollToSection('pricing')} className="text-2xl font-bold text-[var(--aurora-text-primary)] text-left hover:text-[var(--aurora-purple)] transition-colors">Pricing</button>
+          <button onClick={() => scrollToSection('faq')} className="text-2xl font-bold text-[var(--aurora-text-primary)] text-left hover:text-[var(--aurora-purple)] transition-colors">FAQ</button>
+          <hr className="border-[var(--aurora-border)]" />
+          <button onClick={() => { setIsMobileMenuOpen(false); navigate('/auth'); }} className="w-full py-4 rounded-2xl bg-[var(--aurora-bg-secondary)] border border-[var(--aurora-border)] font-bold text-[var(--aurora-text-primary)] hover:bg-[var(--aurora-bg-tertiary)] transition-colors">Sign in</button>
+        </div>
+      )}
     </>
   );
 };
-
-const cn = (...classes: any[]) => classes.filter(Boolean).join(' ');
 
 export default LandingNav;

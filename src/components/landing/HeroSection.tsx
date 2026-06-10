@@ -1,186 +1,128 @@
+import { useNavigate } from 'react-router-dom';
+import { useTheme } from '@/contexts/ThemeContext';
+import { Play, Mic, Target } from 'lucide-react';
 import dashboardDarkImg from '@/assets/dashboardDark.png';
 import dashboardLightImg from '@/assets/dashboardLight.png';
-import { Link, useNavigate } from 'react-router-dom';
-import { Play, ChevronRight } from 'lucide-react';
-import { useTheme } from '@/contexts/ThemeContext';
-import { motion, useScroll, useTransform, useSpring } from 'framer-motion';
-import { useRef, useEffect } from 'react';
-
-const Typewriter = ({ text, delay = 0, className }: { text: string, delay?: number, className?: string }) => {
-  return (
-    <motion.span className={className}>
-      {text.split("").map((char, i) => (
-        <motion.span
-          key={i}
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{
-            duration: 0.05,
-            delay: delay + (i * 0.05),
-            ease: "linear"
-          }}
-        >
-          {char}
-        </motion.span>
-      ))}
-      <motion.span
-        animate={{ opacity: [0, 1, 0] }}
-        transition={{ duration: 0.8, repeat: Infinity, ease: "linear" }}
-        className="inline-block w-[0.5em] h-[1em] bg-primary align-middle ml-1"
-      />
-    </motion.span>
-  );
-};
 
 const HeroSection = () => {
   const { theme } = useTheme();
-  const containerRef = useRef<HTMLDivElement>(null);
   const navigate = useNavigate();
-  
-  const { scrollYProgress } = useScroll({
-    target: containerRef,
-    offset: ["start start", "end start"]
-  });
-
-  const smoothProgress = useSpring(scrollYProgress, { stiffness: 100, damping: 30, restDelta: 0.001 });
-  
-  const scrollRotateX = useTransform(smoothProgress, [0, 0.5], [15, 0]);
-  const scrollScale = useTransform(smoothProgress, [0, 0.5], [0.85, 1]);
-  const scrollOpacity = useTransform(smoothProgress, [0, 0.2], [1, 0.8]);
-
   const dashboardImage = theme === 'dark' ? dashboardDarkImg : dashboardLightImg;
 
   return (
-    <section 
-      id="home" 
-      ref={containerRef}
-      className={cn(
-        "relative min-h-screen flex items-center pt-32 pb-24 md:pb-40 px-4 overflow-hidden transition-colors duration-700 bg-transparent"
-      )}
-    >
-      {/* Sexy Noise Texture Overlay */}
-      <div className="absolute inset-0 z-[2] bg-noise opacity-[0.05] pointer-events-none" />
+    <section className="min-h-[900px] flex items-center pt-32 pb-20 relative overflow-hidden bg-transparent">
+      {/* Aurora Background Blobs */}
+      <div className="aurora-container absolute inset-0 overflow-hidden pointer-events-none z-0">
+        <div className="aurora-blob bg-[#8B65C8] top-[10%] left-[20%] opacity-15"></div>
+        <div className="aurora-blob bg-[#4ABFB8] top-[50%] left-[80%] opacity-10" style={{ animationDelay: '-20s' }}></div>
+        <div className="aurora-blob bg-[#F0607A] top-[80%] left-[30%] opacity-10" style={{ animationDelay: '-40s' }}></div>
+        
+        {/* Floating Particles */}
+        <div className="aurora-particle w-1 h-1 bg-[#8B65C8] top-[15%] left-[10%]"></div>
+        <div className="aurora-particle w-1.5 h-1.5 bg-[#4ABFB8] top-[35%] left-[85%]" style={{ animationDelay: '-2s' }}></div>
+        <div className="aurora-particle w-1 h-1 bg-[#F0607A] top-[65%] left-[40%]" style={{ animationDelay: '-5s' }}></div>
+        <div className="aurora-particle w-2 h-2 bg-[#8B65C8] top-[80%] left-[15%]" style={{ animationDelay: '-8s' }}></div>
+        <div className="aurora-particle w-1 h-1 bg-[#4ABFB8] top-[20%] left-[70%]" style={{ animationDelay: '-3s' }}></div>
+      </div>
 
-      <div className="container mx-auto max-w-7xl relative z-10">
-        <div className="flex flex-col items-center text-center mb-24">
-          {/* Active Status Badge */}
-          <motion.div 
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            className={cn(
-              "group cursor-pointer mb-12 p-[1px] rounded-full bg-gradient-to-r from-primary via-secondary to-primary shadow-2xl",
-              theme === 'dark' ? "shadow-primary/20" : "shadow-primary/10"
-            )}
-          >
-            <div className={cn(
-              "px-8 py-3 rounded-full backdrop-blur-2xl flex items-center gap-4 transition-all duration-500 hover:bg-opacity-50",
-              theme === 'dark' ? "bg-black/80" : "bg-white/90"
-            )}>
-              <div className="h-2 w-2 rounded-full bg-primary shadow-[0_0_12px_#22d3ee] animate-pulse" />
-              <span className={cn(
-                "text-[10px] font-black uppercase tracking-[0.4em] transition-colors",
-                theme === 'dark' ? "text-white" : "text-black/60"
-              )}>Circle Mesh v2.0 // Active Node</span>
-              <ChevronRight className="h-4 w-4 text-primary group-hover:translate-x-1 transition-transform" />
-            </div>
-          </motion.div>
-
-          {/* Sexy Title Block */}
-          <div className="relative mb-12">
-            <motion.h1 
-              initial={{ opacity: 0, scale: 0.8, y: 60 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-              className={cn(
-                "text-5xl sm:text-7xl md:text-9xl lg:text-[11rem] font-black leading-tight tracking-tighter transition-colors pb-8",
-                theme === 'dark' ? "text-white" : "text-black"
-              )}
-            >
-              FUTURE<br />
-              <Typewriter 
-                text="TASKMATE" 
-                delay={1} 
-                className="text-gradient drop-shadow-[0_0_60px_rgba(34,211,238,0.3)]" 
-              />
-            </motion.h1>
-          </div>
-
-          <motion.p 
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, delay: 0.2 }}
-            className={cn(
-              "text-xl md:text-3xl max-w-3xl mx-auto mb-20 font-bold leading-relaxed transition-colors",
-              theme === 'dark' ? "text-white/40" : "text-black/40"
-            )}
-          >
-            Unified personal tasks, collaborative rich notes, and group circles. Synchronized in real-time across your web terminal and mobile ecosystem.
-          </motion.p>
-
-          {/* Action Hub */}
-          <motion.div 
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 1, delay: 0.4 }}
-            className="flex flex-col sm:flex-row gap-10 items-center"
-          >
-            <button 
-              onClick={() => navigate('/auth')}
-              className="h-20 px-16 bg-primary text-black font-black uppercase text-[13px] tracking-[0.4em] rounded-full hover:shadow-[0_0_50px_rgba(34,211,238,0.5)] transition-all shadow-2xl"
-            >
-              INITIALIZE FREE
-            </button>
-            
-            <button className={cn(
-              "h-20 px-16 glass font-black uppercase text-[13px] tracking-[0.4em] rounded-full border transition-all flex items-center gap-5",
-              theme === 'dark' ? "text-white border-white/10 hover:bg-white/5" : "text-black border-black/10 hover:bg-black/5"
-            )}>
-              <Play className="h-5 w-5 fill-primary text-primary" />
-              <span>EXPERIENCE</span>
-            </button>
-          </motion.div>
+      <div className="container mx-auto px-6 text-center relative z-10">
+        {/* Version Badge */}
+        <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 mb-8 backdrop-blur-sm shadow-xs">
+          <span className="w-2 h-2 rounded-full bg-[#4ABFB8] animate-pulse shadow-[0_0_8px_#4ABFB8]"></span>
+          <span className="text-xs font-semibold uppercase tracking-widest text-[var(--aurora-text-secondary)]">AI-Powered Task Intelligence · v1.7.0</span>
         </div>
 
-        {/* Static Dashboard Preview - Performance Optimized */}
-        <div className="relative mt-24 px-4 max-w-7xl mx-auto">
-          <motion.div
-            style={{ 
-              rotateX: window.innerWidth > 768 ? scrollRotateX : 0, 
-              scale: window.innerWidth > 768 ? scrollScale : 1, 
-              opacity: scrollOpacity 
-            }}
-            className="relative z-10"
-          >
-            <div className={cn(
-              "relative rounded-2xl overflow-hidden border p-3 shadow-2xl transition-all",
-              theme === 'dark' 
-                ? "border-white/10 bg-black/40 shadow-black/20" 
-                : "border-black/5 bg-white shadow-black/10"
-            )}>
-              <div className={cn(
-                "rounded-xl overflow-hidden relative group",
-                theme === 'dark' ? "bg-black/60" : "bg-gray-50"
-              )}>
-                <img 
-                   src={dashboardImage}
-                   alt="TaskMate Interface"
-                   className="w-full h-auto opacity-95 transition-opacity duration-1000"
-                />
-              </div>
-            </div>
+        {/* Hero Title */}
+        <h1 className="text-5xl md:text-8xl font-black mb-6 leading-[1.05] tracking-tighter text-[var(--aurora-text-primary)]">
+          Plan smarter.<br />
+          <span className="bg-gradient-to-r from-[#F5A87B] via-[#F0607A] to-[#8B65C8] bg-clip-text text-transparent italic">Live better.</span>
+        </h1>
 
-            {/* Core Glow - Static on mobile for performance */}
-            <div className={cn(
-              "absolute -bottom-40 left-1/2 -translate-x-1/2 w-[95%] h-80 bg-primary/20 blur-[200px] -z-10 rounded-full",
-              window.innerWidth > 768 ? "animate-pulse-slow" : "opacity-50"
-            )} />
-          </motion.div>
+        {/* Hero Description */}
+        <p className="max-w-2xl mx-auto text-lg md:text-xl text-[var(--aurora-text-secondary)] mb-10 leading-relaxed">
+          Harness the power of AI to organize your life. From voice-captured thoughts to auto-scheduled days, TaskMate AI is your ultimate productivity partner.
+        </p>
+
+        {/* Action Buttons */}
+        <div className="flex flex-col sm:flex-row items-center justify-center gap-5 mb-16">
+          <button 
+            onClick={() => navigate('/auth')}
+            className="w-full sm:w-auto px-10 py-5 bg-gradient-to-r from-[#F0607A] to-[#8B65C8] text-white font-extrabold rounded-2xl shadow-[0_20px_40px_-10px_rgba(240,96,122,0.4)] hover:scale-105 active:scale-95 transition-all text-lg"
+          >
+            Get Started Free
+          </button>
+          <button 
+            className="w-full sm:w-auto px-10 py-5 border border-white/10 bg-white/5 backdrop-blur-md font-extrabold rounded-2xl text-[var(--aurora-text-primary)] hover:bg-white/10 active:scale-95 transition-all flex items-center justify-center gap-3 text-lg"
+          >
+            <Play className="w-5 h-5 fill-current" /> Watch Demo
+          </button>
+        </div>
+
+        {/* Supported Platforms */}
+        <div className="flex flex-wrap items-center justify-center gap-8 mb-20 opacity-70 text-[var(--aurora-text-secondary)]">
+          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest">
+            <span className="text-xl text-[#4ABFB8]">🤖</span> Android Live
+          </div>
+          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest opacity-40">
+            <span className="text-xl">🍎</span> iOS Soon
+          </div>
+          <div className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest">
+            <span className="text-xl text-[#8B65C8]">🌐</span> Web App
+          </div>
+        </div>
+
+        {/* 3D Mockup Container */}
+        <div className="mockup-container max-w-5xl mx-auto px-4 perspective-[1500px]">
+          <div className="mockup-inner relative rounded-3xl border border-white/10 bg-[var(--aurora-bg-secondary)] shadow-2xl p-2 transition-all duration-700 hover:rotate-0 hover:scale-[1.01] transform rotate-x-[6deg] rotate-y-[-4deg]">
+            <div className="w-full bg-[#0b0e14] rounded-2xl overflow-hidden relative aspect-[16/10]">
+              
+              {/* Window Controls */}
+              <div className="absolute top-4 left-6 flex gap-2 z-20">
+                <div className="w-3 h-3 rounded-full bg-[#FF5F56]"></div>
+                <div className="w-3 h-3 rounded-full bg-[#FFBD2E]"></div>
+                <div className="w-3 h-3 rounded-full bg-[#27C93F]"></div>
+              </div>
+              
+              {/* Dashboard Image */}
+              <img 
+                src={dashboardImage} 
+                alt="TaskMate Dashboard" 
+                className="w-full h-full object-cover opacity-90"
+              />
+
+              {/* Floating Widgets */}
+              {/* Left Widget: Voice Capture */}
+              <div className="absolute top-[15%] left-[-2%] z-30 aurora-floating-chip hidden lg:block">
+                <div className="bg-white/10 dark:bg-black/40 backdrop-blur-xl border border-white/20 p-4 rounded-2xl shadow-2xl flex items-center gap-4 text-left">
+                  <div className="w-12 h-12 rounded-xl bg-[#8B65C8] flex items-center justify-center text-white text-2xl shadow-lg">
+                    <Mic className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-[#8B65C8]">Voice Capturing</p>
+                    <p className="text-sm font-semibold text-white">"Schedule sync with devs..."</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Widget: Deep Work Focus */}
+              <div className="absolute bottom-[20%] right-[-2%] z-30 aurora-floating-chip hidden lg:block" style={{ animationDelay: '-2s' }}>
+                <div className="bg-white/10 dark:bg-black/40 backdrop-blur-xl border border-white/20 p-4 rounded-2xl shadow-2xl flex items-center gap-4 text-left">
+                  <div className="w-12 h-12 rounded-xl bg-[#4ABFB8] flex items-center justify-center text-white text-2xl shadow-lg">
+                    <Target className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <p className="text-[10px] font-bold uppercase tracking-widest text-[#4ABFB8]">Deep Work Active</p>
+                    <p className="text-sm font-semibold text-white">Focus Timer: 42:15</p>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+          </div>
         </div>
       </div>
     </section>
   );
 };
-
-const cn = (...classes: any[]) => classes.filter(Boolean).join(' ');
 
 export default HeroSection;

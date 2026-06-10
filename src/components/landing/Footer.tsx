@@ -1,156 +1,98 @@
-import { Link } from 'react-router-dom';
 import { useTheme } from '@/contexts/ThemeContext';
-import { motion } from 'framer-motion';
+import { Twitter, Linkedin, Github, Instagram } from 'lucide-react';
 
 const Footer = () => {
   const { theme } = useTheme();
 
-  const footerLinks = [
-    {
-      title: 'PILLARS',
-      links: [
-        { name: 'Task Engine', href: '#' },
-        { name: 'Note Layering', href: '#' },
-        { name: 'Circle Logic', href: '#' },
-        { name: 'Neural Sync', href: '#' },
-      ]
-    },
-    {
-      title: 'RESOURCES',
-      links: [
-        { name: 'System Status', href: '#' },
-        { name: 'Beta Protocols', href: '#' },
-        { name: 'API Docs', href: '#' },
-        { name: 'Security Hub', href: '#' },
-      ]
-    },
-    {
-      title: 'COMPANY',
-      links: [
-        { name: 'Evolution', href: '#' },
-        { name: 'Ethics', href: '#' },
-        { name: 'Command Center', href: '#' },
-        { name: 'Legal', href: '#' },
-      ]
-    }
-  ];
-
   return (
-    <footer className={cn(
-      "py-32 px-4 transition-colors duration-700",
-      theme === 'dark' ? "bg-transparent" : "bg-white"
-    )}>
-      <div className="container mx-auto max-w-7xl">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-24 mb-32">
-          {/* Brand Column */}
-          <div className="space-y-12">
-            <Link to="/" className="flex items-center gap-6 group">
-              <div className={cn(
-                "h-16 w-16 rounded-2xl flex items-center justify-center relative overflow-hidden transition-all duration-500",
-                theme === 'dark' 
-                  ? "bg-gradient-to-br from-primary/20 to-secondary/20 border border-primary/30 glow-primary" 
-                  : "bg-white border border-primary/20 shadow-xl"
-              )}>
-                <img src="/logo.png" alt="TaskMate" className="h-10 w-10 relative z-10" />
-                <div className="absolute inset-0 bg-primary/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity" />
-              </div>
-              <div className="flex flex-col">
-                <span className={cn(
-                  "text-3xl font-black tracking-tighter leading-none transition-colors",
-                  theme === 'dark' ? "text-white" : "text-black"
-                )}>
-                  TASKMATE
-                </span>
-                <span className="text-[11px] font-black text-primary tracking-[0.4em] uppercase mt-2">
-                  PRO VERSION 2.0
-                </span>
-              </div>
-            </Link>
-
-            <p className={cn(
-              "text-2xl md:text-3xl font-bold leading-tight max-w-md transition-colors",
-              theme === 'dark' ? "text-white/40" : "text-black/40"
-            )}>
-              Architecting the future of unified productivity. One node at a time.
+    <footer className="py-20 bg-[var(--aurora-bg-primary)] border-t border-[var(--aurora-border)]">
+      <div className="container mx-auto px-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12 mb-20 text-left">
+          
+          {/* Brand Info Column */}
+          <div className="lg:col-span-1">
+            <div className="flex items-center gap-2 mb-6">
+              <svg className="w-8 h-8" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect width="40" height="40" rx="10" fill="url(#logoGradFooter)"></rect>
+                <defs>
+                  <linearGradient id="logoGradFooter" x1="0" y1="40" x2="40" y2="0">
+                    <stop offset="0%" stop-color="#F5A87B"></stop>
+                    <stop offset="30%" stop-color="#F0607A"></stop>
+                    <stop offset="65%" stop-color="#8B65C8"></stop>
+                    <stop offset="100%" stop-color="#4ABFB8"></stop>
+                  </linearGradient>
+                </defs>
+                <circle cx="20" cy="20" r="11" stroke="white" stroke-width="2.5" fill="none"></circle>
+                <path d="M14 20.5L18 24.5L26 16" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></path>
+              </svg>
+              <span className="text-xl font-bold tracking-tight text-[var(--aurora-text-primary)]">TaskMate AI</span>
+            </div>
+            <p className="text-[var(--aurora-text-secondary)] text-sm mb-6 leading-relaxed">
+              Reimagining productivity for the AI era. Plan smarter, live better.
             </p>
+            <p className="text-xs text-[var(--aurora-text-muted)]">
+              Made with ❤️ in Ahmedabad, India 🇮🇳
+            </p>
+          </div>
 
-            <div className="flex gap-10">
-              {['TWITTER', 'GITHUB', 'DISCORD'].map((social) => (
-                <a 
-                  key={social} 
-                  href="#" 
-                  className={cn(
-                    "text-[10px] font-black tracking-[0.3em] transition-colors hover:text-primary",
-                    theme === 'dark' ? "text-white/20" : "text-black/20"
-                  )}
-                >
-                  {social}
-                </a>
-              ))}
+          {/* Product Links */}
+          <div>
+            <h4 className="font-bold mb-6 text-[var(--aurora-text-primary)]">Product</h4>
+            <ul className="space-y-4 text-sm text-[var(--aurora-text-secondary)]">
+              <li><a href="#features" className="hover:text-[#8B65C8] transition-colors">Features</a></li>
+              <li><a href="#how-it-works" className="hover:text-[#8B65C8] transition-colors">How it works</a></li>
+              <li><a href="#pricing" className="hover:text-[#8B65C8] transition-colors">Pricing</a></li>
+              <li><a href="#" className="hover:text-[#8B65C8] transition-colors">Release Notes</a></li>
+            </ul>
+          </div>
+
+          {/* Company Links */}
+          <div>
+            <h4 className="font-bold mb-6 text-[var(--aurora-text-primary)]">Company</h4>
+            <ul className="space-y-4 text-sm text-[var(--aurora-text-secondary)]">
+              <li><a href="#" className="hover:text-[#8B65C8] transition-colors">About Us</a></li>
+              <li><a href="#" className="hover:text-[#8B65C8] transition-colors">Careers</a></li>
+              <li><a href="#" className="hover:text-[#8B65C8] transition-colors">Privacy Policy</a></li>
+              <li><a href="#" className="hover:text-[#8B65C8] transition-colors">Terms of Service</a></li>
+            </ul>
+          </div>
+
+          {/* Social Links */}
+          <div>
+            <h4 className="font-bold mb-6 text-[var(--aurora-text-primary)]">Social</h4>
+            <div className="flex gap-4">
+              <a href="#" className="w-10 h-10 rounded-xl bg-[var(--aurora-bg-secondary)] border border-[var(--aurora-border)] flex items-center justify-center hover:bg-[#8B65C8] hover:text-white transition-all text-[var(--aurora-text-primary)]">
+                <Twitter className="w-5 h-5" />
+              </a>
+              <a href="#" className="w-10 h-10 rounded-xl bg-[var(--aurora-bg-secondary)] border border-[var(--aurora-border)] flex items-center justify-center hover:bg-[#8B65C8] hover:text-white transition-all text-[var(--aurora-text-primary)]">
+                <Linkedin className="w-5 h-5" />
+              </a>
+              <a href="#" className="w-10 h-10 rounded-xl bg-[var(--aurora-bg-secondary)] border border-[var(--aurora-border)] flex items-center justify-center hover:bg-[#8B65C8] hover:text-white transition-all text-[var(--aurora-text-primary)]">
+                <Github className="w-5 h-5" />
+              </a>
+              <a href="#" className="w-10 h-10 rounded-xl bg-[var(--aurora-bg-secondary)] border border-[var(--aurora-border)] flex items-center justify-center hover:bg-[#8B65C8] hover:text-white transition-all text-[var(--aurora-text-primary)]">
+                <Instagram className="w-5 h-5" />
+              </a>
             </div>
           </div>
 
-          {/* Links Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-16 md:gap-24">
-            {footerLinks.map((section) => (
-              <div key={section.title} className="space-y-10">
-                <h4 className={cn(
-                  "text-[11px] font-black tracking-[0.4em] uppercase transition-colors",
-                  theme === 'dark' ? "text-white" : "text-black"
-                )}>
-                  {section.title}
-                </h4>
-                <ul className="space-y-6">
-                  {section.links.map((link) => (
-                    <li key={link.name}>
-                      <a 
-                        href={link.href}
-                        className={cn(
-                          "text-base font-bold transition-all hover:text-primary hover:translate-x-1 inline-block",
-                          theme === 'dark' ? "text-white/40" : "text-black/40"
-                        )}
-                      >
-                        {link.name}
-                      </a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
-          </div>
         </div>
 
         {/* Bottom Bar */}
-        <div className={cn(
-          "pt-16 border-t flex flex-col md:flex-row justify-between items-center gap-8 transition-colors",
-          theme === 'dark' ? "border-white/5" : "border-black/5"
-        )}>
-          <span className={cn(
-            "text-[10px] font-black tracking-[0.3em] uppercase transition-colors",
-            theme === 'dark' ? "text-white/20" : "text-black/20"
-          )}>
-            © 2026 TASKMATE PROTOCOL. ALL RIGHTS RESERVED.
-          </span>
-          <div className="flex gap-10">
-            <span className={cn(
-              "text-[10px] font-black tracking-[0.3em] uppercase transition-colors",
-              theme === 'dark' ? "text-white/20" : "text-black/20"
-            )}>
-              PRIVACY POLICY
-            </span>
-            <span className={cn(
-              "text-[10px] font-black tracking-[0.3em] uppercase transition-colors",
-              theme === 'dark' ? "text-white/20" : "text-black/20"
-            )}>
-              TERMS OF SERVICE
-            </span>
+        <div className="pt-10 border-t border-[var(--aurora-border)] flex flex-col md:flex-row justify-between items-center gap-6">
+          <p className="text-xs text-[var(--aurora-text-muted)]">
+            © 2025 TaskMate AI. All rights reserved.
+          </p>
+          <div className="flex gap-8 text-xs text-[var(--aurora-text-muted)]">
+            <a href="#" className="hover:text-[var(--aurora-text-primary)] transition-colors">Security</a>
+            <a href="#" className="hover:text-[var(--aurora-text-primary)] transition-colors">Status</a>
+            <a href="#" className="hover:text-[var(--aurora-text-primary)] transition-colors">Cookies</a>
           </div>
         </div>
+
       </div>
     </footer>
   );
 };
-
-const cn = (...classes: any[]) => classes.filter(Boolean).join(' ');
 
 export default Footer;
