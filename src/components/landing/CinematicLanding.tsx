@@ -13,6 +13,7 @@ import PricingSection from './PricingSection';
 import FAQSection from './FAQSection';
 import CTASection from './CTASection';
 import Footer from './Footer';
+import InteractivePlayground from './InteractivePlayground';
 
 export const CinematicLanding: React.FC = () => {
   const [showScrollTop, setShowScrollTop] = useState(false);
@@ -56,6 +57,9 @@ export const CinematicLanding: React.FC = () => {
 
       {/* Different / Counter Stats Section */}
       <DifferentSection />
+
+      {/* Interactive Sandbox Playground */}
+      <InteractivePlayground />
 
       {/* Features Section */}
       <FeaturesSection />

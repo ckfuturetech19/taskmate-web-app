@@ -1,7 +1,8 @@
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Play, Mic, Target } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import dashboardDarkImg from '@/assets/dashboardDark.png';
 import dashboardLightImg from '@/assets/dashboardLight.png';
 
@@ -9,6 +10,16 @@ const HeroSection = () => {
   const { theme } = useTheme();
   const navigate = useNavigate();
   const dashboardImage = theme === 'dark' ? dashboardDarkImg : dashboardLightImg;
+
+  const words = ['Live better.', 'Focus deeper.', 'Sync faster.', 'Build smarter.'];
+  const [wordIndex, setWordIndex] = useState(0);
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setWordIndex((prev) => (prev + 1) % words.length);
+    }, 3200);
+    return () => clearInterval(interval);
+  }, []);
 
   // Animation variants
   const fadeInUp = {
@@ -54,14 +65,20 @@ const HeroSection = () => {
           className="text-4xl sm:text-6xl md:text-8xl font-black mb-6 leading-[1.05] tracking-tight uppercase text-slate-900 dark:text-white"
         >
           Plan smarter.<br />
-          <motion.span 
-            className="bg-gradient-to-r from-[#F5A87B] via-[#F0607A] to-[#8B65C8] bg-clip-text text-transparent inline-block"
-            animate={{ backgroundPosition: ["0% 50%", "100% 50%", "0% 50%"] }}
-            transition={{ duration: 8, repeat: Infinity, ease: "linear" }}
-            style={{ backgroundSize: "200% 200%" }}
-          >
-            Live better.
-          </motion.span>
+          <span className="relative inline-block overflow-hidden h-[1.15em] w-full pt-1">
+            <AnimatePresence mode="wait">
+              <motion.span 
+                key={wordIndex}
+                initial={{ y: "100%", opacity: 0 }}
+                animate={{ y: 0, opacity: 1 }}
+                exit={{ y: "-100%", opacity: 0 }}
+                transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+                className="bg-gradient-to-r from-[#F5A87B] via-[#F0607A] to-[#8B65C8] bg-clip-text text-transparent absolute left-0 right-0"
+              >
+                {words[wordIndex]}
+              </motion.span>
+            </AnimatePresence>
+          </span>
         </motion.h1>
 
         {/* Hero Description */}
