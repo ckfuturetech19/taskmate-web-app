@@ -6,6 +6,54 @@ import { motion, AnimatePresence } from 'framer-motion';
 import dashboardDarkImg from '@/assets/dashboardDark.png';
 import dashboardLightImg from '@/assets/dashboardLight.png';
 
+const SplitText = ({ text, delay = 0 }: { text: string; delay?: number }) => {
+  const letters = Array.from(text);
+  
+  const container = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.04, delayChildren: delay },
+    },
+  };
+
+  const child = {
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        type: "spring",
+        damping: 15,
+        stiffness: 120,
+      },
+    },
+    hidden: {
+      opacity: 0,
+      y: "110%",
+    },
+  };
+
+  return (
+    <motion.span
+      variants={container}
+      initial="hidden"
+      animate="visible"
+      className="inline-block overflow-hidden"
+    >
+      {letters.map((letter, index) => (
+        <motion.span
+          variants={child}
+          className="inline-block"
+          style={{ display: "inline-block", whiteSpace: "pre" }}
+          key={index}
+        >
+          {letter === ' ' ? '\u00A0' : letter}
+        </motion.span>
+      ))}
+    </motion.span>
+  );
+};
+
 const HeroSection = () => {
   const { theme } = useTheme();
   const navigate = useNavigate();
@@ -57,14 +105,10 @@ const HeroSection = () => {
         </motion.div>
 
         {/* Hero Title */}
-        <motion.h1 
-          custom={1}
-          initial="hidden"
-          animate="visible"
-          variants={fadeInUp}
+        <h1 
           className="text-4xl sm:text-6xl md:text-8xl font-black mb-6 leading-[1.05] tracking-tight uppercase text-slate-900 dark:text-white"
         >
-          Plan smarter.<br />
+          <SplitText text="Plan smarter." delay={0.15} /><br />
           <span className="relative inline-block overflow-hidden h-[1.15em] w-full pt-1">
             <AnimatePresence mode="wait">
               <motion.span 
@@ -79,7 +123,7 @@ const HeroSection = () => {
               </motion.span>
             </AnimatePresence>
           </span>
-        </motion.h1>
+        </h1>
 
         {/* Hero Description */}
         <motion.p 
