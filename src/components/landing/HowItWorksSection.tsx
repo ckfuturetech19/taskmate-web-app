@@ -24,9 +24,9 @@ const HowItWorksSection = () => {
   ];
 
   const panelVariants = {
-    initial: { opacity: 0, scale: 0.95, y: 15 },
-    animate: { opacity: 1, scale: 1, y: 0, transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] } },
-    exit: { opacity: 0, scale: 0.95, y: -15, transition: { duration: 0.3 } }
+    initial: { opacity: 0, rotateY: 90, scale: 0.92 },
+    animate: { opacity: 1, rotateY: 0, scale: 1, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } },
+    exit: { opacity: 0, rotateY: -90, scale: 0.92, transition: { duration: 0.4 } }
   };
 
   return (
@@ -81,8 +81,8 @@ const HowItWorksSection = () => {
           </div>
 
           {/* Right Column: Interactive Demonstration Panel */}
-          <div>
-            <div className="bg-white/80 dark:bg-slate-950/60 border border-slate-200 dark:border-white/5 rounded-[2.5rem] p-10 min-h-[460px] flex items-center justify-center shadow-xs relative overflow-hidden">
+          <div style={{ perspective: 1200 }}>
+            <div className="bg-white/80 dark:bg-slate-950/60 border border-slate-200 dark:border-white/5 rounded-[2.5rem] p-10 min-h-[460px] flex items-center justify-center shadow-xs relative overflow-hidden" style={{ transformStyle: "preserve-3d" }}>
               <AnimatePresence mode="wait">
                 
                 {/* Panel 0: Voice Capture Panel */}
