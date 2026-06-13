@@ -93,6 +93,22 @@ const HeroSection = () => {
     }),
   };
 
+  const magneticVariants = {
+    hidden: { opacity: 0, scale: 0.85, y: 25 },
+    visible: (custom: number) => ({
+      opacity: 1,
+      scale: 1,
+      y: 0,
+      transition: {
+        type: 'spring',
+        stiffness: 90,
+        damping: 11,
+        mass: 0.9,
+        delay: custom * 0.15,
+      },
+    }),
+  };
+
   return (
     <section className="relative pt-32 pb-20 overflow-hidden bg-transparent">
       {/* Ambient background blur */}
@@ -105,7 +121,7 @@ const HeroSection = () => {
           custom={0}
           initial="hidden"
           animate="visible"
-          variants={fadeInUp}
+          variants={magneticVariants}
           className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 mb-8 backdrop-blur-xs shadow-xs"
         >
           <span className="w-2 h-2 rounded-full bg-[#4ABFB8] animate-pulse shadow-[0_0_8px_#4ABFB8]"></span>
@@ -140,7 +156,7 @@ const HeroSection = () => {
           custom={2}
           initial="hidden"
           animate="visible"
-          variants={fadeInUp}
+          variants={magneticVariants}
           className="max-w-2xl mx-auto text-sm sm:text-base text-slate-500 dark:text-slate-400 mb-10 leading-relaxed"
         >
           Harness the power of AI to organize your life. From voice-captured thoughts to auto-scheduled days, TaskMate AI is your ultimate productivity partner.
@@ -151,7 +167,7 @@ const HeroSection = () => {
           custom={3}
           initial="hidden"
           animate="visible"
-          variants={fadeInUp}
+          variants={magneticVariants}
           className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16"
         >
           <motion.button 
