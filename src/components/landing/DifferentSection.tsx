@@ -69,13 +69,16 @@ const DifferentSection = () => {
   };
 
   const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
+    hidden: { opacity: 0, y: 40, rotateX: 15, scale: 0.95 },
     visible: {
       opacity: 1,
       y: 0,
+      rotateX: 0,
+      scale: 1,
       transition: {
-        duration: 0.6,
-        ease: [0.16, 1, 0.3, 1],
+        type: 'spring',
+        stiffness: 80,
+        damping: 18,
       },
     },
   };
@@ -88,6 +91,7 @@ const DifferentSection = () => {
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: "-100px" }}
+          style={{ perspective: 1000 }}
           className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center"
         >
           <motion.div 

@@ -62,13 +62,16 @@ const PricingSection = () => {
   };
 
   const itemVariants = {
-    hidden: { opacity: 0, y: 30 },
+    hidden: { opacity: 0, y: 40, rotateX: 12, scale: 0.96 },
     visible: {
       opacity: 1,
       y: 0,
+      rotateX: 0,
+      scale: 1,
       transition: {
-        duration: 0.6,
-        ease: [0.16, 1, 0.3, 1],
+        type: 'spring',
+        stiffness: 80,
+        damping: 18,
       },
     },
   };
@@ -123,6 +126,7 @@ const PricingSection = () => {
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true, margin: "-100px" }}
+          style={{ perspective: 1000 }}
           className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto items-stretch"
         >
           {plans.map((plan, i) => {
