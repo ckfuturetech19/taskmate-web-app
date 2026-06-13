@@ -31,7 +31,7 @@ const LandingNav = () => {
         id="navbar" 
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 py-4 px-6 lg:px-12 flex items-center justify-between ${
           isScrolled 
-            ? 'shadow-lg border-b bg-[var(--aurora-nav-bg)] border-[var(--aurora-border)]' 
+            ? 'shadow-xs border-b bg-white/85 dark:bg-[#05020c]/85 border-slate-200 dark:border-white/5' 
             : 'bg-transparent border-b border-transparent'
         }`}
         style={{
@@ -53,29 +53,29 @@ const LandingNav = () => {
             <circle cx="20" cy="20" r="11" stroke="white" stroke-width="2.5" fill="none"></circle>
             <path d="M14 20.5L18 24.5L26 16" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></path>
           </svg>
-          <span className="text-xl font-bold tracking-tight text-[var(--aurora-text-primary)]">TaskMate AI</span>
+          <span className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">TaskMate AI</span>
         </div>
 
         {/* Desktop Menu */}
         <div className="hidden md:flex items-center gap-8">
-          <button onClick={() => scrollToSection('features')} className="text-sm font-medium text-[var(--aurora-text-secondary)] hover:text-[var(--aurora-purple)] transition-colors">Features</button>
-          <button onClick={() => scrollToSection('how-it-works')} className="text-sm font-medium text-[var(--aurora-text-secondary)] hover:text-[var(--aurora-purple)] transition-colors">How it works</button>
-          <button onClick={() => scrollToSection('pricing')} className="text-sm font-medium text-[var(--aurora-text-secondary)] hover:text-[var(--aurora-purple)] transition-colors">Pricing</button>
-          <button onClick={() => scrollToSection('faq')} className="text-sm font-medium text-[var(--aurora-text-secondary)] hover:text-[var(--aurora-purple)] transition-colors">FAQ</button>
+          <button onClick={() => scrollToSection('features')} className="text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-[#8B65C8] dark:hover:text-[#8B65C8] transition-colors">Features</button>
+          <button onClick={() => scrollToSection('how-it-works')} className="text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-[#8B65C8] dark:hover:text-[#8B65C8] transition-colors">How it works</button>
+          <button onClick={() => scrollToSection('pricing')} className="text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-[#8B65C8] dark:hover:text-[#8B65C8] transition-colors">Pricing</button>
+          <button onClick={() => scrollToSection('faq')} className="text-sm font-medium text-slate-600 dark:text-slate-400 hover:text-[#8B65C8] dark:hover:text-[#8B65C8] transition-colors">FAQ</button>
         </div>
 
         {/* Desktop Actions */}
         <div className="flex items-center gap-4">
           <button 
             onClick={toggleTheme} 
-            className="p-2.5 rounded-xl bg-[var(--aurora-bg-secondary)] border border-[var(--aurora-border)] hover:bg-[var(--aurora-bg-tertiary)] transition-all text-[var(--aurora-text-primary)]"
+            className="p-2.5 rounded-xl bg-slate-50 hover:bg-slate-100 dark:bg-slate-900/60 dark:hover:bg-slate-900 border border-slate-200 dark:border-white/5 transition-all text-slate-800 dark:text-white"
             aria-label="Toggle theme"
           >
             {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
           </button>
           <button 
             onClick={() => navigate('/auth')} 
-            className="hidden md:block text-sm font-bold text-[var(--aurora-text-primary)] hover:text-[var(--aurora-purple)] transition-colors"
+            className="hidden md:block text-sm font-bold text-slate-700 dark:text-slate-300 hover:text-[#8B65C8] dark:hover:text-[#8B65C8] transition-colors"
           >
             Sign in
           </button>
@@ -87,7 +87,7 @@ const LandingNav = () => {
           </button>
           <button 
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)} 
-            className="md:hidden p-2 text-2xl text-[var(--aurora-text-primary)]"
+            className="md:hidden p-2 text-2xl text-slate-800 dark:text-white"
             aria-label="Toggle mobile menu"
           >
             {isMobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -97,13 +97,13 @@ const LandingNav = () => {
 
       {/* Mobile Menu */}
       {isMobileMenuOpen && (
-        <div className="fixed inset-0 z-40 bg-[var(--aurora-bg-primary)] p-8 pt-24 md:hidden flex flex-col gap-6">
-          <button onClick={() => scrollToSection('features')} className="text-2xl font-bold text-[var(--aurora-text-primary)] text-left hover:text-[var(--aurora-purple)] transition-colors">Features</button>
-          <button onClick={() => scrollToSection('how-it-works')} className="text-2xl font-bold text-[var(--aurora-text-primary)] text-left hover:text-[var(--aurora-purple)] transition-colors">How it works</button>
-          <button onClick={() => scrollToSection('pricing')} className="text-2xl font-bold text-[var(--aurora-text-primary)] text-left hover:text-[var(--aurora-purple)] transition-colors">Pricing</button>
-          <button onClick={() => scrollToSection('faq')} className="text-2xl font-bold text-[var(--aurora-text-primary)] text-left hover:text-[var(--aurora-purple)] transition-colors">FAQ</button>
-          <hr className="border-[var(--aurora-border)]" />
-          <button onClick={() => { setIsMobileMenuOpen(false); navigate('/auth'); }} className="w-full py-4 rounded-2xl bg-[var(--aurora-bg-secondary)] border border-[var(--aurora-border)] font-bold text-[var(--aurora-text-primary)] hover:bg-[var(--aurora-bg-tertiary)] transition-colors">Sign in</button>
+        <div className="fixed inset-0 z-40 bg-white dark:bg-[#05020c] p-8 pt-24 md:hidden flex flex-col gap-6">
+          <button onClick={() => scrollToSection('features')} className="text-2xl font-bold text-slate-800 dark:text-white text-left hover:text-[#8B65C8] dark:hover:text-[#8B65C8] transition-colors">Features</button>
+          <button onClick={() => scrollToSection('how-it-works')} className="text-2xl font-bold text-slate-800 dark:text-white text-left hover:text-[#8B65C8] dark:hover:text-[#8B65C8] transition-colors">How it works</button>
+          <button onClick={() => scrollToSection('pricing')} className="text-2xl font-bold text-slate-800 dark:text-white text-left hover:text-[#8B65C8] dark:hover:text-[#8B65C8] transition-colors">Pricing</button>
+          <button onClick={() => scrollToSection('faq')} className="text-2xl font-bold text-slate-800 dark:text-white text-left hover:text-[#8B65C8] dark:hover:text-[#8B65C8] transition-colors">FAQ</button>
+          <hr className="border-slate-200 dark:border-white/5" />
+          <button onClick={() => { setIsMobileMenuOpen(false); navigate('/auth'); }} className="w-full py-4 rounded-2xl bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/5 font-bold text-slate-800 dark:text-white hover:bg-slate-100 transition-colors">Sign in</button>
         </div>
       )}
     </>

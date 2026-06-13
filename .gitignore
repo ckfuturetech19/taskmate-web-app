@@ -38,6 +38,10 @@ dist-ssr
 **/firebase-service-account*.json
 **/google-services-credentials*.json
 **/*-service-account*.json
+**/*firebase-adminsdk*.json
+**/*firebase-adminsdk-*.json
+**/fir-web-*.json
+**/*adminsdk*.json
 
 # API keys and secrets
 **/secrets/

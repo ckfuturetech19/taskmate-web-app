@@ -883,3 +883,24 @@ html {
 .aurora-pro-card-glow {
   animation: pricing-glow 4s infinite ease-in-out;
 }
+
+/* Lenis smooth scroll core styles */
+html.lenis, html.lenis body {
+  height: auto;
+}
+
+.lenis.lenis-smooth {
+  scroll-behavior: auto !important;
+}
+
+.lenis.lenis-smooth [data-lenis-prevent] {
+  overflow: clip;
+}
+
+.lenis.lenis-stopped {
+  overflow: hidden;
+}
+
+.lenis.lenis-scrolling iframe {
+  pointer-events: none;
+}

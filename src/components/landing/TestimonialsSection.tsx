@@ -1,4 +1,5 @@
 import { Star } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 const TestimonialsSection = () => {
   const testimonialsList = [
@@ -26,39 +27,61 @@ const TestimonialsSection = () => {
   ];
 
   // Duplicate the list to ensure seamless infinite looping scroll
-  const doubleList = [...testimonialsList, ...testimonialsList, ...testimonialsList];
+  const doubleList = [...testimonialsList, ...testimonialsList, ...testimonialsList, ...testimonialsList];
 
   return (
-    <section className="py-32 bg-[var(--aurora-bg-primary)] overflow-hidden">
-      <div className="container mx-auto px-6 mb-16 text-center">
-        <h2 className="text-4xl font-extrabold text-[var(--aurora-text-primary)]">Loved by productivity experts</h2>
+    <section className="py-24 bg-slate-50/50 dark:bg-[#05020c] overflow-hidden">
+      <div className="container mx-auto px-6 mb-16 text-center max-w-7xl">
+        <motion.h2 
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="text-3xl sm:text-4xl font-extrabold text-slate-900 dark:text-white uppercase tracking-tight"
+        >
+          Loved by productivity experts
+        </motion.h2>
       </div>
 
-      <div className="aurora-marquee-container relative w-full overflow-hidden py-4">
-        <div className="aurora-marquee-track">
+      <div className="relative w-full overflow-hidden py-4">
+        {/* We add a marquee hover pause style in this inline block */}
+        <style>{`
+          .marquee-track-animated {
+            display: flex;
+            gap: 24px;
+            width: max-content;
+            animation: scroll 30s linear infinite;
+          }
+          .marquee-track-animated:hover {
+            animation-play-state: paused;
+          }
+        `}</style>
+        
+        <div className="marquee-track-animated">
           {doubleList.map((item, i) => (
-            <div 
+            <motion.div 
               key={i} 
-              className="w-[380px] shrink-0 p-8 rounded-3xl bg-[var(--aurora-bg-secondary)] border border-[var(--aurora-border)] hover:border-[#8B65C8]/30 transition-all text-left"
+              whileHover={{ y: -6, scale: 1.01 }}
+              className="w-[340px] shrink-0 p-8 rounded-3xl bg-white dark:bg-slate-950/60 border border-slate-200 dark:border-white/5 hover:border-[#8B65C8]/30 transition-all text-left shadow-xs cursor-pointer"
             >
               <div className="flex gap-1 text-[#F5A87B] mb-6">
                 {[...Array(5)].map((_, starIndex) => (
-                  <Star key={starIndex} className="w-5 h-5 fill-current" />
+                  <Star key={starIndex} className="w-4 h-4 fill-current" />
                 ))}
               </div>
-              <p className="text-[var(--aurora-text-primary)] text-lg italic mb-8 opacity-90 leading-relaxed">
+              <p className="text-slate-700 dark:text-slate-300 text-xs sm:text-sm italic mb-8 leading-relaxed">
                 "{item.content}"
               </p>
               <div className="flex items-center gap-4">
-                <div className={`w-12 h-12 rounded-full bg-gradient-to-br ${item.gradient} flex items-center justify-center font-bold text-white shadow-lg`}>
+                <div className={`w-10 h-10 rounded-full bg-gradient-to-br ${item.gradient} flex items-center justify-center font-bold text-white text-sm shadow-xs`}>
                   {item.initials}
                 </div>
                 <div>
-                  <h4 className="font-bold text-[var(--aurora-text-primary)]">{item.name}</h4>
-                  <p className="text-xs text-[var(--aurora-text-muted)]">{item.role}</p>
+                  <h4 className="text-sm font-bold text-slate-900 dark:text-white">{item.name}</h4>
+                  <p className="text-[10px] text-slate-400 dark:text-slate-500">{item.role}</p>
                 </div>
               </div>
-            </div>
+            </motion.div>
           ))}
         </div>
       </div>
