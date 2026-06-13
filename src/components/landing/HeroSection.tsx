@@ -1,8 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Play, Mic, Target } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import dashboardDarkImg from '@/assets/dashboardDark.png';
 import dashboardLightImg from '@/assets/dashboardLight.png';
 
@@ -68,6 +68,16 @@ const HeroSection = () => {
     }, 3200);
     return () => clearInterval(interval);
   }, []);
+
+  const mockupRef = useRef<HTMLDivElement>(null);
+  const { scrollYProgress } = useScroll({
+    target: mockupRef,
+    offset: ["start end", "end start"]
+  });
+
+  const scale = useTransform(scrollYProgress, [0, 0.4], [0.85, 1]);
+  const rotateX = useTransform(scrollYProgress, [0, 0.4], [10, 0]);
+  const opacity = useTransform(scrollYProgress, [0, 0.25], [0.2, 1]);
 
   // Animation variants
   const fadeInUp = {
@@ -182,11 +192,15 @@ const HeroSection = () => {
           </div>
         </motion.div>
 
-        {/* Flat Modern Dashboard Mockup Frame */}
+        {/* Flat Modern Dashboard Mockup Frame with scroll reveal */}
         <motion.div 
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 1, delay: 0.4, ease: [0.16, 1, 0.3, 1] }}
+          ref={mockupRef}
+          style={{
+            scale,
+            rotateX,
+            opacity,
+            transformPerspective: 1200,
+          }}
           className="max-w-5xl mx-auto px-4"
         >
           <div className="relative rounded-3xl border border-slate-200 dark:border-white/5 bg-white/80 dark:bg-slate-950/60 shadow-lg p-2 transition-all duration-300">
