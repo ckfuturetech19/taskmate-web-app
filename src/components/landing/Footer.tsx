@@ -1,5 +1,6 @@
 import { Twitter, Linkedin, Github, Instagram } from 'lucide-react';
 import { motion } from 'framer-motion';
+import logoImg from '@/assets/logo.png';
 
 const Footer = () => {
   return (
@@ -9,20 +10,8 @@ const Footer = () => {
           
           {/* Brand Info Column */}
           <div className="lg:col-span-1">
-            <div className="flex items-center gap-2 mb-6">
-              <svg className="w-8 h-8" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <rect width="40" height="40" rx="10" fill="url(#logoGradFooter)"></rect>
-                <defs>
-                  <linearGradient id="logoGradFooter" x1="0" y1="40" x2="40" y2="0">
-                    <stop offset="0%" stop-color="#F5A87B"></stop>
-                    <stop offset="30%" stop-color="#F0607A"></stop>
-                    <stop offset="65%" stop-color="#8B65C8"></stop>
-                    <stop offset="100%" stop-color="#4ABFB8"></stop>
-                  </linearGradient>
-                </defs>
-                <circle cx="20" cy="20" r="11" stroke="white" stroke-width="2.5" fill="none"></circle>
-                <path d="M14 20.5L18 24.5L26 16" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></path>
-              </svg>
+            <div className="flex items-center gap-3.5 mb-6">
+              <img src={logoImg} alt="TaskMate Logo" className="w-8 h-8 object-contain rounded-lg" />
               <span className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">TaskMate AI</span>
             </div>
             <p className="text-slate-500 dark:text-slate-400 text-sm mb-6 leading-relaxed">

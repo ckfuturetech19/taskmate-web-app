@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Sun, Moon, Menu, X } from 'lucide-react';
+import logoImg from '@/assets/logo.png';
 
 const LandingNav = () => {
   const { theme, toggleTheme } = useTheme();
@@ -39,20 +40,8 @@ const LandingNav = () => {
           WebkitBackdropFilter: isScrolled ? 'blur(12px)' : 'none',
         }}
       >
-        <div className="flex items-center gap-2 cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-          <svg className="w-10 h-10" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect width="40" height="40" rx="10" fill="url(#logoGradNav)"></rect>
-            <defs>
-              <linearGradient id="logoGradNav" x1="0" y1="40" x2="40" y2="0">
-                <stop offset="0%" stop-color="#F5A87B"></stop>
-                <stop offset="30%" stop-color="#F0607A"></stop>
-                <stop offset="65%" stop-color="#8B65C8"></stop>
-                <stop offset="100%" stop-color="#4ABFB8"></stop>
-              </linearGradient>
-            </defs>
-            <circle cx="20" cy="20" r="11" stroke="white" stroke-width="2.5" fill="none"></circle>
-            <path d="M14 20.5L18 24.5L26 16" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"></path>
-          </svg>
+        <div className="flex items-center gap-3.5 cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
+          <img src={logoImg} alt="TaskMate Logo" className="w-8 h-8 object-contain rounded-lg" />
           <span className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">TaskMate AI</span>
         </div>
 
