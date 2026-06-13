@@ -55,7 +55,11 @@ const FAQSection = () => {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: i * 0.05 }}
-                className="border-b border-slate-200 dark:border-white/5 pb-4"
+                className={`border rounded-2xl px-5 sm:px-6 transition-all duration-300 ${
+                  isOpen 
+                    ? 'border-[#8B65C8]/40 bg-[#8B65C8]/5 dark:bg-[#8B65C8]/5 shadow-[0_0_20px_-3px_rgba(139,101,200,0.15)] dark:shadow-[0_0_20px_-3px_rgba(139,101,200,0.25)]' 
+                    : 'border-slate-200 dark:border-white/5 bg-transparent'
+                }`}
               >
                 <button 
                   onClick={() => toggleFaq(i)}

@@ -185,12 +185,15 @@ const PricingSection = () => {
                   onClick={() => navigate('/auth')}
                   whileHover={{ scale: 1.03 }}
                   whileTap={{ scale: 0.98 }}
-                  className={`w-full py-3 rounded-xl text-xs uppercase font-extrabold tracking-widest transition-all cursor-pointer ${
+                  className={`w-full py-3 rounded-xl text-xs uppercase font-extrabold tracking-widest transition-all cursor-pointer relative overflow-hidden group ${
                     plan.recommended 
                       ? 'bg-gradient-to-r from-[#F0607A] to-[#8B65C8] text-white font-extrabold shadow-sm' 
                       : 'border border-slate-200 dark:border-white/10 text-slate-800 dark:text-white hover:bg-slate-50 dark:hover:bg-white/5'
                   }`}
                 >
+                  {plan.recommended && (
+                    <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/25 to-transparent -translate-x-full group-hover:animate-shimmer-slide" />
+                  )}
                   {plan.cta}
                 </motion.button>
               </motion.div>

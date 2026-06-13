@@ -46,8 +46,9 @@ const CTASection = () => {
                 onClick={() => navigate('/auth')}
                 whileHover={{ scale: 1.03 }}
                 whileTap={{ scale: 0.98 }}
-                className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-[#F0607A] to-[#8B65C8] text-white text-xs uppercase font-extrabold tracking-widest rounded-full shadow-lg shadow-[#F0607A]/20 transition-all cursor-pointer"
+                className="w-full sm:w-auto px-8 py-4 bg-gradient-to-r from-[#F0607A] to-[#8B65C8] text-white text-xs uppercase font-extrabold tracking-widest rounded-full shadow-lg shadow-[#F0607A]/20 transition-all cursor-pointer relative overflow-hidden group"
               >
+                <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/25 to-transparent -translate-x-full group-hover:animate-shimmer-slide" />
                 Download for Android
               </motion.button>
               
