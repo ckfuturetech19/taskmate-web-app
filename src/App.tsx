@@ -14,7 +14,6 @@ import { initializeServiceWorkerHandler } from "@/lib/serviceWorkerHandler";
 import { WorkspaceProvider } from "@/providers/WorkspaceProvider";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import GlobalBackground from "@/components/landing/GlobalBackground";
-import CustomCursor from "@/components/landing/CustomCursor";
 import Index from "./pages/Index";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
@@ -50,7 +49,6 @@ const AppContent = () => {
   return (
     <>
       {isLandingOrAuth && <GlobalBackground />}
-      {isLandingOrAuth && <CustomCursor />}
       
       <AnimatePresence mode="wait">
         <Routes location={location} key={location.pathname}>
