@@ -14,6 +14,7 @@ import FAQSection from './FAQSection';
 import CTASection from './CTASection';
 import Footer from './Footer';
 import InteractivePlayground from './InteractivePlayground';
+import FloatingWorkspace from './FloatingWorkspace';
 
 export const CinematicLanding: React.FC = () => {
   const [showScrollTop, setShowScrollTop] = useState(false);
@@ -60,6 +61,9 @@ export const CinematicLanding: React.FC = () => {
 
       {/* Interactive Sandbox Playground */}
       <InteractivePlayground />
+
+      {/* Interactive Floating Workspace */}
+      <FloatingWorkspace />
 
       {/* Features Section */}
       <FeaturesSection />

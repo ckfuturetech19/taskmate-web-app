@@ -100,7 +100,7 @@ const TimeTrackerCard = ({ className }: { className?: string }) => {
               exit={{ opacity: 0, scale: 1.1 }}
               className="text-center"
             >
-              <div className="text-6xl font-black tracking-tighter text-foreground font-jakarta flex items-center gap-2">
+              <div className="text-6xl font-black tracking-tighter text-foreground font-sans flex items-center gap-2">
                 <span className="tabular-nums">{currentTime.getHours().toString().padStart(2, '0')}</span>
                 <span className="text-primary/30">:</span>
                 <span className="tabular-nums">{currentTime.getMinutes().toString().padStart(2, '0')}</span>
@@ -119,7 +119,7 @@ const TimeTrackerCard = ({ className }: { className?: string }) => {
               exit={{ opacity: 0, y: -10 }}
               className="flex flex-col items-center"
             >
-              <div className="text-6xl font-black tracking-tighter text-foreground font-jakarta">
+              <div className="text-6xl font-black tracking-tighter text-foreground font-sans">
                 {formatTime(mode === 'stopwatch' ? stopwatchTime : pomoTime)}
               </div>
               <div className="mt-2 text-[10px] font-black text-muted-foreground tracking-[0.4em] uppercase">

@@ -3,8 +3,11 @@ import { useNavigate } from 'react-router-dom';
 import { useTheme } from '@/contexts/ThemeContext';
 import { Play, Mic, Target } from 'lucide-react';
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
-import dashboardDarkImg from '@/assets/dashboardDark.png';
-import dashboardLightImg from '@/assets/dashboardLight.png';
+import dashboardDarkImg from '@/assets/landing-page-dark.png';
+import dashboardLightImg from '@/assets/landing-page-light.png';
+import taskDarkImg from '@/assets/landing-page-task-dark.png';
+import taskLightImg from '@/assets/landing-page-task-light.png';
+
 
 const SplitText = ({ text, delay = 0 }: { text: string; delay?: number }) => {
   const letters = Array.from(text);
@@ -57,10 +60,28 @@ const SplitText = ({ text, delay = 0 }: { text: string; delay?: number }) => {
 const HeroSection = () => {
   const { theme } = useTheme();
   const navigate = useNavigate();
-  const dashboardImage = theme === 'dark' ? dashboardDarkImg : dashboardLightImg;
+  
+  const images = theme === 'dark' 
+    ? [dashboardDarkImg, taskDarkImg] 
+    : [dashboardLightImg, taskLightImg];
+
+  const [[page, direction], setPage] = useState([0, 0]);
+  const imageIndex = ((page % images.length) + images.length) % images.length;
+
+  const paginate = (newDirection: number) => {
+    setPage([page + newDirection, newDirection]);
+  };
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      paginate(1);
+    }, 5000);
+    return () => clearInterval(interval);
+  }, [page]);
 
   const words = ['Live better.', 'Focus deeper.', 'Sync faster.', 'Build smarter.'];
   const [wordIndex, setWordIndex] = useState(0);
+
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -108,6 +129,30 @@ const HeroSection = () => {
       },
     }),
   };
+
+  const slideVariants = {
+    enter: (dir: number) => ({
+      x: dir > 0 ? '100%' : dir < 0 ? '-100%' : 0,
+      opacity: 0
+    }),
+    center: {
+      x: 0,
+      opacity: 1,
+      transition: {
+        x: { type: 'spring', stiffness: 300, damping: 30 },
+        opacity: { duration: 0.5 }
+      }
+    },
+    exit: (dir: number) => ({
+      x: dir < 0 ? '100%' : dir > 0 ? '-100%' : 0,
+      opacity: 0,
+      transition: {
+        x: { type: 'spring', stiffness: 300, damping: 30 },
+        opacity: { duration: 0.5 }
+      }
+    })
+  };
+
 
   return (
     <section className="relative pt-32 pb-20 overflow-hidden bg-transparent">
@@ -197,9 +242,14 @@ const HeroSection = () => {
           variants={fadeInUp}
           className="flex flex-wrap items-center justify-center gap-8 mb-20 text-slate-500 dark:text-slate-400"
         >
-          <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest">
+          <a 
+            href="https://play.google.com/store/apps/details?id=com.ckfuturetech.taskmate"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest hover:text-[#8B65C8] transition-colors cursor-pointer"
+          >
             <span className="text-lg">🤖</span> Android Live
-          </div>
+          </a>
           <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest opacity-40">
             <span className="text-lg">🍎</span> iOS Soon
           </div>
@@ -229,12 +279,42 @@ const HeroSection = () => {
                 <div className="w-2.5 h-2.5 rounded-full bg-[#27C93F]"></div>
               </div>
               
-              {/* Dashboard Image */}
-              <img 
-                src={dashboardImage} 
-                alt="TaskMate Dashboard" 
-                className="w-full h-full object-cover opacity-90 dark:opacity-85"
-              />
+              {/* Dashboard Image Slideshow */}
+              <AnimatePresence initial={false} custom={direction}>
+                <motion.img
+                  key={page}
+                  src={images[imageIndex]}
+                  custom={direction}
+                  variants={slideVariants}
+                  initial="enter"
+                  animate="center"
+                  exit="exit"
+                  className="absolute inset-0 w-full h-full object-cover opacity-90 dark:opacity-85"
+                  alt={`TaskMate Dashboard Mockup ${imageIndex + 1}`}
+                />
+              </AnimatePresence>
+
+              {/* Carousel Navigation Indicators */}
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-40">
+                {images.map((_, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => {
+                      if (idx !== imageIndex) {
+                        const dir = idx > imageIndex ? 1 : -1;
+                        setPage([idx, dir]);
+                      }
+                    }}
+                    className={`w-2 h-2 rounded-full transition-all duration-300 cursor-pointer ${
+                      idx === imageIndex 
+                        ? "bg-[#8B65C8] w-6" 
+                        : "bg-slate-300 dark:bg-white/20 hover:bg-slate-400 dark:hover:bg-white/40"
+                    }`}
+                    aria-label={`Go to slide ${idx + 1}`}
+                  />
+                ))}
+              </div>
+
 
               {/* Interactive Floating Widgets */}
               {/* Left Widget: Voice Capture */}

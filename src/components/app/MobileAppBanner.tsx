@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { X } from 'lucide-react';
 
 const STORAGE_KEY = 'has_dismissed_mobile_app_banner';
-const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=com.taskmate.app'; // Update with actual URL
+const PLAY_STORE_URL = 'https://play.google.com/store/apps/details?id=com.ckfuturetech.taskmate';
 
 export function MobileAppBanner() {
   const [isVisible, setIsVisible] = useState(false);

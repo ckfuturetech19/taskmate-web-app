@@ -166,7 +166,7 @@ const Clock = () => {
                     {/* High-Fidelity Time Display */}
                     <div className="text-center">
                       <div className={cn(
-                        "font-black tracking-tighter text-foreground leading-none font-jakarta flex items-center justify-center gap-1 sm:gap-4 drop-shadow-[0_20px_50px_rgba(0,0,0,0.5)]",
+                        "font-black tracking-tighter text-foreground leading-none font-sans flex items-center justify-center gap-1 sm:gap-4 drop-shadow-[0_20px_50px_rgba(0,0,0,0.5)]",
                         user?.isPro 
                           ? "text-[4rem] xs:text-[5rem] sm:text-[6.5rem] md:text-[7.5rem] lg:text-[8.5rem] xl:text-[11rem] 2xl:text-[14rem]" 
                           : "text-[3rem] xs:text-[4rem] sm:text-[5rem] md:text-[6rem] lg:text-[7rem]"

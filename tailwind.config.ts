@@ -176,7 +176,7 @@ export default {
   		},
   		fontFamily: {
   			sans: [
-  				'Inter',
+  				'Outfit',
   				'ui-sans-serif',
   				'system-ui',
   				'-apple-system',
