@@ -30,6 +30,8 @@ import Notes from "./pages/Notes";
 import NoteDetail from "./pages/NoteDetail";
 import NotFound from "./pages/NotFound";
 import Contact from "./pages/Contact";
+import Privacy from "./pages/Privacy";
+import Terms from "./pages/Terms";
 import ProjectListPage from "./pages/ProjectListPage";
 import { ProjectDetailsPage } from "./pages/ProjectDetailsPage";
 import TeamTaskListPage from "./pages/TeamTaskListPage";
@@ -45,7 +47,12 @@ const queryClient = new QueryClient();
 // Wrapper component to handle location-based visibility
 const AppContent = () => {
   const location = useLocation();
-  const isLandingOrAuth = location.pathname === '/' || location.pathname === '/auth' || location.pathname === '/contact';
+  const isLandingOrAuth = 
+    location.pathname === '/' || 
+    location.pathname === '/auth' || 
+    location.pathname === '/contact' ||
+    location.pathname === '/privacy' ||
+    location.pathname === '/terms';
 
   return (
     <>
@@ -57,6 +64,8 @@ const AppContent = () => {
           <Route path="/" element={<Index />} />
           <Route path="/auth" element={<Auth />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/privacy" element={<Privacy />} />
+          <Route path="/terms" element={<Terms />} />
           <Route path="/dashboard" element={
             <ProtectedRoute><Dashboard /></ProtectedRoute>
           } />

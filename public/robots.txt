@@ -1,17 +1,4 @@
 User-agent: *
 Allow: /
-Allow: /auth
-Allow: /contact
-Disallow: /dashboard
-Disallow: /settings
-Disallow: /admin
-Disallow: /workspace/
-Disallow: /groups/
-Disallow: /projects/
-Disallow: /notes/
-Disallow: /tasks
-Disallow: /analytics
-Disallow: /notifications
-Disallow: /clock
 
 Sitemap: https://taskmateapp.site/sitemap.xml
