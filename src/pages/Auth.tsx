@@ -12,6 +12,7 @@ import { Loader2, Sparkles, Zap, Globe, ArrowRight, Mail, User, Lock, Eye, EyeOf
 import { toast } from '@/hooks/use-toast';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import SEO from '@/components/SEO';
 
 const Auth = () => {
   const { 
@@ -96,6 +97,10 @@ const Auth = () => {
 
   return (
     <div className="min-h-screen w-full flex bg-transparent relative overflow-hidden font-sans">
+      <SEO 
+        title="Sign In or Sign Up - TaskMate AI"
+        description="Access your high-performance productivity dashboard. Authenticate to manage personal flows, note-taking, and shared team circles."
+      />
       {/* Left Panel: Purposeful Content */}
       <div className="flex-1 hidden lg:flex flex-col justify-center px-16 xl:px-24 relative z-10">
         <motion.div 
@@ -104,26 +109,20 @@ const Auth = () => {
           transition={{ duration: 1 }}
           className="space-y-12 text-left"
         >
-          <div className="flex items-center gap-4">
-            <div className={cn(
-              "p-3 rounded-[1.2rem] shadow-2xl transition-all",
-              theme === 'dark' ? "bg-gradient-to-r from-[#F0607A] to-[#8B65C8]" : "bg-primary/10"
-            )}>
-              <img src={logoImg} alt="Logo" className="h-8 w-8 invert brightness-200" />
-            </div>
-            <span className={cn(
-              "text-3xl font-black tracking-tighter",
-              theme === 'dark' ? "text-white" : "text-black"
-            )}>TASK<span className="text-[#8B65C8]">MATE</span></span>
+          <div className="flex items-center gap-3.5 cursor-pointer" onClick={() => navigate('/')}>
+            <img src={logoImg} alt="TaskMate Logo" className="w-9 h-9 object-contain rounded-lg animate-pulse" />
+            <span className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white relative overflow-hidden">
+              TaskMate AI
+            </span>
           </div>
 
           <div className="space-y-6">
             <h1 className={cn(
               "text-7xl xl:text-8xl font-black tracking-tighter leading-[0.9]",
-              theme === 'dark' ? "text-white" : "text-black"
+              theme === 'dark' ? "text-white" : "text-slate-900"
             )}>
               UNIFIED <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#F0607A] to-[#8B65C8]">ECOSYSTEM</span>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#F5A87B] via-[#F0607A] to-[#8B65C8]">ECOSYSTEM</span>
             </h1>
             <p className="text-xl text-[var(--aurora-text-secondary)] font-bold max-w-lg leading-relaxed uppercase tracking-widest">
               Manage personal tasks, collaborative notes, and shared circles in one high-performance terminal.
@@ -144,7 +143,9 @@ const Auth = () => {
                 transition={{ delay: 0.5 + (i * 0.1) }}
                 className={cn(
                   "p-6 rounded-[2rem] border transition-all hover:scale-105 duration-300",
-                  theme === 'dark' ? "bg-[var(--aurora-bg-secondary)] border-white/5 hover:border-[#8B65C8]/40" : "bg-white/40 border-black/5 hover:border-[#8B65C8]/40 shadow-sm"
+                  theme === 'dark' 
+                    ? "glass-premium-dark border-white/5 hover:border-[#8B65C8]/40" 
+                    : "glass-light border-black/5 hover:border-[#8B65C8]/40 shadow-xs"
                 )}
               >
                 <f.icon className="h-8 w-8 text-[#8B65C8] mb-4" />
@@ -164,22 +165,29 @@ const Auth = () => {
           transition={{ duration: 0.8, type: 'spring' }}
           className="w-full max-w-[500px]"
         >
-          <div className="mb-12 text-center lg:hidden">
-            <div className="inline-block p-4 bg-gradient-to-r from-[#F0607A] to-[#8B65C8] rounded-3xl mb-6 shadow-2xl">
-              <img src={logoImg} alt="Logo" className="h-10 w-10 invert brightness-200" />
+          <div className="mb-12 text-center lg:hidden flex flex-col items-center justify-center">
+            <div className="inline-flex items-center gap-3 mb-4 cursor-pointer" onClick={() => navigate('/')}>
+              <img src={logoImg} alt="TaskMate Logo" className="w-10 h-10 object-contain rounded-lg animate-pulse" />
+              <span className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white relative overflow-hidden">
+                TaskMate AI
+              </span>
             </div>
-            <h2 className="text-5xl font-black tracking-tighter text-[var(--aurora-text-primary)]">TASKMATE</h2>
           </div>
 
-          <Card className="bg-[var(--aurora-bg-secondary)] rounded-[3rem] border border-[var(--aurora-border)] overflow-hidden shadow-2xl hover:border-[#8B65C8]/30 transition-all duration-500">
+          <Card className={cn(
+            "rounded-[3rem] border overflow-hidden shadow-2xl transition-all duration-500 hover:border-[#8B65C8]/30",
+            theme === 'dark' 
+              ? "bg-slate-950/40 border-white/5 backdrop-blur-xl" 
+              : "bg-white/70 border-slate-200/50 backdrop-blur-xl"
+          )}>
             <CardContent className="p-8 sm:p-12">
               <Tabs defaultValue="signin" className="w-full">
                 <TabsList className={cn(
                   "grid w-full grid-cols-2 h-14 p-1.5 rounded-2xl mb-12",
                   theme === 'dark' ? "bg-white/5" : "bg-black/5 border border-black/5"
                 )}>
-                  <TabsTrigger value="signin" className="rounded-xl font-black text-xs uppercase tracking-widest data-[state=active]:bg-[#8B65C8] data-[state=active]:text-white">ACCESS</TabsTrigger>
-                  <TabsTrigger value="signup" className="rounded-xl font-black text-xs uppercase tracking-widest data-[state=active]:bg-[#8B65C8] data-[state=active]:text-white">CREATE</TabsTrigger>
+                  <TabsTrigger value="signin" className="rounded-xl font-black text-xs uppercase tracking-widest data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#F0607A] data-[state=active]:to-[#8B65C8] data-[state=active]:text-white transition-all duration-300">ACCESS</TabsTrigger>
+                  <TabsTrigger value="signup" className="rounded-xl font-black text-xs uppercase tracking-widest data-[state=active]:bg-gradient-to-r data-[state=active]:from-[#F0607A] data-[state=active]:to-[#8B65C8] data-[state=active]:text-white transition-all duration-300">CREATE</TabsTrigger>
                 </TabsList>
 
                 {/* Sign In Tab */}
@@ -197,7 +205,7 @@ const Auth = () => {
                             onChange={(e) => setSignInEmail(e.target.value)}
                             className={cn(
                               "h-14 rounded-2xl border pl-12 font-bold tracking-wider transition-all",
-                              theme === 'dark' ? "bg-white/5 border-white/5" : "bg-black/5 border-black/5 focus:bg-white"
+                              theme === 'dark' ? "bg-white/5 border-white/5 focus:border-[#8B65C8]/50 focus:ring-2 focus:ring-[#8B65C8]/10" : "bg-black/5 border-black/5 focus:bg-white focus:border-[#8B65C8]/50 focus:ring-2 focus:ring-[#8B65C8]/10"
                             )}
                             autoComplete="username"
                             required
@@ -215,7 +223,7 @@ const Auth = () => {
                             onChange={(e) => setSignInPassword(e.target.value)}
                             className={cn(
                               "h-14 rounded-2xl border pl-12 pr-12 font-bold tracking-wider transition-all",
-                              theme === 'dark' ? "bg-white/5 border-white/5" : "bg-black/5 border-black/5 focus:bg-white"
+                              theme === 'dark' ? "bg-white/5 border-white/5 focus:border-[#8B65C8]/50 focus:ring-2 focus:ring-[#8B65C8]/10" : "bg-black/5 border-black/5 focus:bg-white focus:border-[#8B65C8]/50 focus:ring-2 focus:ring-[#8B65C8]/10"
                             )}
                             autoComplete="current-password"
                             required
@@ -233,9 +241,10 @@ const Auth = () => {
 
                     <Button 
                       type="submit"
-                      className="w-full h-16 rounded-2xl bg-gradient-to-r from-[#F0607A] to-[#8B65C8] text-white hover:scale-105 active:scale-95 transition-all font-black text-sm tracking-[0.2em] shadow-2xl shadow-[#F0607A]/20"
+                      className="w-full h-16 rounded-2xl bg-gradient-to-r from-[#F0607A] to-[#8B65C8] text-white hover:scale-105 active:scale-95 transition-all font-black text-sm tracking-[0.2em] shadow-2xl shadow-[#F0607A]/20 relative overflow-hidden group"
                       disabled={loading}
                     >
+                      <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/25 to-transparent -translate-x-full group-hover:animate-shimmer-slide" />
                       {loading ? (
                         <span className="flex items-center gap-2">
                           <Loader2 className="animate-spin h-5 w-5" />
@@ -266,7 +275,7 @@ const Auth = () => {
                             onChange={(e) => setSignUpName(e.target.value)}
                             className={cn(
                               "h-14 rounded-2xl border pl-12 font-bold tracking-wider transition-all",
-                              theme === 'dark' ? "bg-white/5 border-white/5" : "bg-black/5 border-black/5 focus:bg-white"
+                              theme === 'dark' ? "bg-white/5 border-white/5 focus:border-[#8B65C8]/50 focus:ring-2 focus:ring-[#8B65C8]/10" : "bg-black/5 border-black/5 focus:bg-white focus:border-[#8B65C8]/50 focus:ring-2 focus:ring-[#8B65C8]/10"
                             )}
                             autoComplete="name"
                             required
@@ -284,7 +293,7 @@ const Auth = () => {
                             onChange={(e) => setSignUpEmail(e.target.value)}
                             className={cn(
                               "h-14 rounded-2xl border pl-12 font-bold tracking-wider transition-all",
-                              theme === 'dark' ? "bg-white/5 border-white/5" : "bg-black/5 border-black/5 focus:bg-white"
+                              theme === 'dark' ? "bg-white/5 border-white/5 focus:border-[#8B65C8]/50 focus:ring-2 focus:ring-[#8B65C8]/10" : "bg-black/5 border-black/5 focus:bg-white focus:border-[#8B65C8]/50 focus:ring-2 focus:ring-[#8B65C8]/10"
                             )}
                             autoComplete="email"
                             required
@@ -302,7 +311,7 @@ const Auth = () => {
                             onChange={(e) => setSignUpPassword(e.target.value)}
                             className={cn(
                               "h-14 rounded-2xl border pl-12 pr-12 font-bold tracking-wider transition-all",
-                              theme === 'dark' ? "bg-white/5 border-white/5" : "bg-black/5 border-black/5 focus:bg-white"
+                              theme === 'dark' ? "bg-white/5 border-white/5 focus:border-[#8B65C8]/50 focus:ring-2 focus:ring-[#8B65C8]/10" : "bg-black/5 border-black/5 focus:bg-white focus:border-[#8B65C8]/50 focus:ring-2 focus:ring-[#8B65C8]/10"
                             )}
                             autoComplete="new-password"
                             required
@@ -320,9 +329,10 @@ const Auth = () => {
 
                     <Button 
                       type="submit"
-                      className="w-full h-16 rounded-2xl bg-gradient-to-r from-[#F0607A] to-[#8B65C8] text-white hover:scale-105 active:scale-95 transition-all font-black text-sm tracking-[0.2em] shadow-2xl shadow-[#F0607A]/20"
+                      className="w-full h-16 rounded-2xl bg-gradient-to-r from-[#F0607A] to-[#8B65C8] text-white hover:scale-105 active:scale-95 transition-all font-black text-sm tracking-[0.2em] shadow-2xl shadow-[#F0607A]/20 relative overflow-hidden group"
                       disabled={loading}
                     >
+                      <span className="absolute inset-0 w-full h-full bg-gradient-to-r from-transparent via-white/25 to-transparent -translate-x-full group-hover:animate-shimmer-slide" />
                       {loading ? (
                         <span className="flex items-center gap-2">
                           <Loader2 className="animate-spin h-5 w-5" />
@@ -346,7 +356,10 @@ const Auth = () => {
                     <span className="w-full border-t border-[var(--aurora-border)]" />
                   </div>
                   <div className="relative flex justify-center text-xs uppercase">
-                    <span className="bg-[var(--aurora-bg-secondary)] px-3 text-[var(--aurora-text-muted)] font-bold">Or continue with</span>
+                    <span className={cn(
+                      "px-3 font-bold",
+                      theme === 'dark' ? "bg-[#181126] text-[var(--aurora-text-muted)]" : "bg-[#fbfafd] text-[var(--aurora-text-muted)]"
+                    )}>Or continue with</span>
                   </div>
                 </div>
 
@@ -355,8 +368,10 @@ const Auth = () => {
                   onClick={handleGoogleSignIn}
                   disabled={googleLoading}
                   className={cn(
-                    "w-full h-14 rounded-2xl border font-bold hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center",
-                    theme === 'dark' ? "bg-white/5 border-white/10 text-white hover:bg-white/10" : "bg-white border-black/10 text-black hover:bg-black/5 shadow-xs"
+                    "w-full h-14 rounded-2xl border font-bold hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center backdrop-blur-md",
+                    theme === 'dark' 
+                      ? "bg-white/5 border-white/10 text-white hover:bg-white/10" 
+                      : "bg-white/40 border-black/10 text-black hover:bg-white/60 shadow-xs"
                   )}
                 >
                   {googleLoading ? (

@@ -10,6 +10,7 @@ import HowItWorksSection from './HowItWorksSection';
 import IntegrationsSection from './IntegrationsSection';
 import TestimonialsSection from './TestimonialsSection';
 import PricingSection from './PricingSection';
+import SemanticOverview from './SemanticOverview';
 import FAQSection from './FAQSection';
 import CTASection from './CTASection';
 import Footer from './Footer';
@@ -79,6 +80,9 @@ export const CinematicLanding: React.FC = () => {
 
       {/* Pricing / Journeys Section */}
       <PricingSection />
+
+      {/* Semantic AI Entity Index Card */}
+      <SemanticOverview />
 
       {/* FAQ Section */}
       <FAQSection />
