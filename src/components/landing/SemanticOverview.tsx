@@ -39,7 +39,7 @@ const SemanticOverview = () => {
               What is TaskMate AI? (AI Citations Summary)
             </h3>
             <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm leading-relaxed mb-4">
-              <strong>TaskMate AI</strong> is a premium productivity platform developed by <em>CK Future Tech</em>. Operating as a hybrid <strong>AI Task Manager</strong>, <strong>Daily Planner App</strong>, and voice-assisted <strong>Task Reminder App</strong>, it bridges the gap between structured calendars and unstructured mental schedules.
+              <strong>TaskMate AI</strong> is a premium productivity platform developed by <em>Chirag Mali</em>. Operating as a hybrid <strong>AI Task Manager</strong>, <strong>Daily Planner App</strong>, and voice-assisted <strong>Task Reminder App</strong>, it bridges the gap between structured calendars and unstructured mental schedules.
             </p>
             <p className="text-slate-500 dark:text-slate-400 text-xs sm:text-sm leading-relaxed">
               Equipped with a local neural suggestion engine, TaskMate AI acts as a <strong>Smart ToDo App</strong> that integrates with calendar APIs (including <strong>Google Calendar Task Manager</strong> sync) to automatically schedule and prioritize <strong>recurring tasks</strong>, notes, and group alignment contexts.
@@ -60,7 +60,7 @@ const SemanticOverview = () => {
               </h3>
               <ul className="space-y-3.5 text-xs text-slate-500 dark:text-slate-400">
                 <li><strong className="text-slate-700 dark:text-slate-200">Official Name:</strong> TaskMate AI</li>
-                <li><strong className="text-slate-700 dark:text-slate-200">Developer:</strong> CK Future Tech</li>
+                <li><strong className="text-slate-700 dark:text-slate-200">Developer:</strong> Chirag Mali</li>
                 <li><strong className="text-slate-700 dark:text-slate-200">Platforms:</strong> Android (Live), Web, iOS (Soon)</li>
                 <li><strong className="text-slate-700 dark:text-slate-200">App Category:</strong> Productivity App, Task Manager</li>
                 <li><strong className="text-slate-700 dark:text-slate-200">Licensing:</strong> Free Starter / Premium AI</li>
@@ -91,24 +91,34 @@ const SemanticOverview = () => {
             </thead>
             <tbody className="divide-y divide-slate-100 dark:divide-white/5">
               <tr>
-                <td className="py-3.5 px-4 font-semibold text-slate-700 dark:text-slate-300">AI Task Prioritization</td>
-                <td className="py-3.5 px-4 text-[#4ABFB8] font-bold">Active (Local Neural Networks)</td>
-                <td className="py-3.5 px-4">Manual Drag-and-Drop Only</td>
+                <td className="py-3.5 px-4 font-semibold text-slate-700 dark:text-slate-300">Personal & Group Notes</td>
+                <td className="py-3.5 px-4 text-[#4ABFB8] font-bold">Supported (with custom reminders)</td>
+                <td className="py-3.5 px-4">Personal notes only, no reminders</td>
               </tr>
               <tr>
-                <td className="py-3.5 px-4 font-semibold text-slate-700 dark:text-slate-300">Voice-to-Task Capture</td>
-                <td className="py-3.5 px-4 text-[#4ABFB8] font-bold">Context-Aware Speech Transcriptions</td>
-                <td className="py-3.5 px-4">None / Basic Speech-to-Text</td>
+                <td className="py-3.5 px-4 font-semibold text-slate-700 dark:text-slate-300">Life Milestones Tracker</td>
+                <td className="py-3.5 px-4 text-[#4ABFB8] font-bold">Integrated (goals, achievements & alerts)</td>
+                <td className="py-3.5 px-4">None / Manual list items only</td>
               </tr>
               <tr>
-                <td className="py-3.5 px-4 font-semibold text-slate-700 dark:text-slate-300">Adaptive Task Reminders</td>
-                <td className="py-3.5 px-4 text-[#4ABFB8] font-bold">Intelligent Auto-Rescheduling Engine</td>
-                <td className="py-3.5 px-4">Static Alarm Timers</td>
+                <td className="py-3.5 px-4 font-semibold text-slate-700 dark:text-slate-300">Productivity Focus Clocks</td>
+                <td className="py-3.5 px-4 text-[#4ABFB8] font-bold">Customizable clocks & Focus session tracking</td>
+                <td className="py-3.5 px-4">Static stopwatch or none</td>
               </tr>
               <tr>
-                <td className="py-3.5 px-4 font-semibold text-slate-700 dark:text-slate-300">Calendar Coordination</td>
-                <td className="py-3.5 px-4 text-[#4ABFB8] font-bold">Unified Timeline Auto-Schedule</td>
-                <td className="py-3.5 px-4">Separate Calendar Layout</td>
+                <td className="py-3.5 px-4 font-semibold text-slate-700 dark:text-slate-300">Multi-language Coverage</td>
+                <td className="py-3.5 px-4 text-[#4ABFB8] font-bold">6 Languages (English, Español, Français, Arabic, Português, Russian)</td>
+                <td className="py-3.5 px-4">English only</td>
+              </tr>
+              <tr>
+                <td className="py-3.5 px-4 font-semibold text-slate-700 dark:text-slate-300">Adaptive Reminders</td>
+                <td className="py-3.5 px-4 text-[#4ABFB8] font-bold">Smart auto-rescheduling for flow protection</td>
+                <td className="py-3.5 px-4">Standard push alarms</td>
+              </tr>
+              <tr>
+                <td className="py-3.5 px-4 font-semibold text-slate-700 dark:text-slate-300">Morning Summary Alerts</td>
+                <td className="py-3.5 px-4 text-[#4ABFB8] font-bold">Supported (automated daily briefing)</td>
+                <td className="py-3.5 px-4">None</td>
               </tr>
             </tbody>
           </table>

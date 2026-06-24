@@ -32,6 +32,7 @@ import NotFound from "./pages/NotFound";
 import Contact from "./pages/Contact";
 import Privacy from "./pages/Privacy";
 import Terms from "./pages/Terms";
+import About from "./pages/About";
 import ProjectListPage from "./pages/ProjectListPage";
 import { ProjectDetailsPage } from "./pages/ProjectDetailsPage";
 import TeamTaskListPage from "./pages/TeamTaskListPage";
@@ -52,7 +53,8 @@ const AppContent = () => {
     location.pathname === '/auth' || 
     location.pathname === '/contact' ||
     location.pathname === '/privacy' ||
-    location.pathname === '/terms';
+    location.pathname === '/terms' ||
+    location.pathname === '/about';
 
   return (
     <>
@@ -66,6 +68,7 @@ const AppContent = () => {
           <Route path="/contact" element={<Contact />} />
           <Route path="/privacy" element={<Privacy />} />
           <Route path="/terms" element={<Terms />} />
+          <Route path="/about" element={<About />} />
           <Route path="/dashboard" element={
             <ProtectedRoute><Dashboard /></ProtectedRoute>
           } />

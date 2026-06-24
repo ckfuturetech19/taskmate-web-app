@@ -1,43 +1,96 @@
-import { Mic, Sparkles, BellRing, CalendarDays, Target, LayoutGrid } from 'lucide-react';
+import { 
+  Mic, 
+  Sparkles, 
+  BellRing, 
+  CalendarDays, 
+  Target, 
+  LayoutGrid, 
+  FileText, 
+  Trophy, 
+  Clock, 
+  Languages, 
+  RefreshCw, 
+  Sun, 
+  MessageSquare, 
+  Lock, 
+  Cloud, 
+  Users 
+} from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const FeaturesSection = () => {
   const featuresList = [
     {
-      icon: Mic,
-      title: 'Voice to Task',
-      description: 'Turn ephemeral thoughts into actionable items just by speaking. High-fidelity transcriptions with context awareness.',
+      icon: FileText,
+      title: 'Personal & Group Notes',
+      description: 'Create notes for yourself or your team, set reminders, and never lose track of shared documents and information.',
       delay: '0ms',
     },
     {
-      icon: Sparkles,
-      title: 'AI Smart Suggestions',
-      description: 'Let AI handle the prioritization. TaskMate suggests what to do next based on your deadlines and energy levels.',
+      icon: Trophy,
+      title: 'Life Milestones Tracker',
+      description: 'Track key life events, achievements, anniversaries, goals, and milestones with automated notifications and reminders.',
+      delay: '50ms',
+    },
+    {
+      icon: Clock,
+      title: 'Productivity Focus Clocks',
+      description: 'Use custom focus timers and clocks to manage your focus intervals, stay concentrated, and measure deep work.',
       delay: '100ms',
     },
     {
-      icon: BellRing,
-      title: 'Smart Reminders',
-      description: "Reminders that adapt. If you're busy, TaskMate intelligently reschedules minor alerts to avoid flow disruption.",
+      icon: Languages,
+      title: '6 Languages Supported',
+      description: 'Full multi-language accessibility in English, Español, Français, العربية, Português, and Русский.',
+      delay: '150ms',
+    },
+    {
+      icon: RefreshCw,
+      title: 'Advanced Recurring Tasks',
+      description: 'Automate your routine with a robust scheduling system built to recur daily, weekly, monthly, or on custom intervals.',
       delay: '200ms',
     },
     {
-      icon: CalendarDays,
-      title: 'Calendar Sync',
-      description: 'Deep integration with Google, Outlook, and Apple calendars. View your tasks and events in one unified AI-curated timeline.',
+      icon: Sun,
+      title: 'Morning Summary Briefings',
+      description: 'Start every day with an organized briefing containing today\'s priority tasks, milestones, and pending actions.',
+      delay: '250ms',
+    },
+    {
+      icon: Mic,
+      title: 'Voice-to-Task Capture',
+      description: 'Quickly record thoughts by speaking. TaskMate converts your voice inputs into clear, organized items instantly.',
       delay: '300ms',
     },
     {
-      icon: Target,
-      title: 'Focus Mode Pro',
-      description: 'A sanctuary for deep work. Block distractions and track focus duration with a minimalist, beautiful timer UI.',
+      icon: BellRing,
+      title: 'Smart Adaptable Reminders',
+      description: 'Get notified without flow disruption. Alerts intelligently reschedule based on your focus calendars.',
+      delay: '350ms',
+    },
+    {
+      icon: CalendarDays,
+      title: 'Google Calendar Sync',
+      description: 'Sync your tasks, notes, and milestones seamlessly with Google Calendar and local devices in one timeline.',
       delay: '400ms',
     },
     {
       icon: LayoutGrid,
-      title: 'Home Widgets',
-      description: 'Stay updated without opening the app. Beautiful, glassmorphic widgets for your home and lock screen.',
+      title: 'Home Screen Widgets',
+      description: 'Check off accomplishments or add items directly from your mobile home screen using sleek glassmorphic widgets.',
+      delay: '450ms',
+    },
+    {
+      icon: Users,
+      title: 'Group Collaboration',
+      description: 'Collaborate with friends, family, or colleagues. Assign list actions and sync group notebooks in real-time.',
       delay: '500ms',
+    },
+    {
+      icon: Sparkles,
+      title: 'AI-Powered Productivity',
+      description: 'Leverage AI assistance for planning, summary analysis, and personal habits organization.',
+      delay: '550ms',
     },
   ];
 

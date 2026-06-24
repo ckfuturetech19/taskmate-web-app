@@ -18,7 +18,7 @@ const Footer = () => {
               Reimagining productivity for the AI era. Plan smarter, live better.
             </p>
             <p className="text-xs text-slate-400 dark:text-slate-500">
-              Made with ❤️ in Ahmedabad, India 🇮🇳
+              {/* Made with ❤️ in Ahmedabad, India 🇮🇳 */}
             </p>
           </div>
 
@@ -41,11 +41,6 @@ const Footer = () => {
                   Pricing
                 </a>
               </li>
-              <li>
-                <a href="#" className="hover:text-[#8B65C8] dark:hover:text-purple-400 transition-colors hover:translate-x-1 duration-200 transition-transform inline-block">
-                  Release Notes
-                </a>
-              </li>
             </ul>
           </div>
 
@@ -54,22 +49,22 @@ const Footer = () => {
             <h4 className="font-bold mb-6 text-slate-900 dark:text-white text-sm uppercase tracking-wider">Company</h4>
             <ul className="space-y-4 text-xs sm:text-sm text-slate-500 dark:text-slate-400">
               <li>
-                <a href="#" className="hover:text-[#8B65C8] dark:hover:text-purple-400 transition-colors hover:translate-x-1 duration-200 transition-transform inline-block">
+                <a href="/about" className="hover:text-[#8B65C8] dark:hover:text-purple-400 transition-colors hover:translate-x-1 duration-200 transition-transform inline-block">
                   About Us
                 </a>
               </li>
               <li>
-                <a href="#" className="hover:text-[#8B65C8] dark:hover:text-purple-400 transition-colors hover:translate-x-1 duration-200 transition-transform inline-block">
-                  Careers
+                <a href="/contact" className="hover:text-[#8B65C8] dark:hover:text-purple-400 transition-colors hover:translate-x-1 duration-200 transition-transform inline-block">
+                  Contact Us
                 </a>
               </li>
               <li>
-                <a href="#" className="hover:text-[#8B65C8] dark:hover:text-purple-400 transition-colors hover:translate-x-1 duration-200 transition-transform inline-block">
+                <a href="/privacy" className="hover:text-[#8B65C8] dark:hover:text-purple-400 transition-colors hover:translate-x-1 duration-200 transition-transform inline-block">
                   Privacy Policy
                 </a>
               </li>
               <li>
-                <a href="#" className="hover:text-[#8B65C8] dark:hover:text-purple-400 transition-colors hover:translate-x-1 duration-200 transition-transform inline-block">
+                <a href="/terms" className="hover:text-[#8B65C8] dark:hover:text-purple-400 transition-colors hover:translate-x-1 duration-200 transition-transform inline-block">
                   Terms of Service
                 </a>
               </li>
@@ -120,7 +115,7 @@ const Footer = () => {
         {/* Bottom Bar */}
         <div className="pt-8 border-t border-slate-200 dark:border-white/5 flex flex-col md:flex-row justify-between items-center gap-6 text-xs text-slate-400 dark:text-slate-500 font-mono">
           <p>
-            © 2025 TaskMate AI. All rights reserved.
+            © 2025 TaskMate App AI. All rights reserved.
           </p>
           <div className="flex gap-6">
             <a href="#" className="hover:text-slate-900 dark:hover:text-white transition-colors">Security</a>
