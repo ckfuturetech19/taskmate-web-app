@@ -13,18 +13,32 @@ export const useTaskOperations = () => {
     return 0;
   }, []);
 
+  const mapRecurrence = useCallback((recurrenceType: string | undefined) => {
+    const isRecurring = !!recurrenceType && recurrenceType !== 'none';
+    const typeStr = isRecurring ? recurrenceType : 'none';
+    return {
+      isRecurring,
+      recurrenceType: typeStr,
+      recurringPattern: isRecurring ? typeStr : null,
+      recurrenceFrequency: 1
+    };
+  }, []);
+
   const addTask = useCallback(async (
     taskData: Omit<Task, 'id' | 'createdAt' | 'userId'>
   ) => {
     if (!user) throw new Error('User must be logged in');
 
+    const recurrenceFields = mapRecurrence(taskData.recurrenceType);
     const payload = {
       ...taskData,
+      ...recurrenceFields,
       isCompleted: taskData.isCompleted ? 1 : 0,
       isPriority: taskData.isPriority ? 1 : 0,
       isGroupTask: taskData.isGroupTask ? 1 : 0,
       focusTimerEnabled: taskData.focusTimerEnabled ? 1 : 0,
       priorityLevel: getPriorityLevel(taskData.priorityLevel || 'none'),
+      reminder: taskData.reminder ? new Date(taskData.reminder).toISOString() : undefined,
       reminderUtc: taskData.reminder ? new Date(taskData.reminder).toISOString() : undefined,
     };
 
@@ -32,7 +46,7 @@ export const useTaskOperations = () => {
     const endpoint = taskData.groupId ? '/groups/tasks' : '/tasks';
     const response = await api.post(endpoint, payload);
     return response.data.id;
-  }, [user, getPriorityLevel]);
+  }, [user, getPriorityLevel, mapRecurrence]);
 
   const updateTask = useCallback(async (
     id: string,
@@ -43,6 +57,12 @@ export const useTaskOperations = () => {
 
     const payload: any = { ...updates };
     
+    // Map recurrence fields
+    if (updates.recurrenceType !== undefined) {
+      const recurrenceFields = mapRecurrence(updates.recurrenceType);
+      Object.assign(payload, recurrenceFields);
+    }
+    
     // Map booleans to numbers for backend
     if (updates.isCompleted !== undefined) payload.isCompleted = updates.isCompleted ? 1 : 0;
     if (updates.isPriority !== undefined) payload.isPriority = updates.isPriority ? 1 : 0;
@@ -50,6 +70,7 @@ export const useTaskOperations = () => {
     if (updates.focusTimerIsRunning !== undefined) payload.focusTimerIsRunning = updates.focusTimerIsRunning ? 1 : 0;
     if (updates.priorityLevel !== undefined) payload.priorityLevel = getPriorityLevel(updates.priorityLevel);
     if (updates.reminder !== undefined) {
+      payload.reminder = updates.reminder ? new Date(updates.reminder).toISOString() : null;
       payload.reminderUtc = updates.reminder ? new Date(updates.reminder).toISOString() : null;
     }
 

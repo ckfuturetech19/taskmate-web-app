@@ -28,6 +28,8 @@ import Clock from "./pages/Clock";
 import AdminUsers from "./pages/AdminUsers";
 import Notes from "./pages/Notes";
 import NoteDetail from "./pages/NoteDetail";
+import Milestones from "./pages/Milestones";
+import MilestoneDetail from "./pages/MilestoneDetail";
 import NotFound from "./pages/NotFound";
 import Contact from "./pages/Contact";
 import Privacy from "./pages/Privacy";
@@ -101,6 +103,12 @@ const AppContent = () => {
           } />
           <Route path="/notes/:noteId" element={
             <ProtectedRoute><NoteDetail /></ProtectedRoute>
+          } />
+          <Route path="/milestones" element={
+            <ProtectedRoute><Milestones /></ProtectedRoute>
+          } />
+          <Route path="/milestones/:id" element={
+            <ProtectedRoute><MilestoneDetail /></ProtectedRoute>
           } />
           <Route path="/projects" element={
             <ProtectedRoute><ProjectListPage /></ProtectedRoute>

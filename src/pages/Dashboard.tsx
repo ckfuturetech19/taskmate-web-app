@@ -1,34 +1,34 @@
-import { useState, useMemo, useRef } from 'react';
+import { useState, useMemo } from 'react';
 import AppLayout from '@/components/app/AppLayout';
 import StatCard from '@/components/dashboard/StatCard';
 import TaskCard from '@/components/tasks/TaskCard';
 import TaskDialog from '@/components/tasks/TaskDialog';
 import AnalyticsChart from '@/components/dashboard/AnalyticsChart';
-import ProgressDonut from '@/components/dashboard/ProgressDonut';
 import RemindersCard from '@/components/dashboard/RemindersCard';
 import TimeTrackerCard from '@/components/dashboard/TimeTrackerCard';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useTaskContext } from '@/contexts/TaskContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { useAnalytics } from '@/contexts/AnalyticsContext';
 import { useAnalyticsSync } from '@/hooks/useAnalyticsSync';
 import { Task } from '@/types/task';
-import { CalendarDays, Clock, CheckCircle2, Plus, TrendingUp, AlertCircle, FileDown, Sparkles, Zap, BarChart3 } from 'lucide-react';
+import { CalendarDays, CheckCircle2, Plus, TrendingUp, AlertCircle, Clock } from 'lucide-react';
 import { safeIsToday, safeParseDate, safeIsPast } from '@/lib/dateUtils';
 import { toast } from '@/hooks/use-toast';
 import { motion } from 'framer-motion';
-import { useWorkspace } from '@/providers/WorkspaceProvider';
-import { WorkspaceDashboard } from '@/modules/workspace/WorkspaceDashboard';
+import { usePremium } from '@/contexts/PremiumContext';
+import { UpgradePromptDialog } from '@/components/premium/UpgradePromptDialog';
 
 const Dashboard = () => {
   const { user } = useAuth();
-  const { tasks, addTask, updateTask, deleteTask, toggleTaskComplete, getPersonalTasks } = useTaskContext();
+  const { isPremium } = usePremium();
+  const { addTask, updateTask, deleteTask, toggleTaskComplete, getPersonalTasks } = useTaskContext();
   const { tasksCompleted, tasksCreated, currentStreak, completionRate: analyticsCompletionRate } = useAnalytics();
-  const { currentWorkspace } = useWorkspace();
 
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [isUpgradeOpen, setIsUpgradeOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [activeTab, setActiveTab] = useState('today');
 
@@ -75,6 +75,7 @@ const Dashboard = () => {
       toast({ title: 'Failed to save task', variant: 'destructive' });
     } finally {
       setEditingTask(null);
+      setDialogOpen(false);
     }
   };
 
@@ -83,106 +84,107 @@ const Dashboard = () => {
     setDialogOpen(true);
   };
 
+  const formattedDate = new Date().toLocaleDateString('en-US', { 
+    weekday: 'long', 
+    month: 'long', 
+    day: 'numeric' 
+  });
+
+  // Greeting based on user's LOCAL time (new Date() already uses device timezone)
+  const getGreeting = () => {
+    const hour = new Date().getHours(); // 0-23, local timezone
+    if (hour >= 5 && hour < 12)  return { text: 'Good morning',   emoji: '☀️' };
+    if (hour >= 12 && hour < 17) return { text: 'Good afternoon', emoji: '🌤️' };
+    if (hour >= 17 && hour < 21) return { text: 'Good evening',   emoji: '🌆' };
+    return                                { text: 'Good night',    emoji: '🌙' };
+  };
+  const greeting = getGreeting();
+
   return (
     <AppLayout title="Dashboard">
       <motion.div
-        initial={{ opacity: 0, scale: 0.98, y: 10 }}
-        animate={{ opacity: 1, scale: 1, y: 0 }}
-        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.25 }}
         className="space-y-6 pb-10"
       >
+        {/* Compact Greeting Bar — animated 4-color gradient border ring */}
+        <div className="gradient-ring-card rounded-[12px] p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 relative">
+          {/* Subtle inner wash */}
+          <div className="absolute inset-0 bg-gradient-to-r from-[#FF3CAC]/4 via-transparent to-[#7B2FBE]/4 pointer-events-none rounded-[12px]" />
 
-        {/* Welcome Header */}
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-6">
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="space-y-2"
-          >
-            <div className="flex items-center gap-2 text-primary font-black uppercase tracking-[0.4em] text-[10px]">
-              <Zap className="h-3 w-3" />
-              <span>Strategic Command Hub</span>
-            </div>
-            <h1 className="text-4xl sm:text-6xl font-black tracking-tighter text-foreground leading-[0.9]">
-              Intelligence <span className="text-primary">Restored.</span>
+          <div className="relative">
+            <h1 className="text-[20px] font-semibold text-[var(--text-primary)] leading-tight">
+              {greeting.text}, {user?.name || 'User'} {greeting.emoji}{' '}
+              <span className="text-[14px] font-normal text-[var(--text-secondary)] ml-1">
+                You have {todaysTasks.length} tasks today
+              </span>
             </h1>
-            <p className="text-muted-foreground text-sm font-medium max-w-md italic border-l-2 border-primary/20 pl-4">
-              Analyzing <span className="text-foreground font-bold">{todaysTasks.length} active objectives</span> for today. Operational readiness is 100%.
-            </p>
-          </motion.div>
+            <p className="text-[13px] text-[var(--text-muted)] mt-0.5">{formattedDate}</p>
+          </div>
 
-          <motion.div
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="flex gap-3 shrink-0"
+          <Button
+            onClick={() => {
+              if (!isPremium) { setIsUpgradeOpen(true); } else { setDialogOpen(true); }
+            }}
+            className="rounded-full text-white text-[13px] font-semibold h-9 px-5 border-0 shrink-0 relative hover:brightness-110 transition-all"
+            style={{ background: 'linear-gradient(135deg, #FF3CAC 0%, #7B2FBE 100%)' }}
           >
-            <Button
-              onClick={() => setDialogOpen(true)}
-              size="lg"
-              className="rounded-xl px-8 h-14 font-black transition-all hover:scale-105 active:scale-95 shadow-2xl shadow-primary/30 bg-primary hover:bg-primary/90 text-sm tracking-widest"
-            >
-              <Plus className="h-5 w-5 mr-2" />
-              INITIATE TASK
-            </Button>
-          </motion.div>
+            <Plus className="h-4 w-4 mr-1.5" />
+            Add Task
+          </Button>
         </div>
 
-        {/* Stats Grid */}
+        {/* Standardized Stats Grid */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <StatCard
-            title="Operation Volume"
+            title="Total Tasks"
             value={totalCreated}
-            icon={Zap}
+            icon={CheckCircle2}
             variant="primary"
             trend="up"
             trendValue={12}
+            delay={50}
+          />
+          <StatCard
+            title="Pending Tasks"
+            value={pendingTasks.length}
+            icon={Clock}
+            variant="destructive"
             delay={100}
           />
           <StatCard
-            title="Critical Payload"
-            value={pendingTasks.length}
-            icon={Clock}
-            subtitle={`${pendingTasks.length} tasks to go`}
-            variant="destructive"
-            delay={200}
-          />
-          <StatCard
-            title="Combat Efficiency"
+            title="Completion Rate"
             value={`${Math.round(displayCompletionRate)}%`}
             icon={CheckCircle2}
             variant="accent"
-            subtitle="Efficiency score"
-            delay={300}
+            delay={150}
           />
           <StatCard
-            title="Operational Continuity"
+            title="Daily Streak"
             value={currentStreak}
             icon={TrendingUp}
             variant="purple"
-            subtitle={currentStreak > 0 ? `${currentStreak} day streak!` : "Start today"}
-            delay={400}
+            delay={200}
           />
         </div>
 
-        {/* Top Row - Intelligence Grid (3 Side-by-Side with Same Height) */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 items-stretch">
-          
-          {/* 1. Productivity Analytics */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-            className="glass rounded-xl border-white/10 overflow-hidden flex flex-col h-[380px]"
-          >
-            <div className="p-6 border-b border-white/5 flex items-center justify-between">
-              <h3 className="font-black text-sm tracking-tight flex items-center gap-2 uppercase italic text-muted-foreground">
-                <BarChart3 className="h-4 w-4 text-primary" />
+        {/* 3-Panel Layout Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-[1.2fr_1fr_0.8fr] gap-4 items-stretch min-h-[320px]">
+          {/* Panel 1: Productivity Wave */}
+          <Card className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-[16px] p-6 shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] transition-all duration-200 flex flex-col justify-between">
+            <div className="mb-4">
+              <h3 className="font-semibold text-[16px] text-[var(--text-primary)]">
                 Productivity Wave
               </h3>
+              <p className="text-[12px] text-[var(--text-muted)]">
+                Last 7 days
+              </p>
             </div>
-            <div className="p-6 flex-1 min-h-0">
+            <div className="flex-1 min-h-[180px]">
               <AnalyticsChart
-                type="bar"
+                type="area"
+                strokeColor="#00C9A7"
                 data={useMemo(() => {
                   const days = ['S', 'M', 'T', 'W', 'T', 'F', 'S'];
                   const today = new Date();
@@ -198,59 +200,45 @@ const Dashboard = () => {
                     });
                     return {
                       name: day,
-                      completed: dayTasks.filter(t => t.isCompleted).length,
-                      pending: dayTasks.filter(t => !t.isCompleted).length,
                       value: dayTasks.length,
                     };
                   });
                 }, [personalTasks])}
               />
             </div>
-          </motion.div>
+          </Card>
 
-          {/* 2. Reminders Card */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.3 }}
-            className="h-[380px] flex flex-col"
-          >
-            <RemindersCard 
-              tasks={personalTasks} 
-              onAddTask={() => setDialogOpen(true)} 
-              onStartTimer={(t) => console.log(t)} 
-              className="flex-1 rounded-xl"
-            />
-          </motion.div>
+          {/* Panel 2: Focus Timers */}
+          <RemindersCard 
+            tasks={personalTasks} 
+            onAddTask={() => {
+              if (!isPremium) {
+                setIsUpgradeOpen(true);
+              } else {
+                setDialogOpen(true);
+              }
+            }} 
+          />
 
-          {/* 3. Time Tracker Card */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: 0.4 }}
-            className="h-[380px] flex flex-col"
-          >
-            <TimeTrackerCard className="flex-1 rounded-xl" />
-          </motion.div>
+          {/* Panel 3: Clock widget / Time */}
+          <TimeTrackerCard />
         </div>
 
-        {/* Bottom Row - Full Width Task Matrix */}
+        {/* Bottom Task Matrix Section */}
         <motion.div 
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5 }}
-          className="space-y-4"
+          transition={{ delay: 0.25 }}
+          className="space-y-4 pt-4"
         >
           <Tabs defaultValue="today" onValueChange={setActiveTab} className="w-full">
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-6 gap-4 px-4 bg-white/5 p-4 rounded-xl border border-white/10">
-              <div className="flex items-center gap-4">
-                <div className="h-10 w-2 bg-primary rounded-full shadow-[0_0_15px_rgba(var(--primary-rgb),0.5)]" />
-                <h3 className="font-black text-2xl tracking-tighter uppercase italic">Task Matrix</h3>
-              </div>
-              <TabsList className="bg-white/5 border border-white/10 rounded-xl h-12 p-1 min-w-[300px]">
-                <TabsTrigger value="today" className="flex-1 rounded-xl px-6 text-[10px] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-black tracking-[0.2em]">TODAY</TabsTrigger>
-                <TabsTrigger value="upcoming" className="flex-1 rounded-xl px-6 text-[10px] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-black tracking-[0.2em]">UPCOMING</TabsTrigger>
-                <TabsTrigger value="overdue" className="flex-1 rounded-xl px-6 text-[10px] data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-black tracking-[0.2em]">OVERDUE</TabsTrigger>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between mb-4 gap-4 bg-[var(--bg-card)] p-4 rounded-[16px] border border-[var(--border-default)]">
+              <h3 className="font-semibold text-[18px] text-[var(--text-primary)]">Task Board</h3>
+              
+              <TabsList className="bg-[var(--bg-base)] border border-[var(--border-default)] rounded-full h-9 p-1 shrink-0 flex">
+                <TabsTrigger value="today" className="rounded-full px-4 text-[12px] font-medium data-[state=active]:bg-[var(--brand-gradient)] data-[state=active]:text-white transition-all">Today</TabsTrigger>
+                <TabsTrigger value="upcoming" className="rounded-full px-4 text-[12px] font-medium data-[state=active]:bg-[var(--brand-gradient)] data-[state=active]:text-white transition-all">Upcoming</TabsTrigger>
+                <TabsTrigger value="overdue" className="rounded-full px-4 text-[12px] font-medium data-[state=active]:bg-[var(--brand-gradient)] data-[state=active]:text-white transition-all">Overdue</TabsTrigger>
               </TabsList>
             </div>
 
@@ -260,20 +248,20 @@ const Dashboard = () => {
                   todaysTasks.map((task, i) => (
                     <motion.div
                       key={task.id}
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: i * 0.1 }}
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.05 }}
                     >
                       <TaskCard task={task} onToggleComplete={toggleTaskComplete} onEdit={handleEdit} onDelete={deleteTask} />
                     </motion.div>
                   ))
                 ) : (
-                  <Card className="glass border-dashed border-white/20 rounded-xl p-16 text-center col-span-full">
-                    <div className="h-20 w-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                      <CheckCircle2 className="h-10 w-10 text-primary" />
+                  <Card className="bg-[var(--bg-card)] border border-[var(--border-default)] border-dashed rounded-[16px] p-12 text-center col-span-full shadow-sm">
+                    <div className="h-14 w-14 bg-[var(--bg-base)] rounded-full flex items-center justify-center mx-auto mb-4">
+                      <CheckCircle2 className="h-7 w-7 text-[var(--brand-pink)]" />
                     </div>
-                    <h4 className="font-bold text-2xl text-foreground">Mission Accomplished</h4>
-                    <p className="text-muted-foreground mt-2">All objectives for today have been cleared.</p>
+                    <h4 className="font-semibold text-[16px] text-[var(--text-primary)]">All Done!</h4>
+                    <p className="text-[13px] text-[var(--text-muted)] mt-1">No pending tasks for today.</p>
                   </Card>
                 )}
               </div>
@@ -285,20 +273,20 @@ const Dashboard = () => {
                   upcomingTasks.map((task, i) => (
                     <motion.div
                       key={task.id}
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: i * 0.1 }}
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.05 }}
                     >
                       <TaskCard task={task} onToggleComplete={toggleTaskComplete} onEdit={handleEdit} onDelete={deleteTask} />
                     </motion.div>
                   ))
                 ) : (
-                  <Card className="glass border-dashed border-white/20 rounded-xl p-16 text-center col-span-full">
-                    <div className="h-20 w-20 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                      <CalendarDays className="h-10 w-10 text-primary" />
+                  <Card className="bg-[var(--bg-card)] border border-[var(--border-default)] border-dashed rounded-[16px] p-12 text-center col-span-full shadow-sm">
+                    <div className="h-14 w-14 bg-[var(--bg-base)] rounded-full flex items-center justify-center mx-auto mb-4">
+                      <CalendarDays className="h-7 w-7 text-[var(--brand-pink)]" />
                     </div>
-                    <h4 className="font-bold text-2xl text-foreground">Operational Clear</h4>
-                    <p className="text-muted-foreground mt-2">No upcoming tasks scheduled in the mission logs.</p>
+                    <h4 className="font-semibold text-[16px] text-[var(--text-primary)]">No Upcoming Tasks</h4>
+                    <p className="text-[13px] text-[var(--text-muted)] mt-1">There are no upcoming tasks scheduled.</p>
                   </Card>
                 )}
               </div>
@@ -310,20 +298,20 @@ const Dashboard = () => {
                   overdueTasks.map((task, i) => (
                     <motion.div
                       key={task.id}
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: i * 0.1 }}
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: i * 0.05 }}
                     >
                       <TaskCard task={task} onToggleComplete={toggleTaskComplete} onEdit={handleEdit} onDelete={deleteTask} />
                     </motion.div>
                   ))
                 ) : (
-                  <Card className="glass border-dashed border-white/20 rounded-xl p-16 text-center col-span-full">
-                    <div className="h-20 w-20 bg-rose-500/10 rounded-full flex items-center justify-center mx-auto mb-6">
-                      <AlertCircle className="h-10 w-10 text-rose-500" />
+                  <Card className="bg-[var(--bg-card)] border border-[var(--border-default)] border-dashed rounded-[16px] p-12 text-center col-span-full shadow-sm">
+                    <div className="h-14 w-14 bg-[var(--bg-base)] rounded-full flex items-center justify-center mx-auto mb-4">
+                      <AlertCircle className="h-7 w-7 text-[var(--status-danger)]" />
                     </div>
-                    <h4 className="font-bold text-2xl text-foreground">Integrity Maintained</h4>
-                    <p className="text-muted-foreground mt-2">No overdue objectives. Operational efficiency is optimal.</p>
+                    <h4 className="font-semibold text-[16px] text-[var(--text-primary)]">No Overdue Tasks</h4>
+                    <p className="text-[13px] text-[var(--text-muted)] mt-1">Great job! You have no overdue tasks.</p>
                   </Card>
                 )}
               </div>
@@ -340,10 +328,14 @@ const Dashboard = () => {
           task={editingTask}
           onSave={handleSaveTask}
         />
+
+        <UpgradePromptDialog
+          open={isUpgradeOpen}
+          onOpenChange={setIsUpgradeOpen}
+        />
       </motion.div>
     </AppLayout>
   );
 };
 
 export default Dashboard;
-

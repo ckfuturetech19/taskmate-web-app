@@ -17,8 +17,8 @@ import {
 } from '@/components/ui/alert-dialog';
 import { useTaskContext } from '@/contexts/TaskContext';
 import { useAuth } from '@/contexts/AuthContext';
-import { Task, PriorityLevel, RecurrenceType, SubTask } from '@/types/task';
-import { Plus, ArrowLeft, Copy, Users, CheckCircle, LogOut, User } from 'lucide-react';
+import { Task } from '@/types/task';
+import { Plus, ArrowLeft, Copy, Users, CheckCircle, LogOut } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 const GroupDetail = () => {
@@ -39,9 +39,9 @@ const GroupDetail = () => {
   if (!group) {
     return (
       <AppLayout title="Group Not Found">
-        <div className="text-center py-16">
-          <p className="text-muted-foreground mb-4">This group doesn't exist or you don't have access.</p>
-          <Button onClick={() => navigate('/groups')}>Back to Groups</Button>
+        <div className="text-center py-16 bg-[var(--bg-card)] rounded-[16px] border border-[var(--border-default)] p-8 max-w-md mx-auto shadow-sm">
+          <p className="text-[14px] text-[var(--text-muted)] mb-4">This group doesn't exist or you don't have access.</p>
+          <Button onClick={() => navigate('/groups')} className="rounded-full bg-[var(--brand-gradient)] text-white">Back to Groups</Button>
         </div>
       </AppLayout>
     );
@@ -83,6 +83,7 @@ const GroupDetail = () => {
       addTask({ ...data, groupId: group.id });
     }
     setEditingTask(null);
+    setDialogOpen(false);
   };
 
   const handleEdit = (task: Task) => {
@@ -92,65 +93,95 @@ const GroupDetail = () => {
 
   return (
     <AppLayout title={group.name}>
-      <div className="space-y-4 sm:space-y-5 md:space-y-6">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3 sm:gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate('/groups')} className="h-8 w-8 sm:h-9 sm:w-9 shrink-0">
-            <ArrowLeft className="h-4 w-4 sm:h-5 sm:w-5" />
-          </Button>
-          <div className="flex-1 min-w-0">
-            <h2 className="text-xl sm:text-2xl font-bold text-foreground truncate">{group.name}</h2>
-            {group.description && (
-              <p className="text-xs sm:text-sm text-muted-foreground mt-1">{group.description}</p>
-            )}
-            <div className="flex flex-wrap items-center gap-2 sm:gap-3 mt-1.5 sm:mt-2">
-              <div className="flex items-center gap-1.5 text-xs sm:text-sm text-muted-foreground">
-                <Users className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                <span>{(group.members?.length || 0)} member{(group.members?.length || 0) !== 1 ? 's' : ''}</span>
+      <div className="space-y-6 pb-10">
+        
+        {/* Page Header */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-[var(--border-default)] pb-4">
+          <div className="flex items-center gap-3">
+            <Button 
+              variant="ghost" 
+              size="icon" 
+              onClick={() => navigate('/groups')} 
+              className="h-9 w-9 rounded-full text-[var(--text-secondary)] hover:bg-[var(--bg-card-hover)] border border-[var(--border-default)] shrink-0"
+            >
+              <ArrowLeft className="h-5 w-5" />
+            </Button>
+            <div>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h1 className="text-[24px] font-bold text-[var(--text-primary)] leading-tight">{group.name}</h1>
+                {isOwner ? (
+                  <Badge className="bg-[var(--brand-gradient)] text-white font-semibold text-[11px] rounded-full px-2 py-0.5 border-transparent">
+                    Owner
+                  </Badge>
+                ) : (
+                  <Badge className="bg-[#00C9A7] text-white font-semibold text-[11px] rounded-full px-2 py-0.5 border-transparent">
+                    Member
+                  </Badge>
+                )}
               </div>
-              {isOwner && (
-                <Badge variant="secondary" className="text-[10px] sm:text-xs">
-                  <User className="h-3 w-3 sm:h-3.5 sm:w-3.5 mr-1" />
-                  Owner
-                </Badge>
-              )}
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-6 sm:h-7 gap-1.5 text-xs shrink-0"
-                onClick={handleCopyInvite}
-              >
-                {copied ? <CheckCircle className="h-3 w-3 sm:h-3.5 sm:w-3.5" /> : <Copy className="h-3 w-3 sm:h-3.5 sm:w-3.5" />}
-                <span className="font-mono text-[10px] sm:text-xs">{group.inviteCode || group.code || ''}</span>
-              </Button>
+              
+              <div className="flex items-center gap-3 mt-1 text-[13px] text-[var(--text-secondary)]">
+                <span className="flex items-center gap-1">
+                  <Users className="h-4 w-4 text-[var(--text-muted)]" />
+                  {(group.members?.length || 0)} member{(group.members?.length || 0) !== 1 ? 's' : ''}
+                </span>
+
+                <button 
+                  onClick={handleCopyInvite}
+                  className="flex items-center gap-1 px-2 py-0.5 rounded-full border border-[var(--border-default)] bg-[var(--bg-base)] text-[11px] text-[var(--text-secondary)] font-mono hover:text-[var(--text-primary)] transition-all"
+                >
+                  <span>{group.inviteCode || group.code || ''}</span>
+                  {copied ? <CheckCircle className="h-3 w-3 text-[var(--status-success)]" /> : <Copy className="h-3 w-3" />}
+                </button>
+              </div>
             </div>
           </div>
+
           <div className="flex items-center gap-2 shrink-0">
             {!isOwner && (
               <Button
-                variant="outline"
+                variant="ghost"
                 size="sm"
-                className="gap-1.5 text-xs sm:text-sm text-destructive border-destructive/20 hover:bg-destructive/10"
                 onClick={() => setShowLeaveDialog(true)}
+                className="h-9 px-3.5 rounded-full border border-[var(--status-danger)] hover:bg-red-500/10 text-[var(--status-danger)] text-[13px] font-semibold gap-1.5"
               >
-                <LogOut className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
-                <span className="hidden sm:inline">Leave</span>
+                <LogOut className="h-4 w-4" />
+                Leave Group
               </Button>
             )}
-            <Button onClick={() => setDialogOpen(true)} className="gap-2 w-full sm:w-auto text-sm sm:text-base">
-              <Plus className="h-4 w-4" />
-              <span className="hidden sm:inline">Add Task</span>
-              <span className="sm:hidden">Add</span>
+            <Button 
+              onClick={() => setDialogOpen(true)} 
+              className="rounded-full bg-[var(--brand-gradient)] text-white hover:brightness-105 shadow-sm text-[13px] font-semibold h-9 px-5 shrink-0"
+            >
+              <Plus className="h-4 w-4 mr-1.5" />
+              Add Task
             </Button>
           </div>
         </div>
 
+        {group.description && (
+          <p className="text-[14px] text-[var(--text-secondary)] leading-relaxed mt-2 max-w-2xl bg-[var(--bg-card)] p-4 rounded-[12px] border border-[var(--border-default)]">
+            {group.description}
+          </p>
+        )}
+
+        {/* Tasks list / Empty state */}
         {groupTasks.length === 0 ? (
-          <div className="text-center py-16 bg-card rounded-lg border border-border">
-            <p className="text-muted-foreground mb-4">
-              No tasks in this group yet.
+          <div className="flex flex-col items-center justify-center text-center py-16 bg-[var(--bg-card)] rounded-[16px] border border-[var(--border-default)] p-8 max-w-lg mx-auto shadow-sm">
+            <div className="h-[72px] w-[72px] rounded-full bg-[var(--brand-gradient)] flex items-center justify-center text-white mb-5 shadow-md">
+              <Users className="h-8 w-8" />
+            </div>
+            
+            <h3 className="text-[17px] font-semibold text-[var(--text-primary)]">No tasks yet</h3>
+            <p className="text-[14px] text-[var(--text-muted)] mt-1.5 max-w-[280px]">
+              Add the first task to kick things off
             </p>
-            <Button onClick={() => setDialogOpen(true)}>
-              Add the first task
+
+            <Button 
+              onClick={() => setDialogOpen(true)}
+              className="mt-6 rounded-full bg-[var(--brand-gradient)] text-white hover:brightness-105 shadow-sm text-[13px] font-semibold h-9 px-6"
+            >
+              + Add Task
             </Button>
           </div>
         ) : (
@@ -180,16 +211,16 @@ const GroupDetail = () => {
       />
 
       <AlertDialog open={showLeaveDialog} onOpenChange={setShowLeaveDialog}>
-        <AlertDialogContent>
+        <AlertDialogContent className="bg-[var(--bg-card)] rounded-[20px] border border-[var(--border-default)] shadow-[var(--shadow-modal)] p-6 max-w-sm">
           <AlertDialogHeader>
-            <AlertDialogTitle>Leave Group?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Are you sure you want to leave "{group.name}"? You will lose access to all group tasks and will need to be re-invited to rejoin.
+            <AlertDialogTitle className="font-semibold text-[18px] text-[var(--text-primary)]">Leave Group?</AlertDialogTitle>
+            <AlertDialogDescription className="text-[13px] text-[var(--text-secondary)]">
+              Are you sure you want to leave "{group.name}"? You will lose access to all collaborative tasks.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setShowLeaveDialog(false)}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleLeaveGroup} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+          <AlertDialogFooter className="gap-2 mt-4">
+            <AlertDialogCancel onClick={() => setShowLeaveDialog(false)} className="rounded-full h-9 text-[13px] text-[var(--text-secondary)] hover:bg-[var(--bg-card-hover)]">Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleLeaveGroup} className="rounded-full h-9 bg-[var(--status-danger)] text-white hover:bg-[var(--status-danger)]/90 text-[13px]">
               Leave Group
             </AlertDialogAction>
           </AlertDialogFooter>

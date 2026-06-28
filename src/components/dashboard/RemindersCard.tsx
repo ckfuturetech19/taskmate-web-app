@@ -1,6 +1,5 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Timer, Plus, Play, Sparkles } from 'lucide-react';
+import { Zap, Plus, Play, ArrowRight } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Task } from '@/types/task';
 import { useNavigate } from 'react-router-dom';
@@ -24,67 +23,90 @@ const RemindersCard = ({ tasks = [], onAddTask, onStartTimer, className }: Remin
   };
 
   return (
-    <div className={cn("glass rounded-[2rem] border-white/10 p-6 space-y-6 h-full flex flex-col shadow-2xl relative overflow-hidden", className)}>
-      <div className="absolute top-0 right-0 w-32 h-32 bg-primary/5 blur-[50px] pointer-events-none" />
-      
-      <div className="flex items-center justify-between">
-        <h3 className="font-black text-lg tracking-tight flex items-center gap-2">
-          <Timer className="h-5 w-5 text-primary" />
-          Focus Timers
-        </h3>
+    <div className={cn(
+      "bg-[var(--bg-card)] border border-[var(--border-default)] rounded-[12px] p-5 h-full flex flex-col shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] transition-shadow duration-250 overflow-hidden relative",
+      className
+    )}>
+      {/* Subtle purple tint background blob */}
+      <div className="absolute top-0 right-0 w-32 h-32 rounded-full bg-[#7B2FBE]/5 blur-2xl pointer-events-none" />
+
+      {/* Header */}
+      <div className="flex items-center justify-between mb-4 relative">
+        <div className="flex items-center gap-2">
+          <div className="h-8 w-8 rounded-xl bg-[#7B2FBE]/10 flex items-center justify-center">
+            <Zap className="h-4 w-4 text-[#7B2FBE]" />
+          </div>
+          <h3 className="font-semibold text-[15px] text-[var(--text-primary)]">Focus Timers</h3>
+        </div>
         {onAddTask && (
-          <Button variant="ghost" size="icon" onClick={onAddTask} className="h-8 w-8 rounded-lg hover:bg-white/5">
-            <Plus className="h-4 w-4" />
+          <Button 
+            variant="ghost" 
+            size="icon" 
+            onClick={onAddTask} 
+            className="h-7 w-7 rounded-lg hover:bg-[var(--bg-card-hover)] text-[var(--text-muted)] hover:text-[var(--text-primary)]"
+          >
+            <Plus className="h-3.5 w-3.5" />
           </Button>
         )}
       </div>
 
-      <div className="flex-1 flex flex-col justify-center">
+      {/* Content */}
+      <div className="flex-1 flex flex-col justify-center relative">
         {displayTasks.length === 0 ? (
-          <div className="text-center py-10 space-y-4">
-            <div className="relative inline-block">
-              <div className="h-20 w-20 bg-primary/10 rounded-3xl flex items-center justify-center animate-pulse">
-                <Timer className="h-10 w-10 text-primary" />
+          <div className="flex flex-col items-center text-center gap-4 py-4">
+            {/* Clean icon — no gradient abuse */}
+            <div className="relative">
+              <div className="h-14 w-14 rounded-2xl bg-[var(--bg-base)] border border-[var(--border-default)] flex items-center justify-center">
+                <Zap className="h-7 w-7 text-[var(--text-muted)]" />
               </div>
+              {/* Small status dot */}
+              <span className="absolute -top-1 -right-1 h-3.5 w-3.5 rounded-full bg-[var(--bg-card)] border-2 border-[var(--border-default)] flex items-center justify-center">
+                <span className="h-1.5 w-1.5 rounded-full bg-[var(--text-muted)] block" />
+              </span>
             </div>
-            <div className="space-y-1">
-              <p className="text-sm font-black text-foreground uppercase tracking-widest">No Active Nodes</p>
-              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-tighter">Initialize a focus timer to begin</p>
+
+            <div>
+              <p className="text-[13.5px] font-semibold text-[var(--text-primary)]">No active timers</p>
+              <p className="text-[12px] text-[var(--text-muted)] mt-0.5 leading-relaxed">
+                Start a focus session to<br />track deep work sessions
+              </p>
             </div>
-            {onAddTask && (
-              <Button onClick={onAddTask} className="rounded-2xl h-12 px-6 font-black bg-primary hover:bg-primary/90 text-xs">
-                INITIALIZE
-              </Button>
-            )}
+
+            <button
+              onClick={() => navigate('/clock')}
+              className="flex items-center gap-1.5 px-4 h-8 rounded-lg text-[12px] font-semibold text-[#7B2FBE] bg-[#7B2FBE]/8 hover:bg-[#7B2FBE]/14 border border-[#7B2FBE]/20 transition-all duration-150"
+            >
+              Start Session
+              <ArrowRight className="h-3.5 w-3.5" />
+            </button>
           </div>
         ) : (
-          <div className="space-y-3">
+          <div className="space-y-2">
             {displayTasks.map((task, i) => (
               <motion.div
                 key={task.id}
-                initial={{ opacity: 0, x: 20 }}
+                initial={{ opacity: 0, x: -8 }}
                 animate={{ opacity: 1, x: 0 }}
-                transition={{ delay: i * 0.1 }}
-                className="flex items-center justify-between p-4 rounded-2xl glass-dark border-white/5 group hover:border-primary/30 transition-all cursor-pointer"
+                transition={{ delay: i * 0.08 }}
+                className="flex items-center justify-between p-3 rounded-xl border border-[var(--border-default)] hover:border-[#7B2FBE]/30 bg-[var(--bg-card-hover)] hover:bg-[#7B2FBE]/4 transition-all duration-150 cursor-pointer group"
                 onClick={() => handleStartTimer(task)}
               >
-                <div className="flex-1 min-w-0">
-                  <p className="font-black text-sm text-foreground truncate group-hover:text-primary transition-colors">
+                <div className="flex-1 min-w-0 pr-3">
+                  <p className="text-[13px] font-semibold text-[var(--text-primary)] truncate group-hover:text-[#7B2FBE] transition-colors">
                     {task.title}
                   </p>
-                  <div className="flex items-center gap-2 mt-1 opacity-60">
-                    <Sparkles className="h-3 w-3 text-primary" />
-                    <span className="text-[10px] font-black uppercase tracking-widest">{task.focusDurationMinutes || 25} MIN CYCLE</span>
-                  </div>
+                  <p className="text-[11px] text-[var(--text-muted)] mt-0.5">
+                    {task.focusDurationMinutes || 25} min focus
+                  </p>
                 </div>
-                <div className="h-10 w-10 bg-primary/10 rounded-xl flex items-center justify-center group-hover:bg-primary group-hover:text-primary-foreground transition-all">
-                  <Play className="h-4 w-4" />
+                <div className="h-7 w-7 rounded-lg bg-[#7B2FBE]/10 text-[#7B2FBE] flex items-center justify-center shrink-0 group-hover:bg-[#7B2FBE] group-hover:text-white transition-all duration-150">
+                  <Play className="h-3 w-3 fill-current ml-0.5" />
                 </div>
               </motion.div>
             ))}
             {tasksWithTimers.length > 3 && (
-              <p className="text-[10px] font-black text-center text-muted-foreground uppercase tracking-[0.2em] pt-2">
-                + {tasksWithTimers.length - 3} OTHER STREAMS
+              <p className="text-[11px] text-center text-[var(--text-muted)] pt-1">
+                +{tasksWithTimers.length - 3} more
               </p>
             )}
           </div>
@@ -95,5 +117,3 @@ const RemindersCard = ({ tasks = [], onAddTask, onStartTimer, className }: Remin
 };
 
 export default RemindersCard;
-
-

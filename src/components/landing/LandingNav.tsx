@@ -75,7 +75,7 @@ const LandingNav = () => {
       >
         {/* Branding Logo & Text */}
         <div className="flex items-center gap-3.5 cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-          <img src={logoImg} alt="TaskMate Logo" className="w-8 h-8 object-contain rounded-lg animate-pulse" />
+          <img src={logoImg} alt="TaskMate Logo" className="w-8 h-8 object-contain rounded-[12px] animate-pulse" />
           
           {/* Shimmer animation on brand text */}
           <span className="text-xl font-bold tracking-tight text-slate-900 dark:text-white relative overflow-hidden">

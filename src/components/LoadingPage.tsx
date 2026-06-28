@@ -25,7 +25,7 @@ const LoadingPage = () => {
             <img 
               src={logoImg}
               alt="TaskMate Logo" 
-              className="h-20 w-20 sm:h-24 sm:w-24 animate-bounce-subtle"
+              className="h-20 w-20 sm:h-24 sm:w-24 animate-bounce-subtle rounded-[12px]"
             />
           </div>
         </div>

@@ -1,4 +1,4 @@
-@import url("https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&family=Space+Mono:wght@400;700&display=swap");
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Outfit:wght@400;500;600;700;800;900&family=Space+Mono:wght@400;700&display=swap");
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -181,10 +181,250 @@
   background-size: 60px 60px;
 }
 
-.bg-dot-pattern {
-  background-image: radial-gradient(circle, rgba(34, 211, 238, 0.15) 1px, transparent 1px);
-  background-size: 40px 40px;
+/* ============================================
+   GEMINI-STYLE ANIMATED GRADIENT RING
+   Technique: @property animates --angle, conic-gradient uses it.
+   padding-box = fills inner card surface with --bg-card
+   border-box  = the rotating conic-gradient bleeds into the transparent border area
+   4 logo colors: hot pink → purple → deep purple → coral pink
+   ============================================ */
+
+@property --angle {
+  syntax: '<angle>';
+  initial-value: 0deg;
+  inherits: false;
 }
+
+@keyframes spin-border {
+  to { --angle: 360deg; }
+}
+
+/* Apply to any card/section — only on the greeting bar */
+.gradient-ring-card {
+  position: relative;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background:
+    linear-gradient(var(--bg-card, #ffffff), var(--bg-card, #ffffff)) padding-box,
+    conic-gradient(
+      from var(--angle),
+      transparent 0deg,
+      #FF3CAC 10deg,
+      #7B2FBE 25deg,
+      #784BA0 40deg,
+      #FF6B6B 50deg,
+      transparent 60deg,
+      transparent 360deg
+    ) border-box;
+  animation: spin-border 4s linear infinite;
+}
+
+/* Glowing background spread effect (Gemini style) */
+.gradient-ring-card::before {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  border-radius: 16px;
+  background: conic-gradient(
+    from var(--angle),
+    transparent 0deg,
+    #FF3CAC 10deg,
+    #7B2FBE 25deg,
+    #784BA0 40deg,
+    #FF6B6B 50deg,
+    transparent 60deg,
+    transparent 360deg
+  );
+  filter: blur(14px);
+  opacity: 0.15;
+  pointer-events: none;
+  z-index: -1;
+  animation: spin-border 4s linear infinite;
+}
+
+
+/* Dark mode: inner surface needs darker bg and stronger glow visibility */
+.dark .gradient-ring-card {
+  background:
+    linear-gradient(var(--bg-card, #121124), var(--bg-card, #121124)) padding-box,
+    conic-gradient(
+      from var(--angle),
+      transparent 0deg,
+      #FF3CAC 10deg,
+      #7B2FBE 25deg,
+      #784BA0 40deg,
+      #FF6B6B 50deg,
+      transparent 60deg,
+      transparent 360deg
+    ) border-box;
+}
+
+.dark .gradient-ring-card::before {
+  opacity: 0.28;
+  filter: blur(18px);
+  inset: -8px;
+}
+
+/* ============================================
+   STAT CARD BORDER BEAM HOVER EFFECTS
+   ============================================ */
+
+.stat-card-beam {
+  border: 1px solid var(--border-default);
+  background: var(--bg-card);
+  position: relative;
+  transition: box-shadow 0.3s ease, border-color 0.3s ease;
+}
+
+.stat-card-beam:hover {
+  border: 1px solid transparent;
+  animation: spin-border 1.6s linear infinite;
+}
+
+/* Primary (Pink/Purple) */
+.hover-beam-primary:hover {
+  background:
+    linear-gradient(var(--bg-card), var(--bg-card)) padding-box,
+    conic-gradient(from var(--angle), transparent 0deg, #FF3CAC 20deg, #7B2FBE 45deg, transparent 65deg, transparent 360deg) border-box;
+}
+
+/* Destructive (Amber/Orange) */
+.hover-beam-destructive:hover {
+  background:
+    linear-gradient(var(--bg-card), var(--bg-card)) padding-box,
+    conic-gradient(from var(--angle), transparent 0deg, #FFB300 20deg, #FF6B6B 45deg, transparent 65deg, transparent 360deg) border-box;
+}
+
+/* Accent (Teal/Blue) */
+.hover-beam-accent:hover {
+  background:
+    linear-gradient(var(--bg-card), var(--bg-card)) padding-box,
+    conic-gradient(from var(--angle), transparent 0deg, #00C9A7 20deg, #4A90FF 45deg, transparent 65deg, transparent 360deg) border-box;
+}
+
+/* Purple (Streak) */
+.hover-beam-purple:hover {
+  background:
+    linear-gradient(var(--bg-card), var(--bg-card)) padding-box,
+    conic-gradient(from var(--angle), transparent 0deg, #7B2FBE 20deg, #FF3CAC 45deg, transparent 65deg, transparent 360deg) border-box;
+}
+
+/* Default */
+.hover-beam-default:hover {
+  background:
+    linear-gradient(var(--bg-card), var(--bg-card)) padding-box,
+    conic-gradient(from var(--angle), transparent 0deg, #7B2FBE 20deg, #FF3CAC 45deg, transparent 65deg, transparent 360deg) border-box;
+}
+
+/* Dark mode variations for inner backgrounds */
+.dark .hover-beam-primary:hover,
+.dark .hover-beam-destructive:hover,
+.dark .hover-beam-accent:hover,
+.dark .hover-beam-purple:hover,
+.dark .hover-beam-default:hover {
+  background-clip: padding-box, border-box;
+  background-origin: padding-box, border-box;
+}
+
+
+.bg-dot-pattern {
+  background-image: radial-gradient(circle, rgba(123, 47, 190, 0.12) 1px, transparent 1px);
+  background-size: 36px 36px;
+}
+
+/* ============================================
+   GLOBAL INTERACTION & MICRO-ANIMATION POLISH
+   ============================================ */
+
+/* Smooth scroll for the whole app */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Premium card hover lift — applies to any element with these bg card vars */
+[class*="bg-[var(--bg-card)]"],
+[class*="rounded-[16px]"],
+[class*="rounded-\[16px\]"] {
+  transition: box-shadow 0.22s ease, transform 0.22s ease;
+}
+
+/* Card lift on hover */
+.card-hover-lift {
+  transition: box-shadow 0.22s cubic-bezier(0.25, 0.46, 0.45, 0.94), 
+              transform 0.22s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+.card-hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(123, 47, 190, 0.14), 0 2px 8px rgba(0, 0, 0, 0.06);
+}
+
+/* Button active press feel */
+button:not([disabled]),
+[role="button"]:not([disabled]) {
+  transition: transform 0.12s ease, opacity 0.12s ease;
+}
+button:not([disabled]):active,
+[role="button"]:not([disabled]):active {
+  transform: scale(0.96);
+}
+
+/* Smooth all interactive elements */
+a, button, [role="button"], input, select, textarea {
+  transition-timing-function: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Focus ring using brand color */
+:focus-visible {
+  outline: 2px solid rgba(255, 60, 172, 0.5);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Smooth image rendering */
+img {
+  image-rendering: -webkit-optimize-contrast;
+}
+
+/* Framer Motion page wrapper — prevent overflow flash during transitions */
+.motion-page {
+  will-change: transform, opacity;
+}
+
+/* Badge pulse for counts */
+@keyframes badge-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.12); }
+}
+.badge-pulse {
+  animation: badge-pulse 2s ease-in-out infinite;
+}
+
+/* Shimmer loading effect */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.shimmer {
+  background: linear-gradient(90deg, 
+    var(--bg-card) 25%, 
+    var(--bg-card-hover) 50%, 
+    var(--bg-card) 75%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 1.6s ease-in-out infinite;
+}
+
+/* Stat number count-up feel */
+@keyframes count-pop {
+  0% { transform: scale(0.85); opacity: 0; }
+  70% { transform: scale(1.05); }
+  100% { transform: scale(1); opacity: 1; }
+}
+.count-pop {
+  animation: count-pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+
 
 .bg-noise {
   background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.65' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
@@ -223,9 +463,16 @@
 }
 
 .glass {
-  background: rgba(255, 255, 255, 0.02);
+  background: rgba(255, 255, 255, 0.75);
   backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.04);
+}
+
+.dark .glass {
+  background: rgba(13, 8, 25, 0.65);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.04);
   box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.3);
 }
 
@@ -236,9 +483,9 @@
 }
 
 .glass-cyan {
-  background: hsla(187, 85%, 53%, 0.05);
+  background: hsla(349, 82%, 66%, 0.05);
   backdrop-filter: blur(16px);
-  border: 1px solid hsla(187, 85%, 53%, 0.1);
+  border: 1px solid hsla(349, 82%, 66%, 0.1);
 }
 
 .glow-primary {
@@ -250,9 +497,10 @@
 }
 
 .text-gradient {
-  background: linear-gradient(135deg, hsl(187 85% 53%), hsl(270 70% 55%));
+  background: linear-gradient(135deg, #FF3CAC 0%, #7B2FBE 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
+  background-clip: text;
 }
 
 @keyframes entrance-up {
@@ -269,6 +517,36 @@
 .animate-entrance {
   animation: entrance-up 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
+
+/* Futuristic HUD scanning sweep line */
+@keyframes hud-scan-line {
+  0% { transform: translateY(-10%); opacity: 0; }
+  15% { opacity: 0.8; }
+  85% { opacity: 0.8; }
+  100% { transform: translateY(1100%); opacity: 0; }
+}
+
+.animate-hud-scan {
+  animation: hud-scan-line 2s cubic-bezier(0.25, 0.46, 0.45, 0.94) infinite;
+}
+
+/* 3D Parallax Helpers */
+.preserve-3d {
+  transform-style: preserve-3d;
+}
+.translate-z-10 {
+  transform: translateZ(10px);
+}
+.translate-z-20 {
+  transform: translateZ(20px);
+}
+.translate-z-30 {
+  transform: translateZ(32px);
+}
+.translate-z-40 {
+  transform: translateZ(45px);
+}
+
 
 .glass-light {
   background: rgba(255, 255, 255, 0.7);
@@ -311,71 +589,107 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    /* Cyber-Premium Light Theme - Unique Branding */
-    --background: 0 0% 99%;
-    --foreground: 222 47% 11%;
+    /* Primary Brand Gradient - simple 2-color: hot pink → purple */
+    --brand-gradient: linear-gradient(135deg, #FF3CAC 0%, #7B2FBE 100%);
+    --brand-pink: #FF3CAC;
+    --brand-purple: #7B2FBE;
+    --brand-coral: #FF6B6B;
 
-    --card: 0 0% 100%;
-    --card-foreground: 222 47% 11%;
+    /* Accent */
+    --accent-teal: #00C9A7;
+    --accent-amber: #FFB300;
 
+    /* Surfaces - Light Mode */
+    --bg-base: #EBE5FF;          /* soft lavender - clearly different from white cards */
+    --bg-card: #FFFFFF;
+    --bg-card-hover: #F9F7FF;
+    --bg-sidebar: #FFFFFF;
+    --bg-sidebar-active: linear-gradient(135deg, #FF3CAC18, #7B2FBE18);
+
+    /* Text - strong contrast for light mode */
+    --text-primary: #0F0E1A;
+    --text-secondary: #3D3B52;
+    --text-muted: #6E6B84;
+    --text-on-brand: #FFFFFF;
+
+    /* Borders - clearly visible in light mode */
+    --border-default: rgba(123, 47, 190, 0.22);
+    --border-strong: rgba(123, 47, 190, 0.40);
+    --border-brand: rgba(255, 60, 172, 0.55);
+
+    /* Shadows - clearly visible in light mode */
+    --shadow-card: 0 2px 8px rgba(0,0,0,0.07), 0 0 0 1px rgba(123, 47, 190, 0.10);
+    --shadow-card-hover: 0 8px 24px rgba(123, 47, 190, 0.16), 0 2px 8px rgba(0, 0, 0, 0.08);
+    --shadow-modal: 0 20px 60px rgba(15, 14, 26, 0.22), 0 4px 16px rgba(123, 47, 190, 0.14);
+
+    /* Radius */
+    --radius-sm: 8px;
+    --radius-md: 12px;
+    --radius-lg: 12px;
+    --radius-xl: 12px;
+    --radius-pill: 100px;
+
+    /* Status Colors */
+    --status-success: #00C9A7;
+    --status-warning: #FFB300;
+    --status-danger: #FF4757;
+    --status-info: #4A90FF;
+
+    /* Map shadcn UI / Tailwind base variables */
+    --background: 255 60% 97%;  /* very light lavender base */
+    --foreground: 246 30% 8%;   /* #0F0E1A near-black */
+    --card: 0 0% 100%;          /* pure white cards */
+    --card-foreground: 246 30% 8%;
     --popover: 0 0% 100%;
-    --popover-foreground: 222 47% 11%;
-
-    --primary: 187 85% 42%; /* Refined Cyber Cyan */
+    --popover-foreground: 246 30% 8%;
+    --primary: 326 100% 62%;    /* #FF3CAC */
     --primary-foreground: 0 0% 100%;
-
-    --secondary: 270 70% 52%; /* Refined Cyber Purple */
+    --secondary: 261 60% 46%;   /* #7B2FBE */
     --secondary-foreground: 0 0% 100%;
-
-    --muted: 210 20% 96%;
-    --muted-foreground: 215 16% 40%;
-
-    --accent: 187 85% 96%;
-    --accent-foreground: 187 85% 30%;
-
-    --destructive: 0 84% 55%;
-    --destructive-foreground: 0 0% 98%;
-
-    --border: 214 32% 91%;
-    --input: 214 32% 91%;
-    --ring: 187 85% 42%;
-
-    --radius: 1.25rem;
-    --font-sans: 'Outfit', 'Plus Jakarta Sans', ui-sans-serif, system-ui;
+    --muted: 252 25% 88%;       /* slightly darker lavender muted */
+    --muted-foreground: 248 15% 35%;
+    --accent: 326 100% 62% / 0.1;
+    --accent-foreground: 326 100% 62%;
+    --destructive: 355 100% 64%; /* #FF4757 */
+    --destructive-foreground: 0 0% 100%;
+    --border: 261 60% 46% / 0.22;
+    --input: 261 60% 46% / 0.18;
+    --ring: 326 100% 62%;
+    --radius: 12px;
+    --font-sans: 'Inter', 'Outfit', 'Plus Jakarta Sans', ui-sans-serif, system-ui;
   }
 
-  .dark {
-    /* Cyber-Premium Dark Theme - Absolute Branding */
-    --background: 260 50% 3%; /* Deep Logo Purple-Black */
-    --foreground: 210 40% 98%;
+  .dark, [data-theme="dark"] {
+    --bg-base: #0D0B14;
+    --bg-card: #16131F;
+    --bg-card-hover: #1C1828;
+    --bg-sidebar: #12101C;
+    --bg-sidebar-active: linear-gradient(135deg, #FF3CAC20, #7B2FBE20);
 
-    --card: 222 47% 7%;
-    --card-foreground: 210 40% 98%;
+    --text-primary: #F0EEF8;
+    --text-secondary: #9896A8;
+    --text-muted: #5A586B;
 
-    --popover: 222 47% 7%;
-    --popover-foreground: 210 40% 98%;
+    --border-default: rgba(123, 47, 190, 0.15);
+    --border-strong: rgba(123, 47, 190, 0.3);
+    --shadow-card: 0 1px 3px rgba(0,0,0,0.3), 0 4px 12px rgba(0,0,0,0.2);
 
-    --primary: 187 85% 53%; /* Vibrant Cyber Cyan */
-    --primary-foreground: 222 47% 4%;
-
-    --secondary: 270 70% 55%; /* Vibrant Cyber Purple */
-    --secondary-foreground: 210 40% 98%;
-
-    --muted: 217 32% 12%;
-    --muted-foreground: 215 20% 65%;
-
-    --accent: 187 85% 53% / 0.1;
-    --accent-foreground: 210 40% 98%;
-
-    --glow-primary: 187 85% 53%;
-    --glow-secondary: 270 70% 55%;
-
-    --destructive: 0 62% 30%;
-    --destructive-foreground: 210 40% 98%;
-
-    --border: 217 32% 12%;
-    --input: 217 32% 12%;
-    --ring: 187 85% 53%;
+    /* Map shadcn UI / Tailwind base variables */
+    --background: 256 30% 6%; /* #0D0B14 */
+    --foreground: 248 30% 96%; /* #F0EEF8 */
+    --card: 256 24% 10%; /* #16131F */
+    --card-foreground: 248 30% 96%;
+    --popover: 256 24% 10%;
+    --popover-foreground: 248 30% 96%;
+    --primary: 326 100% 62%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 261 60% 46%;
+    --secondary-foreground: 0 0% 100%;
+    --muted: 256 24% 15%;
+    --muted-foreground: 248 20% 60%;
+    --border: 261 60% 46% / 0.15;
+    --input: 261 60% 46% / 0.15;
+    --ring: 326 100% 62%;
   }
 }
 
@@ -400,12 +714,14 @@ All colors MUST be HSL.
     background-attachment: fixed;
   }
 
-  .dark body {
-    background: radial-gradient(circle at 50% -20%, hsl(260 60% 8%), hsl(260 60% 2%));
+  .dark body,
+  [data-theme="dark"] body {
+    background: radial-gradient(ellipse at 60% -10%, hsl(260 50% 9%), hsl(258 55% 4%));
   }
 
-  .light body {
-    background: radial-gradient(circle at 50% -20%, hsl(210 40% 98%), hsl(210 40% 92%));
+  :root:not(.dark) body {
+    background: linear-gradient(155deg, #F2EEFF 0%, #F7F4FF 50%, #EEE9FF 100%);
+    min-height: 100vh;
   }
 }
 
@@ -448,6 +764,85 @@ html {
 ::-webkit-scrollbar-thumb:hover {
   background: hsl(var(--muted-foreground));
 }
+
+/* ==========================================
+   CRITICAL FIX: Gradient Background Rendering
+   Tailwind's bg-[var(--brand-gradient)] generates background-color which
+   CANNOT render CSS gradients. This forces the background shorthand to work.
+   ========================================== */
+
+/* Match ONLY elements with standalone bg-[var(--brand-gradient)] class
+   Using [class~=] (word match) NOT [class*=] (substring) to avoid matching
+   data-[state=active]:bg-[var(--brand-gradient)] on inactive tab triggers */
+[class~="bg-[var(--brand-gradient)]"] {
+  background: linear-gradient(135deg, #FF3CAC 0%, #7B2FBE 100%) !important;
+}
+
+[data-state="active"][class~="data-[state=active]:bg-[var(--brand-gradient)]"] {
+  background: linear-gradient(135deg, #FF3CAC 0%, #7B2FBE 100%) !important;
+  color: #ffffff !important;
+}
+
+/* ==========================================
+   Light Mode Global Fixes
+   ========================================== */
+
+/* Ensure inputs are clearly visible in light mode */
+:root:not(.dark) input,
+:root:not(.dark) textarea,
+:root:not(.dark) select {
+  background-color: #FFFFFF !important;
+  color: #0F0E1A !important;
+  border-color: rgba(123, 47, 190, 0.25) !important;
+}
+
+:root:not(.dark) input::placeholder,
+:root:not(.dark) textarea::placeholder {
+  color: #7A7892 !important;
+}
+
+/* Dialog/Sheet content in light mode */
+:root:not(.dark) [role="dialog"],
+:root:not(.dark) [data-radix-popper-content-wrapper] {
+  --popover: 0 0% 100%;
+  --popover-foreground: 246 30% 8%;
+}
+
+/* Dropdown menus in light mode */
+:root:not(.dark) [data-radix-popper-content-wrapper] > * {
+  background-color: #FFFFFF;
+  border: 1px solid rgba(123, 47, 190, 0.18);
+  box-shadow: 0 8px 32px rgba(123, 47, 190, 0.12), 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+/* Tab triggers in light mode */
+:root:not(.dark) [role="tablist"] {
+  background-color: rgba(123, 47, 190, 0.08) !important;
+}
+
+:root:not(.dark) [role="tab"][data-state="active"] {
+  background-color: #FFFFFF !important;
+  color: #0F0E1A !important;
+}
+
+:root:not(.dark) [role="tab"] {
+  color: #3D3B52 !important;
+}
+
+/* Badge visibility in light mode */
+:root:not(.dark) .badge-outline {
+  border-color: rgba(123, 47, 190, 0.3) !important;
+  color: #3D3B52 !important;
+}
+
+/* Select trigger in light mode */
+:root:not(.dark) [role="combobox"] {
+  background-color: #FFFFFF !important;
+  border-color: rgba(123, 47, 190, 0.22) !important;
+  color: #0F0E1A !important;
+}
+
+
 
 /* TipTap Editor Styles */
 
@@ -903,4 +1298,42 @@ html.lenis, html.lenis body {
 
 .lenis.lenis-scrolling iframe {
   pointer-events: none;
-}
+}
+
+/* ====================================================
+   GLOBAL 12PX BORDER RADIUS UNIFICATION
+   Forces exactly 12px border-radius on buttons, cards,
+   inputs, textareas, dropdowns, popovers, select triggers,
+   tabs, dialogs, and main containers globally.
+   ==================================================== */
+
+button,
+input,
+textarea,
+select,
+.card,
+[class*="bg-[var(--bg-card)]"],
+[class*="DialogContent"],
+[class*="DropdownMenuContent"],
+[class*="PopoverContent"],
+[class*="TabsList"],
+[class*="TabsTrigger"],
+.rounded-xl,
+.rounded-lg,
+.rounded-md {
+  border-radius: 12px !important;
+}
+
+/* Keep user/system avatars, status dots, checkbox indicators, and raw circles fully round */
+.h-8.w-8.rounded-full,
+.h-9.w-9.rounded-full,
+.h-10.w-10.rounded-full,
+.h-12.w-12.rounded-full,
+.h-14.w-14.rounded-full,
+.h-24.w-24.rounded-full,
+[class*="avatar"],
+[class*="Avatar"],
+circle {
+  border-radius: 9999px !important;
+}
+

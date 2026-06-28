@@ -10,6 +10,7 @@ class SocketService {
   initialize() {
     if (this.socket) return this.socket;
 
+    const token = localStorage.getItem('token');
     console.log('📡 Socket.io: Connecting to', SOCKET_URL);
     this.socket = io(SOCKET_URL, {
       path: "/socket.io/",
@@ -17,6 +18,9 @@ class SocketService {
       autoConnect: true,
       reconnectionAttempts: 5,
       reconnectionDelay: 1000,
+      auth: {
+        token: token ? `Bearer ${token}` : undefined
+      }
     });
 
     this.socket.on('connect', () => {
@@ -48,7 +52,19 @@ class SocketService {
   }
 
   joinUserRoom(userId: string) {
-    if (!this.socket) this.initialize();
+    const token = localStorage.getItem('token');
+    if (!this.socket) {
+      this.initialize();
+    } else if (token) {
+      // Re-configure auth and reconnect with the latest token
+      this.socket.auth = { token: `Bearer ${token}` };
+      if (!this.socket.connected) {
+        this.socket.connect();
+      } else {
+        // Force reconnection to trigger backend auth middleware
+        this.socket.disconnect().connect();
+      }
+    }
     this.socket?.emit('join_user_room', userId);
   }
 
@@ -81,3 +97,4 @@ class SocketService {
 }
 
 export const socketService = new SocketService();
+

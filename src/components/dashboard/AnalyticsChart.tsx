@@ -1,85 +1,67 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { cn } from '@/lib/utils';
-import { motion } from 'framer-motion';
 
 interface AnalyticsChartProps {
   data: { name: string; value: number; completed?: number }[];
   type?: 'bar' | 'pie' | 'area';
   title?: string;
   className?: string;
+  strokeColor?: string;
 }
 
 const COLORS = [
-  'hsl(var(--primary))',
-  '#06b6d4', // Cyan
-  '#8b5cf6', // Violet
-  '#ec4899', // Pink
-  '#f59e0b'  // Amber
+  '#00C9A7', // Teal
+  '#7B2FBE', // Purple
+  '#FF3CAC', // Pink
+  '#FFB300', // Amber
+  '#FF6B6B'  // Coral
 ];
 
-const AnalyticsChart = ({ data, type = 'area', title, className }: AnalyticsChartProps) => {
+const AnalyticsChart = ({ data, type = 'area', className, strokeColor = '#00C9A7' }: AnalyticsChartProps) => {
   return (
-    <div className={cn("h-full flex flex-col", className)}>
+    <div className={cn("h-full w-full flex flex-col", className)}>
       <ResponsiveContainer width="100%" height="100%">
         {type === 'area' || type === 'bar' ? (
-          <AreaChart data={data} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+          <AreaChart data={data} margin={{ top: 10, right: 10, left: -25, bottom: 0 }}>
             <defs>
               <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
-                <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
-              </linearGradient>
-              <linearGradient id="colorCompleted" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.3}/>
-                <stop offset="95%" stopColor="#06b6d4" stopOpacity={0}/>
+                <stop offset="5%" stopColor={strokeColor} stopOpacity={0.25}/>
+                <stop offset="95%" stopColor={strokeColor} stopOpacity={0}/>
               </linearGradient>
             </defs>
-            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.05)" />
+            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border-default)" />
             <XAxis 
               dataKey="name" 
               axisLine={false}
               tickLine={false}
-              tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 10, fontWeight: 800 }}
-              dy={10}
+              tick={{ fill: 'var(--text-muted)', fontSize: 11, fontWeight: 500 }}
+              dy={8}
             />
             <YAxis 
               axisLine={false}
               tickLine={false}
-              tick={{ fill: 'rgba(255,255,255,0.4)', fontSize: 10, fontWeight: 800 }}
+              tick={{ fill: 'var(--text-muted)', fontSize: 11, fontWeight: 500 }}
             />
             <Tooltip 
               contentStyle={{ 
-                backgroundColor: 'rgba(15, 15, 25, 0.8)',
-                backdropFilter: 'blur(10px)',
-                border: '1px solid rgba(255,255,255,0.1)',
-                borderRadius: '16px',
-                boxShadow: '0 20px 40px rgba(0,0,0,0.4)',
+                backgroundColor: 'var(--bg-card)',
+                border: '1px solid var(--border-default)',
+                borderRadius: 'var(--radius-md)',
+                boxShadow: 'var(--shadow-card)',
                 fontSize: '12px',
-                fontWeight: '900'
+                color: 'var(--text-primary)'
               }}
-              itemStyle={{ color: '#fff' }}
-              cursor={{ stroke: 'hsl(var(--primary))', strokeWidth: 2, strokeDasharray: '5 5' }}
+              cursor={{ stroke: 'var(--border-strong)', strokeWidth: 1 }}
             />
             <Area 
               type="monotone" 
               dataKey="value" 
-              stroke="hsl(var(--primary))" 
-              strokeWidth={4}
+              stroke={strokeColor} 
+              strokeWidth={3}
               fillOpacity={1} 
               fill="url(#colorValue)" 
-              animationDuration={2000}
+              animationDuration={1500}
             />
-            {data[0]?.completed !== undefined && (
-              <Area 
-                type="monotone" 
-                dataKey="completed" 
-                stroke="#06b6d4" 
-                strokeWidth={4}
-                fillOpacity={1} 
-                fill="url(#colorCompleted)" 
-                animationDuration={2500}
-              />
-            )}
           </AreaChart>
         ) : (
           <PieChart>
@@ -99,18 +81,16 @@ const AnalyticsChart = ({ data, type = 'area', title, className }: AnalyticsChar
                 <Cell 
                   key={`cell-${index}`} 
                   fill={COLORS[index % COLORS.length]} 
-                  style={{ filter: `drop-shadow(0 0 8px ${COLORS[index % COLORS.length]}40)` }}
                 />
               ))}
             </Pie>
             <Tooltip 
               contentStyle={{ 
-                backgroundColor: 'rgba(15, 15, 25, 0.8)',
-                backdropFilter: 'blur(10px)',
-                border: '1px solid rgba(255,255,255,0.1)',
-                borderRadius: '16px',
+                backgroundColor: 'var(--bg-card)',
+                border: '1px solid var(--border-default)',
+                borderRadius: 'var(--radius-md)',
                 fontSize: '12px',
-                fontWeight: '900'
+                color: 'var(--text-primary)'
               }}
             />
           </PieChart>
@@ -121,5 +101,3 @@ const AnalyticsChart = ({ data, type = 'area', title, className }: AnalyticsChar
 };
 
 export default AnalyticsChart;
-
-

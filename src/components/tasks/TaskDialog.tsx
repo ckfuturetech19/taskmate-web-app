@@ -450,12 +450,20 @@ const TaskDialog = ({ open, onOpenChange, task, groupId, onSave }: TaskDialogPro
         </SheetHeader>
 
         {/* Action Buttons at Top */}
-        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 py-3 sm:py-4 border-b">
-          <Button className="flex-1 w-full sm:w-auto text-sm sm:text-base gap-2" onClick={handleSave} disabled={!title.trim() || isSaving}>
+        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 py-3 sm:py-4 border-b border-[var(--border-default)]">
+          <Button 
+            className="flex-1 w-full sm:w-auto text-sm sm:text-base gap-2 bg-[var(--brand-gradient)] text-white hover:brightness-105 rounded-full shadow-sm font-semibold h-10" 
+            onClick={handleSave} 
+            disabled={!title.trim() || isSaving}
+          >
             {isSaving ? <Loader2 className="h-4 w-4 animate-spin" /> : null}
             {task ? 'Save Changes' : 'Create Task'}
           </Button>
-          <Button variant="outline" className="w-full sm:w-auto text-sm sm:text-base" onClick={() => onOpenChange(false)}>
+          <Button 
+            variant="ghost" 
+            className="w-full sm:w-auto text-sm sm:text-base rounded-full h-10 text-[var(--text-secondary)] hover:bg-[var(--bg-card-hover)] font-semibold border border-[var(--border-default)]" 
+            onClick={() => onOpenChange(false)}
+          >
             Cancel
           </Button>
         </div>

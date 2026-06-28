@@ -112,7 +112,11 @@ export const AIService = {
         { noteId, content, type },
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      return response.data;
+      const rawData = response.data;
+      if (rawData && typeof rawData === 'object' && 'insight' in rawData) {
+        return rawData.insight;
+      }
+      return rawData;
     } catch (error) {
       console.error('Error saving insight:', error);
       return null;
@@ -128,7 +132,11 @@ export const AIService = {
       const response = await axios.get(`${API_URL}/ai/insights/${noteId}`, 
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      return response.data;
+      const rawData = response.data;
+      if (rawData && typeof rawData === 'object' && 'insights' in rawData) {
+        return rawData.insights;
+      }
+      return Array.isArray(rawData) ? rawData : [];
     } catch (error) {
       console.error('Error fetching insights:', error);
       return [];

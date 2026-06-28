@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { KeyRound, Loader2 } from 'lucide-react';
+import { KeyRound, Loader2, X } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { NoteService } from '@/services/noteService';
 import { useNavigate } from 'react-router-dom';
@@ -22,7 +22,6 @@ const JoinNoteDialog = ({ open, onOpenChange, onSuccess }: JoinNoteDialogProps) 
   const handleJoin = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validation: 8-digit alphanumeric
     const codeRegex = /^[A-Z0-9]{8}$/;
     if (!codeRegex.test(inviteCode.toUpperCase())) {
       toast({
@@ -58,47 +57,57 @@ const JoinNoteDialog = ({ open, onOpenChange, onSuccess }: JoinNoteDialogProps) 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[400px]">
-        <DialogHeader>
-          <div className="flex items-center gap-2 mb-1">
-            <div className="p-2 rounded-full bg-primary/10 text-primary">
-              <KeyRound className="h-5 w-5" />
+      <DialogContent className="max-w-[480px] rounded-[20px] bg-[var(--bg-card)] border border-[var(--border-default)] p-8 shadow-[var(--shadow-modal)] relative">
+        <button 
+          onClick={() => onOpenChange(false)}
+          className="absolute right-4 top-4 h-8 w-8 rounded-full flex items-center justify-center hover:bg-[var(--bg-card-hover)] text-[var(--text-secondary)]"
+        >
+          <X className="h-4 w-4" />
+        </button>
+
+        <DialogHeader className="p-0 mb-4">
+          <div className="flex items-center gap-2">
+            <div className="h-8 w-8 rounded-full bg-[var(--brand-gradient)] flex items-center justify-center text-white">
+              <KeyRound className="h-4.5 w-4.5" />
             </div>
-            <DialogTitle>Join Group Note</DialogTitle>
+            <DialogTitle className="text-[20px] font-semibold text-[var(--text-primary)]">Join Group Note</DialogTitle>
           </div>
-          <DialogDescription>
+          <DialogDescription className="text-[14px] text-[var(--text-muted)] mt-1">
             Enter the 8-digit invite code to join a collaborative note.
           </DialogDescription>
         </DialogHeader>
-        <form onSubmit={handleJoin} className="space-y-4 py-4">
-          <div className="space-y-2">
-            <Label htmlFor="inviteCode">Invite Code</Label>
+
+        <form onSubmit={handleJoin} className="space-y-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="inviteCode" className="text-[13px] font-semibold text-[var(--text-secondary)]">Invite Code</Label>
             <Input
               id="inviteCode"
-              placeholder="e.g. A1B2C3D4"
+              placeholder="E.g. A1B2C3D4"
               value={inviteCode}
               onChange={(e) => setInviteCode(e.target.value.toUpperCase())}
               maxLength={8}
-              className="text-center font-mono text-lg tracking-widest uppercase"
+              className="h-11 border-[var(--border-strong)] focus:border-[var(--brand-pink)] rounded-[12px] bg-transparent text-[16px] font-mono tracking-[0.15em] text-center uppercase"
               disabled={loading}
               autoFocus
             />
           </div>
-          <DialogFooter className="pt-2">
+
+          <DialogFooter className="flex items-center justify-end gap-3 pt-2">
             <Button
               type="button"
-              variant="outline"
+              variant="ghost"
               onClick={() => onOpenChange(false)}
               disabled={loading}
+              className="rounded-full h-10 text-[13px] text-[var(--text-secondary)] hover:bg-[var(--bg-card-hover)]"
             >
               Cancel
             </Button>
             <Button
               type="submit"
               disabled={loading || inviteCode.length !== 8}
-              className="gap-2"
+              className="rounded-full h-10 bg-[var(--brand-gradient)] text-white hover:brightness-105 shadow-sm text-[13px] font-semibold px-6 min-w-[120px]"
             >
-              {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+              {loading && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
               Join Note
             </Button>
           </DialogFooter>

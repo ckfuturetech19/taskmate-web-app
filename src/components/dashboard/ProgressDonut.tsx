@@ -1,5 +1,5 @@
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
+import { Card, CardContent } from '@/components/ui/card';
+import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { cn } from '@/lib/utils';
 
 interface ProgressDonutProps {
@@ -14,61 +14,82 @@ const ProgressDonut = ({ completed, inProgress, pending, className }: ProgressDo
   const completedPercent = total > 0 ? Math.round((completed / total) * 100) : 0;
   
   const data = [
-    { name: 'Completed', value: completed, color: 'hsl(142 71% 45%)' },
-    { name: 'In Progress', value: inProgress, color: 'hsl(142 60% 60%)' },
-    { name: 'Pending', value: pending, color: 'hsl(var(--muted-foreground) / 0.2)' },
+    { name: 'Completed', value: completed, color: 'url(#brandGrad)' },
+    { name: 'In Progress', value: inProgress, color: '#00C9A7' },
+    { name: 'Pending', value: pending, color: 'var(--border-strong)' },
   ];
 
-  const COLORS = data.map(item => item.color);
-
   return (
-    <Card className={cn("transition-all duration-500 hover:shadow-2xl bg-card/50 backdrop-blur-md border-border/50 rounded-2xl overflow-hidden flex flex-col", className)}>
-      <CardHeader className="bg-muted/20 border-b border-border/10">
-        <CardTitle className="text-base font-bold uppercase tracking-tight text-foreground/80">Project Progress</CardTitle>
-      </CardHeader>
+    <Card className={cn(
+      "bg-[var(--bg-card)] border border-[var(--border-default)] rounded-[16px] overflow-hidden flex flex-col shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] transition-all duration-200", 
+      className
+    )}>
+      <div className="p-5 border-b border-[var(--border-default)]">
+        <h3 className="text-[16px] font-semibold text-[var(--text-primary)]">Project Progress</h3>
+      </div>
       <CardContent className="flex-1 flex flex-col items-center justify-center p-6">
-        <div className="relative w-full h-[250px] flex items-center justify-center">
+        
+        {/* 200px diameter container */}
+        <div className="relative w-[200px] h-[200px] flex items-center justify-center">
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
+              <defs>
+                <linearGradient id="brandGrad" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stopColor="#FF3CAC" />
+                  <stop offset="50%" stopColor="#7B2FBE" />
+                  <stop offset="100%" stopColor="#784BA0" />
+                </linearGradient>
+              </defs>
               <Pie
                 data={data}
                 cx="50%"
                 cy="50%"
-                innerRadius={70}
-                outerRadius={100}
-                paddingAngle={8}
+                innerRadius={65}
+                outerRadius={85}
+                paddingAngle={4}
                 dataKey="value"
                 stroke="none"
               >
                 {data.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index]} className="hover:opacity-80 transition-opacity duration-300" />
+                  <Cell 
+                    key={`cell-${index}`} 
+                    fill={entry.color} 
+                    className="hover:opacity-90 transition-opacity" 
+                  />
                 ))}
               </Pie>
               <Tooltip 
                 contentStyle={{ 
-                  backgroundColor: 'hsl(var(--card))',
-                  border: '1px solid hsl(var(--border))',
-                  borderRadius: '12px',
-                  boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.1)',
+                  backgroundColor: 'var(--bg-card)',
+                  border: '1px solid var(--border-default)',
+                  borderRadius: 'var(--radius-md)',
                   fontSize: '12px',
-                  fontWeight: '600'
+                  color: 'var(--text-primary)'
                 }}
               />
             </PieChart>
           </ResponsiveContainer>
           
           <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-            <span className="text-4xl font-black text-foreground">{completedPercent}%</span>
-            <span className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Overall</span>
+            <span className="text-[24px] font-bold text-[var(--text-primary)] leading-none">{completedPercent}%</span>
+            <span className="text-[11px] text-[var(--text-muted)] mt-1">Completed</span>
           </div>
         </div>
 
-        <div className="grid grid-cols-3 gap-2 w-full mt-6">
+        {/* Legend: dots + labels, horizontal layout below */}
+        <div className="flex flex-wrap items-center justify-center gap-4 w-full mt-6">
           {data.map((item) => (
-            <div key={item.name} className="flex flex-col items-center gap-1 p-2 rounded-xl bg-muted/30 border border-border/5">
-              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: item.color }} />
-              <span className="text-[10px] font-bold uppercase tracking-tighter text-muted-foreground">{item.name}</span>
-              <span className="text-sm font-black text-foreground">{item.value}</span>
+            <div key={item.name} className="flex items-center gap-2">
+              <div 
+                className="w-2.5 h-2.5 rounded-full shrink-0" 
+                style={{ 
+                  background: item.color.startsWith('url') 
+                    ? 'linear-gradient(135deg, #FF3CAC 0%, #7B2FBE 100%)' 
+                    : item.color 
+                }} 
+              />
+              <span className="text-[12px] text-[var(--text-secondary)] capitalize">{item.name}</span>
+              <span className="text-[12px] font-bold text-[var(--text-primary)]">({item.value})</span>
             </div>
           ))}
         </div>
@@ -78,4 +99,3 @@ const ProgressDonut = ({ completed, inProgress, pending, className }: ProgressDo
 };
 
 export default ProgressDonut;
-

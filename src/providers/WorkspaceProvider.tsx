@@ -40,51 +40,23 @@ export const WorkspaceProvider: React.FC<{ children: ReactNode }> = ({ children 
 
     try {
       setState(prev => ({ ...prev, isLoading: true }));
-      const response = await api.get('/workspaces/me');
-      const workspacesData = response.data.success ? response.data.data : response.data;
-      const workspaces: Workspace[] = workspacesData;
+      const mockWorkspace: Workspace = {
+        id: 'personal-workspace',
+        name: 'Personal Workspace',
+        ownerId: user.id,
+        type: 'PERSONAL',
+        workspaceType: 'PERSONAL',
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
       
-      let current = null;
-      const storedWorkspaceId = localStorage.getItem(WORKSPACE_STORAGE_KEY);
-      
-      if (storedWorkspaceId) {
-        current = workspaces.find(w => w.id === storedWorkspaceId) || workspaces[0] || null;
-      } else {
-        current = workspaces[0] || null;
-      }
-
-      // If we have a current workspace, fetch its permissions/role
-      let role: WorkspaceRole | null = null;
-      let permissions: string[] = [];
-
-      if (current) {
-        try {
-          const roleRes = await api.get(`/workspaces/${current.id}/my-role`);
-          const roleData = roleRes.data.success ? roleRes.data.data : roleRes.data;
-          role = roleData.role;
-          permissions = roleData.permissions || [];
-        } catch (e) {
-          console.warn('Failed to fetch role via API, falling back to local check', e);
-          // Fallback: Check if user is owner or has member entry
-          if (current.ownerId === user.id || current.type === 'PERSONAL' || current.workspaceType === 'PERSONAL') {
-            role = 'OWNER';
-            permissions = ['*']; // Full permissions for owner
-          } else {
-            // Try to find user in members array if it exists
-            const membership = (current as any).members?.find((m: any) => m.userId === user.id);
-            if (membership) {
-              role = typeof membership.role === 'object' ? membership.role.name : membership.role;
-            }
-          }
-        }
-        localStorage.setItem(WORKSPACE_STORAGE_KEY, current.id);
-      }
+      localStorage.setItem(WORKSPACE_STORAGE_KEY, mockWorkspace.id);
 
       setState({
-        workspaces,
-        currentWorkspace: current,
-        role,
-        permissions,
+        workspaces: [mockWorkspace],
+        currentWorkspace: mockWorkspace,
+        role: 'OWNER',
+        permissions: ['*'],
         isLoading: false,
         error: null,
       });
@@ -103,32 +75,11 @@ export const WorkspaceProvider: React.FC<{ children: ReactNode }> = ({ children 
       setState(prev => ({ ...prev, isLoading: true }));
       localStorage.setItem(WORKSPACE_STORAGE_KEY, workspace.id);
       
-      let role: WorkspaceRole | null = null;
-      let permissions: string[] = [];
-
-      try {
-        const roleRes = await api.get(`/workspaces/${workspace.id}/my-role`);
-        const roleData = roleRes.data.success ? roleRes.data.data : roleRes.data;
-        role = roleData.role;
-        permissions = roleData.permissions || [];
-      } catch (e) {
-        console.warn('Switch fallback: using local role info', e);
-        if (workspace.ownerId === user?.id || workspace.type === 'PERSONAL' || workspace.workspaceType === 'PERSONAL') {
-          role = 'OWNER';
-          permissions = ['*'];
-        } else {
-          const membership = (workspace as any).members?.find((m: any) => m.userId === user?.id);
-          if (membership) {
-            role = typeof membership.role === 'object' ? membership.role.name : membership.role;
-          }
-        }
-      }
-      
       setState(prev => ({
         ...prev,
         currentWorkspace: workspace,
-        role,
-        permissions,
+        role: 'OWNER',
+        permissions: ['*'],
         isLoading: false,
       }));
 

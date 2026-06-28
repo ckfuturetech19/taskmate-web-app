@@ -110,7 +110,7 @@ const Auth = () => {
           className="space-y-12 text-left"
         >
           <div className="flex items-center gap-3.5 cursor-pointer" onClick={() => navigate('/')}>
-            <img src={logoImg} alt="TaskMate Logo" className="w-9 h-9 object-contain rounded-lg animate-pulse" />
+            <img src={logoImg} alt="TaskMate Logo" className="w-9 h-9 object-contain rounded-[12px] animate-pulse" />
             <span className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white relative overflow-hidden">
               TaskMate AI
             </span>
@@ -167,7 +167,7 @@ const Auth = () => {
         >
           <div className="mb-12 text-center lg:hidden flex flex-col items-center justify-center">
             <div className="inline-flex items-center gap-3 mb-4 cursor-pointer" onClick={() => navigate('/')}>
-              <img src={logoImg} alt="TaskMate Logo" className="w-10 h-10 object-contain rounded-lg animate-pulse" />
+              <img src={logoImg} alt="TaskMate Logo" className="w-10 h-10 object-contain rounded-[12px] animate-pulse" />
               <span className="text-3xl font-bold tracking-tight text-slate-900 dark:text-white relative overflow-hidden">
                 TaskMate AI
               </span>
@@ -195,12 +195,12 @@ const Auth = () => {
                   <form onSubmit={handleEmailSignIn} className="space-y-8 text-left">
                     <div className="space-y-6">
                       <div className="space-y-3">
-                        <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-[var(--aurora-text-muted)] ml-1">Terminal Identity</Label>
+                        <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-[var(--aurora-text-muted)] ml-1">Email Address</Label>
                         <div className="relative">
                           <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-[var(--aurora-text-muted)]" />
                           <Input 
                             type="email" 
-                            placeholder="ENTER_EMAIL"
+                            placeholder="Enter your email"
                             value={signInEmail}
                             onChange={(e) => setSignInEmail(e.target.value)}
                             className={cn(
@@ -213,7 +213,7 @@ const Auth = () => {
                         </div>
                       </div>
                       <div className="space-y-3">
-                        <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-[var(--aurora-text-muted)] ml-1">Access Key</Label>
+                        <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-[var(--aurora-text-muted)] ml-1">Password</Label>
                         <div className="relative">
                           <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-[var(--aurora-text-muted)]" />
                           <Input 
@@ -238,7 +238,7 @@ const Auth = () => {
                         </div>
                       </div>
                     </div>
-
+ 
                     <Button 
                       type="submit"
                       className="w-full h-16 rounded-2xl bg-gradient-to-r from-[#F0607A] to-[#8B65C8] text-white hover:scale-105 active:scale-95 transition-all font-black text-sm tracking-[0.2em] shadow-2xl shadow-[#F0607A]/20 relative overflow-hidden group"
@@ -248,18 +248,18 @@ const Auth = () => {
                       {loading ? (
                         <span className="flex items-center gap-2">
                           <Loader2 className="animate-spin h-5 w-5" />
-                          INITIALIZING...
+                          SIGNING IN...
                         </span>
                       ) : (
                         <span className="flex items-center justify-center">
-                          INITIALIZE SESSION
+                          SIGN IN
                           <ArrowRight className="ml-2 h-5 w-5" />
                         </span>
                       )}
                     </Button>
                   </form>
                 </TabsContent>
-
+ 
                 {/* Create Account Tab */}
                 <TabsContent value="signup" className="mt-0">
                   <form onSubmit={handleEmailSignUp} className="space-y-8 text-left">
@@ -270,7 +270,7 @@ const Auth = () => {
                           <User className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-[var(--aurora-text-muted)]" />
                           <Input 
                             type="text" 
-                            placeholder="YOUR_NAME"
+                            placeholder="Your Name"
                             value={signUpName}
                             onChange={(e) => setSignUpName(e.target.value)}
                             className={cn(
@@ -283,12 +283,12 @@ const Auth = () => {
                         </div>
                       </div>
                       <div className="space-y-3">
-                        <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-[var(--aurora-text-muted)] ml-1">New Identity</Label>
+                        <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-[var(--aurora-text-muted)] ml-1">Email Address</Label>
                         <div className="relative">
                           <Mail className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-[var(--aurora-text-muted)]" />
                           <Input 
                             type="email" 
-                            placeholder="EMAIL_ADDRESS"
+                            placeholder="Email Address"
                             value={signUpEmail}
                             onChange={(e) => setSignUpEmail(e.target.value)}
                             className={cn(
@@ -301,7 +301,7 @@ const Auth = () => {
                         </div>
                       </div>
                       <div className="space-y-3">
-                        <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-[var(--aurora-text-muted)] ml-1">Secure Key</Label>
+                        <Label className="text-[10px] font-black uppercase tracking-[0.3em] text-[var(--aurora-text-muted)] ml-1">Password</Label>
                         <div className="relative">
                           <Lock className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-[var(--aurora-text-muted)]" />
                           <Input 
@@ -336,7 +336,7 @@ const Auth = () => {
                       {loading ? (
                         <span className="flex items-center gap-2">
                           <Loader2 className="animate-spin h-5 w-5" />
-                          CREATING...
+                          SIGNING UP...
                         </span>
                       ) : (
                         <span className="flex items-center justify-center">

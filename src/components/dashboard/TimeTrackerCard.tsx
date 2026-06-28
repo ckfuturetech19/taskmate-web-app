@@ -1,8 +1,7 @@
-import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Play, Pause, RotateCcw, Activity, Clock, Timer, Brain, Zap } from 'lucide-react';
+import { Play, Pause, RotateCcw, Clock, Timer, Brain } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 
 type TimerMode = 'clock' | 'pomodoro' | 'stopwatch';
@@ -10,24 +9,16 @@ type TimerMode = 'clock' | 'pomodoro' | 'stopwatch';
 const TimeTrackerCard = ({ className }: { className?: string }) => {
   const [mode, setMode] = useState<TimerMode>('clock');
   const [isRunning, setIsRunning] = useState(false);
-  
-  // Clock state
   const [currentTime, setCurrentTime] = useState(new Date());
-  
-  // Stopwatch state
   const [stopwatchTime, setStopwatchTime] = useState(0);
-  
-  // Pomodoro state
   const [pomoTime, setPomoTime] = useState(25 * 60);
   const [isWork, setIsWork] = useState(true);
 
-  // Clock effect
   useEffect(() => {
     const timer = setInterval(() => setCurrentTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
-  // Stopwatch/Pomo effect
   useEffect(() => {
     if (!isRunning) return;
     const interval = setInterval(() => {
@@ -35,10 +26,7 @@ const TimeTrackerCard = ({ className }: { className?: string }) => {
         setStopwatchTime(prev => prev + 1);
       } else if (mode === 'pomodoro') {
         setPomoTime(prev => {
-          if (prev <= 0) {
-            setIsRunning(false);
-            return isWork ? 5 * 60 : 25 * 60; // Switch break/work on complete (simplified)
-          }
+          if (prev <= 0) { setIsRunning(false); setIsWork(w => !w); return isWork ? 5 * 60 : 25 * 60; }
           return prev - 1;
         });
       }
@@ -46,126 +34,117 @@ const TimeTrackerCard = ({ className }: { className?: string }) => {
     return () => clearInterval(interval);
   }, [isRunning, mode, isWork]);
 
-  const formatTime = (seconds: number) => {
-    const h = Math.floor(seconds / 3600);
-    const m = Math.floor((seconds % 3600) / 60);
-    const s = seconds % 60;
-    return `${h > 0 ? h.toString().padStart(2, '0') + ':' : ''}${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+  const formatTime = (secs: number) => {
+    const m = Math.floor(secs / 60).toString().padStart(2, '0');
+    const s = (secs % 60).toString().padStart(2, '0');
+    return `${m}:${s}`;
   };
 
-  const handleAction = () => setIsRunning(!isRunning);
-  
-  const resetTimer = () => {
-    setIsRunning(false);
-    if (mode === 'stopwatch') setStopwatchTime(0);
-    if (mode === 'pomodoro') setPomoTime(25 * 60);
-  };
+  const modes: { key: TimerMode; label: string; icon: typeof Clock }[] = [
+    { key: 'clock', label: 'Clock', icon: Clock },
+    { key: 'pomodoro', label: 'Pomo', icon: Brain },
+    { key: 'stopwatch', label: 'Watch', icon: Timer },
+  ];
 
   return (
-    <div className={cn("glass rounded-[2.5rem] border-white/10 p-6 flex flex-col shadow-2xl relative overflow-hidden h-full group", className)}>
-      <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-primary to-transparent opacity-20" />
-      
-      {/* Header & Mode Switcher */}
-      <div className="flex items-center justify-between mb-6 relative z-20">
+    <div className={cn(
+      "bg-[var(--bg-card)] border border-[var(--border-default)] rounded-[12px] p-5 flex flex-col shadow-[var(--shadow-card)] hover:shadow-[var(--shadow-card-hover)] transition-shadow h-full overflow-hidden",
+      className
+    )}>
+      {/* Header row — compact */}
+      <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-2">
-          <div className="h-2 w-2 rounded-full bg-primary animate-pulse" />
-          <h3 className="font-black text-[10px] uppercase tracking-[0.3em] text-muted-foreground">Quantum Hub</h3>
+          <div className="h-8 w-8 rounded-xl bg-[#7B2FBE]/10 flex items-center justify-center">
+            <Clock className="h-4 w-4 text-[#7B2FBE]" />
+          </div>
+          <span className="font-semibold text-[15px] text-[var(--text-primary)]">Time</span>
         </div>
-        
-        <div className="flex bg-white/5 p-1 rounded-xl border border-white/5">
-          {(['clock', 'pomodoro', 'stopwatch'] as TimerMode[]).map((m) => (
+
+        {/* Compact segmented tabs — won't overflow */}
+        <div className="flex bg-[var(--bg-base)] rounded-lg border border-[var(--border-default)] p-0.5 gap-0.5">
+          {modes.map(({ key, label, icon: Icon }) => (
             <button
-              key={m}
-              onClick={() => { setMode(m); setIsRunning(false); }}
+              key={key}
+              onClick={() => { setMode(key); setIsRunning(false); }}
               className={cn(
-                "px-3 py-1.5 rounded-lg transition-all flex items-center justify-center",
-                mode === m ? "bg-primary text-primary-foreground shadow-lg" : "text-muted-foreground hover:text-foreground"
+                "px-2 py-1 rounded-md text-[11px] font-medium transition-all duration-150 flex items-center gap-1 whitespace-nowrap",
+                mode === key
+                  ? "bg-[var(--bg-card)] text-[var(--text-primary)] shadow-sm"
+                  : "text-[var(--text-muted)] hover:text-[var(--text-secondary)]"
               )}
             >
-              {m === 'clock' && <Clock className="h-3.5 w-3.5" />}
-              {m === 'pomodoro' && <Brain className="h-3.5 w-3.5" />}
-              {m === 'stopwatch' && <Timer className="h-3.5 w-3.5" />}
+              <Icon className={cn("h-3 w-3 shrink-0", mode === key ? "text-[#7B2FBE]" : "")} />
+              {label}
             </button>
           ))}
         </div>
       </div>
 
-      <CardContent className="flex-1 flex flex-col items-center justify-center p-0 relative z-10">
+      {/* Time display */}
+      <div className="flex-1 flex flex-col items-center justify-center">
         <AnimatePresence mode="wait">
           {mode === 'clock' && (
-            <motion.div 
-              key="clock"
-              initial={{ opacity: 0, scale: 0.9 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 1.1 }}
-              className="text-center"
+            <motion.div key="clock"
+              initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.18 }} className="text-center"
             >
-              <div className="text-6xl font-black tracking-tighter text-foreground font-sans flex items-center gap-2">
-                <span className="tabular-nums">{currentTime.getHours().toString().padStart(2, '0')}</span>
-                <span className="text-primary/30">:</span>
-                <span className="tabular-nums">{currentTime.getMinutes().toString().padStart(2, '0')}</span>
+              <div className="flex items-baseline justify-center gap-0.5">
+                <span className="text-[46px] font-bold tracking-tight text-[var(--text-primary)] tabular-nums leading-none">
+                  {currentTime.getHours().toString().padStart(2, '0')}
+                </span>
+                <motion.span
+                  animate={{ opacity: [1, 0.2, 1] }}
+                  transition={{ repeat: Infinity, duration: 1.2 }}
+                  className="text-[38px] font-bold text-[var(--text-muted)] leading-none"
+                >:</motion.span>
+                <span className="text-[46px] font-bold tracking-tight text-[var(--text-primary)] tabular-nums leading-none">
+                  {currentTime.getMinutes().toString().padStart(2, '0')}
+                </span>
               </div>
-              <div className="mt-2 text-xs font-black text-primary/60 tracking-[0.5em] uppercase">
-                {currentTime.toLocaleDateString(undefined, { weekday: 'long', month: 'short', day: 'numeric' })}
-              </div>
+              <p className="text-[11px] text-[var(--text-muted)] mt-1.5 font-medium">
+                {currentTime.toLocaleDateString(undefined, { weekday: 'short', month: 'short', day: 'numeric' })}
+              </p>
             </motion.div>
           )}
 
           {mode !== 'clock' && (
-            <motion.div
-              key="timers"
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -10 }}
-              className="flex flex-col items-center"
+            <motion.div key={mode}
+              initial={{ opacity: 0, scale: 0.96 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}
+              transition={{ duration: 0.18 }} className="flex flex-col items-center gap-1"
             >
-              <div className="text-6xl font-black tracking-tighter text-foreground font-sans">
+              <span className="text-[42px] font-bold tracking-tight text-[var(--text-primary)] tabular-nums leading-none">
                 {formatTime(mode === 'stopwatch' ? stopwatchTime : pomoTime)}
-              </div>
-              <div className="mt-2 text-[10px] font-black text-muted-foreground tracking-[0.4em] uppercase">
-                {mode === 'pomodoro' ? (isWork ? 'Deep Work Phase' : 'Recharge Phase') : 'Elapsed Mission Time'}
-              </div>
+              </span>
+              <span className="text-[11px] text-[var(--text-muted)] font-medium">
+                {mode === 'pomodoro' ? (isWork ? 'Work session' : 'Break time') : 'Elapsed'}
+              </span>
             </motion.div>
           )}
         </AnimatePresence>
-
-        {mode !== 'clock' && (
-          <div className="flex items-center gap-3 mt-10 w-full">
-            <Button
-              size="lg"
-              onClick={handleAction}
-              className={cn(
-                "flex-1 h-12 rounded-xl font-black text-[10px] tracking-[0.2em] transition-all active:scale-95",
-                isRunning ? "bg-white/5 border border-white/10 text-foreground" : "bg-primary text-primary-foreground shadow-xl shadow-primary/20"
-              )}
-            >
-              {isRunning ? <Pause className="h-4 w-4 mr-2" /> : <Play className="h-4 w-4 mr-2" />}
-              {isRunning ? 'SUSPEND' : 'INITIALIZE'}
-            </Button>
-            
-            <Button
-              size="icon"
-              onClick={resetTimer}
-              variant="ghost"
-              className="h-12 w-12 rounded-xl border border-white/5 hover:bg-white/5 active:scale-95"
-            >
-              <RotateCcw className="h-4 w-4" />
-            </Button>
-          </div>
-        )}
-      </CardContent>
-
-      {/* Aesthetic Background Decoration */}
-      <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-48 h-48 bg-primary/5 blur-[80px] rounded-full pointer-events-none" />
-      
-      <div className="absolute bottom-4 left-6 flex items-center gap-2 opacity-30">
-        <Zap className="h-3 w-3" />
-        <span className="text-[7px] font-black uppercase tracking-[0.4em]">Temporal Sync Active</span>
       </div>
+
+      {/* Controls */}
+      {mode !== 'clock' && (
+        <div className="flex gap-2 mt-4">
+          <Button
+            onClick={() => setIsRunning(!isRunning)}
+            className="flex-1 h-8 rounded-lg text-[12px] font-semibold border-0 text-white"
+            style={{ background: isRunning ? 'var(--bg-base)' : '#7B2FBE', color: isRunning ? 'var(--text-primary)' : 'white', border: isRunning ? '1px solid var(--border-default)' : 'none' }}
+          >
+            {isRunning ? <Pause className="h-3.5 w-3.5 mr-1" /> : <Play className="h-3.5 w-3.5 mr-1" />}
+            {isRunning ? 'Pause' : 'Start'}
+          </Button>
+          <Button
+            variant="ghost"
+            onClick={() => { setIsRunning(false); if (mode === 'stopwatch') setStopwatchTime(0); if (mode === 'pomodoro') setPomoTime(25 * 60); }}
+            className="h-8 w-8 p-0 rounded-lg border border-[var(--border-default)] text-[var(--text-muted)] hover:text-[var(--text-primary)] shrink-0"
+          >
+            <RotateCcw className="h-3.5 w-3.5" />
+          </Button>
+        </div>
+      )}
     </div>
   );
 };
 
 export default TimeTrackerCard;
-
-

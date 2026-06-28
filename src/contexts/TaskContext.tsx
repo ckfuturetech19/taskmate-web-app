@@ -72,7 +72,41 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
   const fetchCategories = useCallback(async () => {
     try {
       const response = await api.get('/categories');
-      setCategories(response.data);
+      const data = response.data;
+      
+      // Handle both raw array responses and wrapped objects
+      const categoriesList = Array.isArray(data)
+        ? data
+        : (data && typeof data === 'object' && 'categories' in data && Array.isArray((data as any).categories))
+          ? (data as any).categories
+          : [];
+
+      // Predefined icons map matching Flutter CategoryIcons
+      const emojiMap: Record<string, string> = {
+        work: '💼',
+        personal: '👤',
+        shopping: '🛒',
+        health: '❤️',
+        education: '🎓',
+        study: '📚',
+        travel: '✈️',
+        home: '🏠',
+        finance: '💰',
+        sports: '⚽',
+        entertainment: '🎬',
+        default: '📁',
+      };
+
+      const mapped = categoriesList.map((c: any) => ({
+        id: c.id,
+        name: c.name,
+        color: typeof c.color === 'bigint' ? c.color.toString() : c.color,
+        iconName: c.iconName,
+        icon: emojiMap[c.iconName?.toLowerCase()] || emojiMap.default,
+      }));
+
+      console.log('[TaskContext] Loaded Categories:', mapped);
+      setCategories(mapped);
     } catch (error) {
       console.error('Error fetching categories:', error);
     }
@@ -125,9 +159,6 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
     const updates: Partial<Task> = { isCompleted: !task.isCompleted };
     if (!task.isCompleted) {
       updates.lastCompletedDate = new Date().toISOString();
-      if (task.recurrenceType && task.recurrenceType !== 'none') {
-        await createNextRecurrence(task, tasks);
-      }
     }
     await updateTask(id, updates);
   };

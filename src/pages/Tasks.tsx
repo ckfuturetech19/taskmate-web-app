@@ -2,54 +2,37 @@ import { useState, useMemo } from 'react';
 import AppLayout from '@/components/app/AppLayout';
 import TaskCard from '@/components/tasks/TaskCard';
 import TaskDialog from '@/components/tasks/TaskDialog';
-import GroupCard from '@/components/groups/GroupCard';
 import { Button } from '@/components/ui/button';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useTaskContext } from '@/contexts/TaskContext';
 import { useAuth } from '@/contexts/AuthContext';
 import { usePremium } from '@/contexts/PremiumContext';
-import { Task, PriorityLevel, RecurrenceType, SubTask } from '@/types/task';
-import { Plus, CheckSquare, Users } from 'lucide-react';
+import { Task } from '@/types/task';
+import { Plus, CheckSquare, Sparkles } from 'lucide-react';
 import { safeIsToday, safeParseDate } from '@/lib/dateUtils';
-import { useNavigate } from 'react-router-dom';
 import UpgradePrompt from '@/components/premium/UpgradePrompt';
+import { cn } from '@/lib/utils';
 
 const Tasks = () => {
   const { user } = useAuth();
   const { isPremium } = usePremium();
-  const navigate = useNavigate();
   const { tasks, groups, addTask, updateTask, deleteTask, toggleTaskComplete, getPersonalTasks } = useTaskContext();
   const [dialogOpen, setDialogOpen] = useState(false);
   const [editingTask, setEditingTask] = useState<Task | null>(null);
   const [activeTab, setActiveTab] = useState('all');
-  const [selectedGroup, setSelectedGroup] = useState<string>('all');
   const [showCompleted, setShowCompleted] = useState<boolean>(false);
 
   const personalTasks = getPersonalTasks();
   const userGroups = groups.filter(g => user && g.members.some(m => m.id === user.id));
   const groupTasks = tasks.filter(task => task.groupId && userGroups.some(g => g.id === task.groupId));
 
-  console.log('=== Tasks Page Rendering ===');
-  console.log('All tasks:', tasks.length);
-  console.log('Personal tasks:', personalTasks.length);
-  console.log('Group tasks:', groupTasks.length);
-  console.log('User groups:', userGroups.length);
+  const totalPendingCount = personalTasks.filter(t => !t.isCompleted).length;
+  const totalCompletedCount = personalTasks.filter(t => t.isCompleted).length;
 
   const filteredTasks = useMemo(() => {
-    let tasksToFilter = tasks; // Start with ALL tasks (both personal and group)
+    let tasksToFilter = personalTasks; // Use personal tasks by default
 
-    // Filter by group first
-    if (selectedGroup === 'group-tasks') {
-      tasksToFilter = groupTasks;
-    } else if (selectedGroup !== 'all' && selectedGroup !== 'personal') {
-      tasksToFilter = groupTasks.filter(task => task.groupId === selectedGroup);
-    } else if (selectedGroup === 'personal') {
-      tasksToFilter = personalTasks.filter(task => !task.groupId);
-    }
-    // If selectedGroup is 'all', use all tasks (no filtering needed)
-
-    // Then filter by tab
+    // Filter by tab
     let tabFilteredTasks: Task[];
     switch (activeTab) {
       case 'today':
@@ -69,17 +52,14 @@ const Tasks = () => {
         tabFilteredTasks = tasksToFilter;
     }
 
-    // Filter by completion status - by default, only show non-completed tasks
-    // But if activeTab is 'completed', always show completed tasks
-    // And if showCompleted is true, show all tasks
     if (activeTab === 'completed') {
-      return tabFilteredTasks; // Always show completed tasks in completed tab
+      return tabFilteredTasks;
     } else if (!showCompleted) {
       return tabFilteredTasks.filter(task => !task.isCompleted);
     } else {
-      return tabFilteredTasks; // Show all tasks if showCompleted is true
+      return tabFilteredTasks;
     }
-  }, [tasks, personalTasks, groupTasks, activeTab, selectedGroup, showCompleted]);
+  }, [personalTasks, activeTab, showCompleted]);
 
   const handleSaveTask = (data: Omit<Task, 'id' | 'createdAt' | 'userId' | 'completed'>) => {
     if (editingTask) {
@@ -88,6 +68,7 @@ const Tasks = () => {
       addTask(data);
     }
     setEditingTask(null);
+    setDialogOpen(false);
   };
 
   const handleEdit = (task: Task) => {
@@ -97,75 +78,53 @@ const Tasks = () => {
 
   return (
     <AppLayout title="Tasks">
-      <div className="space-y-3 sm:space-y-4 md:space-y-5 lg:space-y-6">
-        <div className="flex flex-col gap-2 sm:gap-3 md:gap-4">
-          <div className="w-full overflow-x-auto -mx-2 px-2 sm:mx-0 sm:px-0">
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-4 h-auto">
-                <TabsTrigger value="all" className="text-[10px] xs:text-xs sm:text-sm px-1.5 sm:px-2 py-1.5 sm:py-2">All</TabsTrigger>
-                <TabsTrigger value="today" className="text-[10px] xs:text-xs sm:text-sm px-1.5 sm:px-2 py-1.5 sm:py-2">Today</TabsTrigger>
-                <TabsTrigger value="pending" className="text-[10px] xs:text-xs sm:text-sm px-1.5 sm:px-2 py-1.5 sm:py-2">Pending</TabsTrigger>
-                <TabsTrigger value="completed" className="text-[10px] xs:text-xs sm:text-sm px-1.5 sm:px-2 py-1.5 sm:py-2">Completed</TabsTrigger>
-              </TabsList>
-            </Tabs>
+      <div className="space-y-6 pb-10">
+        
+        {/* Page Header */}
+        <div className="flex flex-row items-center justify-between border-b border-[var(--border-default)] pb-4">
+          <div>
+            <h1 className="text-[24px] font-bold text-[var(--text-primary)]">Tasks</h1>
+            <p className="text-[13px] text-[var(--text-muted)]">
+              {totalPendingCount} tasks · {totalCompletedCount} completed
+            </p>
           </div>
-            
-          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3">
-            {/* Group Filter - Hidden for now */}
-            {/* <Select value={selectedGroup} onValueChange={setSelectedGroup}>
-              <SelectTrigger className="w-full sm:w-[200px] md:w-[220px] text-sm">
-                <SelectValue placeholder="All Tasks" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Tasks</SelectItem>
-                <SelectItem value="personal">Personal Only</SelectItem>
-                {userGroups.length > 0 && (
-                  <>
-                    <SelectItem value="group-tasks">
-                      <div className="flex items-center gap-2">
-                        <Users className="h-4 w-4" />
-                        All Group Tasks
-                      </div>
-                    </SelectItem>
-                    {userGroups.map(group => (
-                      <SelectItem key={group.id} value={group.id}>
-                        <div className="flex items-center gap-2">
-                          <Users className="h-3 w-3" />
-                          {group.name}
-                        </div>
-                      </SelectItem>
-                    ))}
-                  </>
-                )}
-              </SelectContent>
-            </Select> */}
+          
+          <Button 
+            onClick={() => {
+              if (isPremium) setDialogOpen(true);
+            }}
+            disabled={!isPremium}
+            className="rounded-full bg-[var(--brand-gradient)] text-white hover:brightness-105 shadow-sm text-[13px] font-semibold h-9 px-5 shrink-0"
+          >
+            <Plus className="h-4 w-4 mr-1.5" />
+            Add Task
+          </Button>
+        </div>
 
-            <Select value={showCompleted ? 'show' : 'hide'} onValueChange={(v) => setShowCompleted(v === 'show')}>
-              <SelectTrigger className="w-full sm:w-[180px] md:w-[200px] text-sm">
-                <SelectValue placeholder="Show Completed" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="hide">Hide Completed</SelectItem>
-                <SelectItem value="show">Show Completed</SelectItem>
-              </SelectContent>
-            </Select>
-            
-            <Button 
-              onClick={() => {
-                if (!isPremium) {
-                  // Show upgrade prompt
-                  return;
-                }
-                setDialogOpen(true);
-              }}
-              disabled={!isPremium}
-              className="shrink-0 w-full sm:w-auto text-sm sm:text-base"
+        {/* Filter Tabs & Toggle Bar */}
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full sm:w-auto">
+            <TabsList className="bg-[var(--bg-base)] border border-[var(--border-default)] rounded-full h-10 p-1 shrink-0 flex w-full sm:w-[380px]">
+              <TabsTrigger value="all" className="flex-1 rounded-full px-4 text-[12px] font-medium data-[state=active]:bg-[var(--brand-gradient)] data-[state=active]:text-white transition-all">All</TabsTrigger>
+              <TabsTrigger value="today" className="flex-1 rounded-full px-4 text-[12px] font-medium data-[state=active]:bg-[var(--brand-gradient)] data-[state=active]:text-white transition-all">Today</TabsTrigger>
+              <TabsTrigger value="pending" className="flex-1 rounded-full px-4 text-[12px] font-medium data-[state=active]:bg-[var(--brand-gradient)] data-[state=active]:text-white transition-all">Pending</TabsTrigger>
+              <TabsTrigger value="completed" className="flex-1 rounded-full px-4 text-[12px] font-medium data-[state=active]:bg-[var(--brand-gradient)] data-[state=active]:text-white transition-all">Completed</TabsTrigger>
+            </TabsList>
+          </Tabs>
+
+          {activeTab !== 'completed' && (
+            <button
+              onClick={() => setShowCompleted(!showCompleted)}
+              className={cn(
+                "px-4 h-9 rounded-full text-[12px] font-semibold border transition-all duration-150 shrink-0",
+                showCompleted
+                  ? "bg-[var(--brand-pink)]/10 text-[var(--brand-pink)] border-[var(--brand-pink)]/20"
+                  : "bg-transparent text-[var(--text-secondary)] border-[var(--border-default)] hover:bg-[var(--bg-card-hover)]"
+              )}
             >
-              <Plus className="h-4 w-4 sm:mr-2" />
-              <span className="hidden sm:inline">Add Task</span>
-              <span className="sm:hidden">Add</span>
-            </Button>
-          </div>
+              {showCompleted ? 'Showing Completed' : 'Hide Completed'}
+            </button>
+          )}
         </div>
 
         {!isPremium && (
@@ -176,25 +135,34 @@ const Tasks = () => {
           />
         )}
 
+        {/* Tasks List / Empty State */}
         {filteredTasks.length === 0 ? (
-          <div className="text-center py-16 bg-card rounded-lg border border-border">
-            <CheckSquare className="h-12 w-12 text-muted-foreground mx-auto mb-3" />
-            <p className="text-muted-foreground">
+          <div className="flex flex-col items-center justify-center text-center py-16 bg-[var(--bg-card)] rounded-[16px] border border-[var(--border-default)] p-8 max-w-lg mx-auto shadow-sm">
+            {/* 72px brand-gradient circle with icon */}
+            <div className="h-[72px] w-[72px] rounded-full bg-[var(--brand-gradient)] flex items-center justify-center text-white mb-5 shadow-md relative">
+              <CheckSquare className="h-8 w-8" />
+              <div className="absolute top-1 right-1">
+                <Sparkles className="h-4 w-4 animate-pulse text-white" />
+              </div>
+            </div>
+            
+            <h3 className="text-[17px] font-semibold text-[var(--text-primary)]">All clear!</h3>
+            <p className="text-[14px] text-[var(--text-muted)] mt-1.5 max-w-[280px]">
               {activeTab === 'completed' 
                 ? 'No completed tasks yet.'
                 : activeTab === 'today'
                 ? 'No tasks scheduled for today.'
                 : activeTab === 'pending'
                 ? 'All caught up! No pending tasks.'
-                : 'No tasks yet. Create your first one!'}
+                : 'Add your first task to get started'}
             </p>
+            
             {activeTab !== 'completed' && isPremium && (
               <Button 
-                variant="link" 
-                className="mt-2"
                 onClick={() => setDialogOpen(true)}
+                className="mt-6 rounded-full bg-[var(--brand-gradient)] text-white hover:brightness-105 shadow-sm text-[13px] font-semibold h-9 px-6"
               >
-                Add a task
+                + Add Task
               </Button>
             )}
           </div>
@@ -212,40 +180,6 @@ const Tasks = () => {
             ))}
           </div>
         )}
-
-        {/* Groups Section - Hidden for now */}
-        {/* {userGroups.length > 0 && (
-          <div className="space-y-4 pt-6 border-t">
-            <div className="flex items-center justify-between">
-              <h2 className="text-xl font-semibold flex items-center gap-2">
-                <Users className="h-5 w-5" />
-                My Groups
-              </h2>
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => navigate('/groups')}
-              >
-                View All
-              </Button>
-            </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-              {userGroups.slice(0, 6).map(group => (
-                <GroupCard key={group.id} group={group} />
-              ))}
-            </div>
-            {userGroups.length > 6 && (
-              <div className="text-center pt-2">
-                <Button 
-                  variant="link" 
-                  onClick={() => navigate('/groups')}
-                >
-                  View all {userGroups.length} groups
-                </Button>
-              </div>
-            )}
-          </div>
-        )} */}
       </div>
 
       {isPremium && (
