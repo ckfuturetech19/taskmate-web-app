@@ -85,16 +85,12 @@ export const NotificationBell = () => {
                       {notification.title}
                     </p>
                     <p className="text-xs text-muted-foreground mt-0.5 line-clamp-2">
-                      {notification.message}
+                      {(notification as any).body ?? (notification as any).message}
                     </p>
-                    {notification.groupName && (
-                      <p className="text-xs text-primary mt-1">
-                        📁 {notification.groupName}
-                      </p>
-                    )}
                     <p className="text-xs text-muted-foreground mt-1">
-                      {/* {formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })} */}
-                      Recently
+                      {notification.createdAt
+                        ? formatDistanceToNow(new Date(notification.createdAt), { addSuffix: true })
+                        : 'Recently'}
                     </p>
                   </div>
                   {!notification.isRead && (

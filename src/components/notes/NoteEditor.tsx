@@ -309,7 +309,7 @@ const NoteEditor = ({ content, onChange, editable = true, currentUserName, isFul
     onBlur: () => onFocusChange?.(false),
     editorProps: {
       attributes: {
-        class: 'prose prose-sm sm:prose-base dark:prose-invert max-w-[720px] mx-auto min-h-[500px] px-8 py-12 focus:outline-none text-[16px] leading-[1.7]',
+      class: 'prose prose-sm sm:prose-base dark:prose-invert max-w-none w-full min-h-[500px] px-4 py-6 focus:outline-none text-[16px] leading-[1.7]',
       },
     },
   });

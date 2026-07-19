@@ -10,6 +10,7 @@ import { Plus, Search, Award, Calendar as CalendarIcon, Loader2, Trash2, Clock, 
 import { toast } from '@/hooks/use-toast';
 import { Card, CardContent } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetFooter } from '@/components/ui/sheet';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { usePremium } from '@/contexts/PremiumContext';
@@ -347,134 +348,129 @@ const Milestones = () => {
         )}
       </div>
 
-      {/* Create Milestone Dialog */}
-      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent className="max-w-[480px] rounded-[20px] bg-[var(--bg-card)] border border-[var(--border-default)] p-8 shadow-[var(--shadow-modal)] relative">
-          <button 
-            onClick={() => setIsCreateDialogOpen(false)}
-            className="absolute right-4 top-4 h-8 w-8 rounded-full flex items-center justify-center hover:bg-[var(--bg-card-hover)] text-[var(--text-secondary)]"
-          >
-            <X className="h-4 w-4" />
-          </button>
-
-          <DialogHeader className="p-0 mb-4">
-            <DialogTitle className="text-[20px] font-semibold text-[var(--text-primary)]">Create Milestone</DialogTitle>
-            <DialogDescription className="text-[14px] text-[var(--text-muted)] mt-1">
+      {/* Create Milestone Drawer */}
+      <Sheet open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+        <SheetContent className="w-full sm:max-w-[480px] overflow-y-auto bg-[var(--bg-card)] border-l border-[var(--border-default)] p-8 shadow-[var(--shadow-modal)] flex flex-col h-full scrollbar-none">
+          <SheetHeader className="p-0 mb-6 shrink-0">
+            <SheetTitle className="text-[20px] font-semibold text-[var(--text-primary)]">Create Milestone</SheetTitle>
+            <SheetDescription className="text-[14px] text-[var(--text-muted)] mt-1">
               Start tracking a new major achievement or lifetime milestone.
-            </DialogDescription>
-          </DialogHeader>
+            </SheetDescription>
+          </SheetHeader>
           
-          <form onSubmit={handleCreateMilestone} className="space-y-4">
-            <div className="space-y-1">
-              <Label htmlFor="milestone-title" className="text-[13px] font-semibold text-[var(--text-secondary)]">Milestone Title</Label>
-              <Input
-                id="milestone-title"
-                placeholder="e.g. My Startup Journey"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                className="h-10 border-[var(--border-strong)] focus:border-[var(--brand-pink)] rounded-[12px] bg-transparent text-[14px]"
-              />
-            </div>
-
-            <div className="space-y-1">
-              <Label htmlFor="milestone-desc" className="text-[13px] font-semibold text-[var(--text-secondary)]">Description</Label>
-              <Textarea
-                id="milestone-desc"
-                placeholder="Add some details about this milestone..."
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                className="min-h-[80px] border-[var(--border-strong)] focus:border-[var(--brand-pink)] rounded-[12px] bg-transparent text-[14px] resize-none"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
+          <form onSubmit={handleCreateMilestone} className="space-y-6 flex-1 flex flex-col justify-between">
+            <div className="space-y-6">
               <div className="space-y-1">
-                <Label htmlFor="milestone-type" className="text-[13px] font-semibold text-[var(--text-secondary)]">Type</Label>
-                <Select value={type} onValueChange={setType}>
-                  <SelectTrigger id="milestone-type" className="h-10 border-[var(--border-strong)] focus:border-[var(--brand-pink)] rounded-[12px] bg-transparent text-[14px]">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-[12px]">
-                    {MILESTONE_TYPES.map(t => (
-                      <SelectItem key={t.value} value={t.value} className="rounded-lg">{t.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-1">
-                <Label htmlFor="milestone-interval" className="text-[13px] font-semibold text-[var(--text-secondary)]">Check Interval</Label>
-                <Select value={intervalType} onValueChange={setIntervalType}>
-                  <SelectTrigger id="milestone-interval" className="h-10 border-[var(--border-strong)] focus:border-[var(--brand-pink)] rounded-[12px] bg-transparent text-[14px]">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-[12px]">
-                    {INTERVAL_TYPES.map(i => (
-                      <SelectItem key={i.value} value={i.value} className="rounded-lg">{i.label}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-1">
-                <Label htmlFor="milestone-start" className="text-[13px] font-semibold text-[var(--text-secondary)]">Start Date</Label>
+                <Label htmlFor="milestone-title" className="text-[13px] font-semibold text-[var(--text-secondary)]">Milestone Title</Label>
                 <Input
-                  id="milestone-start"
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
-                  className="h-10 border-[var(--border-strong)] focus:border-[var(--brand-pink)] rounded-[12px] bg-transparent text-[14px]"
+                  id="milestone-title"
+                  placeholder="e.g. My Startup Journey"
+                  value={title}
+                  onChange={(e) => setTitle(e.target.value)}
+                  className="h-11 border-[var(--border-strong)] focus:border-[var(--brand-pink)] rounded-[12px] bg-transparent text-[14px]"
                 />
               </div>
 
               <div className="space-y-1">
-                <Label htmlFor="milestone-end" className="text-[13px] font-semibold text-[var(--text-secondary)]">End Date (Optional)</Label>
-                <Input
-                  id="milestone-end"
-                  type="date"
-                  value={endDate}
-                  onChange={(e) => setEndDate(e.target.value)}
-                  className="h-10 border-[var(--border-strong)] focus:border-[var(--brand-pink)] rounded-[12px] bg-transparent text-[14px]"
+                <Label htmlFor="milestone-desc" className="text-[13px] font-semibold text-[var(--text-secondary)]">Description</Label>
+                <Textarea
+                  id="milestone-desc"
+                  placeholder="Add some details about this milestone..."
+                  value={description}
+                  onChange={(e) => setDescription(e.target.value)}
+                  className="min-h-[100px] border-[var(--border-strong)] focus:border-[var(--brand-pink)] rounded-[12px] bg-transparent text-[14px] resize-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <Label htmlFor="milestone-type" className="text-[13px] font-semibold text-[var(--text-secondary)]">Type</Label>
+                  <Select value={type} onValueChange={setType}>
+                    <SelectTrigger id="milestone-type" className="h-11 border-[var(--border-strong)] focus:border-[var(--brand-pink)] rounded-[12px] bg-transparent text-[14px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-[12px]">
+                      {MILESTONE_TYPES.map(t => (
+                        <SelectItem key={t.value} value={t.value} className="rounded-lg">{t.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-1">
+                  <Label htmlFor="milestone-interval" className="text-[13px] font-semibold text-[var(--text-secondary)]">Check Interval</Label>
+                  <Select value={intervalType} onValueChange={setIntervalType}>
+                    <SelectTrigger id="milestone-interval" className="h-11 border-[var(--border-strong)] focus:border-[var(--brand-pink)] rounded-[12px] bg-transparent text-[14px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent className="bg-[var(--bg-card)] border border-[var(--border-default)] rounded-[12px]">
+                      {INTERVAL_TYPES.map(i => (
+                        <SelectItem key={i.value} value={i.value} className="rounded-lg">{i.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <Label htmlFor="milestone-start" className="text-[13px] font-semibold text-[var(--text-secondary)]">Start Date</Label>
+                  <Input
+                    id="milestone-start"
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="h-11 border-[var(--border-strong)] focus:border-[var(--brand-pink)] rounded-[12px] bg-transparent text-[14px]"
+                  />
+                </div>
+
+                <div className="space-y-1">
+                  <Label htmlFor="milestone-end" className="text-[13px] font-semibold text-[var(--text-secondary)]">End Date (Optional)</Label>
+                  <Input
+                    id="milestone-end"
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className="h-11 border-[var(--border-strong)] focus:border-[var(--brand-pink)] rounded-[12px] bg-transparent text-[14px]"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between p-4 rounded-[12px] border border-[var(--border-default)] bg-[var(--bg-base)]">
+                <div className="space-y-0.5">
+                  <Label htmlFor="notification" className="text-[13px] font-semibold text-[var(--text-primary)]">Reminders</Label>
+                  <p className="text-[12px] text-[var(--text-muted)]">Get checking reminders for interval checks.</p>
+                </div>
+                <Switch
+                  id="notification"
+                  checked={notificationEnabled}
+                  onCheckedChange={setNotificationEnabled}
+                  className="data-[state=checked]:bg-[var(--brand-gradient)]"
                 />
               </div>
             </div>
 
-            <div className="flex items-center justify-between p-4 rounded-[12px] border border-[var(--border-default)] bg-[var(--bg-base)]">
-              <div className="space-y-0.5">
-                <Label htmlFor="notification" className="text-[13px] font-semibold text-[var(--text-primary)]">Reminders</Label>
-                <p className="text-[12px] text-[var(--text-muted)]">Get checking reminders for interval checks.</p>
-              </div>
-              <Switch
-                id="notification"
-                checked={notificationEnabled}
-                onCheckedChange={setNotificationEnabled}
-                className="data-[state=checked]:bg-[var(--brand-gradient)]"
-              />
-            </div>
-
-            <DialogFooter className="flex items-center justify-end gap-3 pt-2">
+            <SheetFooter className="flex sm:flex-row items-center justify-end gap-3 pt-6 border-t border-[var(--border-default)] mt-auto shrink-0">
               <Button 
                 type="button" 
                 variant="ghost" 
                 onClick={() => setIsCreateDialogOpen(false)}
-                className="rounded-full h-10 text-[13px] text-[var(--text-secondary)] hover:bg-[var(--bg-card-hover)]"
+                className="rounded-full h-11 text-[13px] text-[var(--text-secondary)] hover:bg-[var(--bg-card-hover)] flex-1 sm:flex-none"
               >
                 Cancel
               </Button>
               <Button 
                 type="submit" 
                 disabled={creating || !title.trim() || !startDate} 
-                className="rounded-full h-10 bg-[var(--brand-gradient)] text-white hover:brightness-105 shadow-sm text-[13px] font-semibold px-6 min-w-[120px]"
+                className="rounded-full h-11 bg-[var(--brand-gradient)] text-white hover:brightness-105 shadow-sm text-[13px] font-semibold px-6 min-w-[120px] flex-1 sm:flex-none disabled:opacity-50 disabled:text-white/60 disabled:cursor-not-allowed"
               >
                 {creating && <Loader2 className="h-4 w-4 animate-spin mr-2" />}
                 Create
               </Button>
-            </DialogFooter>
+            </SheetFooter>
           </form>
-        </DialogContent>
-      </Dialog>
+        </SheetContent>
+      </Sheet>
 
       {/* Upgrade Prompt Dialog */}
       <UpgradePromptDialog

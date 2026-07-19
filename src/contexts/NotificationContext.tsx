@@ -29,15 +29,16 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
   const fetchNotifications = async () => {
     if (!user) return;
     try {
-      const response = await api.get('/notifications');
-      const data = response.data;
-      
-      const fetchedNotifications: Notification[] = data.map((n: any) => ({
+      const response = await api.get('/notifications', { params: { limit: 50 } });
+      // Backend returns { notifications: [...], pagination: {...} }
+      const list: any[] = response.data.notifications ?? [];
+
+      const fetchedNotifications: Notification[] = list.map((n: any) => ({
         ...n,
-        isRead: n.read, // Map 'read' from backend to 'isRead' used in frontend
-        createdAt: n.timestamp, // Map 'timestamp' to 'createdAt'
+        isRead: n.read,        // Map 'read' → 'isRead'
+        createdAt: n.timestamp, // Map 'timestamp' → 'createdAt'
       }));
-      
+
       setNotifications(fetchedNotifications);
     } catch (error) {
       console.error('Error fetching notifications:', error);
@@ -75,9 +76,13 @@ export const NotificationProvider = ({ children }: { children: ReactNode }) => {
     socketService.on('notification-received', handleNotification);
     socketService.on('pro-status-changed', handleProStatus);
 
+    // Fallback polling every 30s in case socket misses events
+    const pollInterval = setInterval(fetchNotifications, 30_000);
+
     return () => {
       socketService.off('notification-received', handleNotification);
       socketService.off('pro-status-changed', handleProStatus);
+      clearInterval(pollInterval);
     };
   }, [user]);
 

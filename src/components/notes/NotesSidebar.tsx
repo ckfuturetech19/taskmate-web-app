@@ -24,6 +24,7 @@ import {
   DialogTitle, 
   DialogFooter 
 } from '@/components/ui/dialog';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetFooter } from '@/components/ui/sheet';
 import { usePremium } from '@/contexts/PremiumContext';
 import { UpgradePromptDialog } from '@/components/premium/UpgradePromptDialog';
 import JoinNoteDialog from './JoinNoteDialog';
@@ -274,70 +275,65 @@ const NotesSidebar = ({ activeNoteId, onNotesLoaded }: NotesSidebarProps) => {
         )}
       </div>
 
-      {/* Overflow-Safe Create Note Dialog */}
-      <Dialog open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
-        <DialogContent className="max-w-[440px] max-h-[85vh] overflow-y-auto rounded-[20px] bg-[var(--bg-card)] border border-[var(--border-default)] p-6 shadow-[var(--shadow-modal)] relative flex flex-col scrollbar-none">
-          <button 
-            onClick={() => setIsCreateDialogOpen(false)}
-            className="absolute right-4 top-4 h-8 w-8 rounded-full flex items-center justify-center hover:bg-[var(--bg-card-hover)] text-[var(--text-secondary)] z-55"
-          >
-            <X className="h-4 w-4" />
-          </button>
-
-          <DialogHeader className="p-0 mb-4 shrink-0">
-            <DialogTitle className="text-[18px] font-bold text-[var(--text-primary)]">Create New Note</DialogTitle>
-            <DialogDescription className="text-[12px] text-[var(--text-muted)] mt-1">
+      {/* Create Note Drawer */}
+      <Sheet open={isCreateDialogOpen} onOpenChange={setIsCreateDialogOpen}>
+        <SheetContent className="w-full sm:max-w-[440px] overflow-y-auto bg-[var(--bg-card)] border-l border-[var(--border-default)] p-6 shadow-[var(--shadow-modal)] flex flex-col h-full scrollbar-none">
+          <SheetHeader className="p-0 mb-6 shrink-0">
+            <SheetTitle className="text-[18px] font-bold text-[var(--text-primary)]">Create New Note</SheetTitle>
+            <SheetDescription className="text-[12px] text-[var(--text-muted)] mt-1">
               Create a personal notepad or collaborative workspace.
-            </DialogDescription>
-          </DialogHeader>
+            </SheetDescription>
+          </SheetHeader>
 
-          <form onSubmit={handleCreateNote} className="space-y-4 flex-1">
-            <div className="space-y-1.5">
-              <Label htmlFor="title" className="text-[12px] font-semibold text-[var(--text-secondary)]">Note Title</Label>
-              <Input
-                id="title"
-                placeholder="e.g. Weekly Objectives"
-                value={newNoteTitle}
-                onChange={(e) => setNewNoteTitle(e.target.value)}
-                className="h-10 border-[var(--border-strong)] focus:border-[var(--brand-pink)] rounded-[10px] bg-transparent text-[13px] w-full"
-                autoFocus
-              />
-            </div>
-            
-            <div className="flex items-center justify-between p-3.5 rounded-[12px] border border-[var(--border-default)] bg-[var(--bg-base)]">
-              <div className="space-y-0.5">
-                <Label htmlFor="isGroup" className="text-[12px] font-semibold text-[var(--text-primary)]">Group Collaboration</Label>
-                <p className="text-[11px] text-[var(--text-muted)]">Allows others to join via invite code.</p>
+          <form onSubmit={handleCreateNote} className="space-y-6 flex-1 flex flex-col justify-between">
+            <div className="space-y-6">
+              <div className="space-y-1.5">
+                <Label htmlFor="title" className="text-[12px] font-semibold text-[var(--text-secondary)]">Note Title</Label>
+                <Input
+                  id="title"
+                  placeholder="e.g. Weekly Objectives"
+                  value={newNoteTitle}
+                  onChange={(e) => setNewNoteTitle(e.target.value)}
+                  className="h-11 border-[var(--border-strong)] focus:border-[var(--brand-pink)] rounded-[10px] bg-transparent text-[13px] w-full"
+                  autoFocus
+                />
               </div>
-              <Switch
-                id="isGroup"
-                checked={isGroupNote}
-                onCheckedChange={setIsGroupNote}
-                className="data-[state=checked]:bg-[var(--brand-gradient)]"
-              />
+              
+              <div className="flex items-center justify-between p-3.5 rounded-[12px] border border-[var(--border-default)] bg-[var(--bg-base)]">
+                <div className="space-y-0.5">
+                  <Label htmlFor="isGroup" className="text-[12px] font-semibold text-[var(--text-primary)]">Group Collaboration</Label>
+                  <p className="text-[11px] text-[var(--text-muted)]">Allows others to join via invite code.</p>
+                </div>
+                <Switch
+                  id="isGroup"
+                  checked={isGroupNote}
+                  onCheckedChange={setIsGroupNote}
+                  className="data-[state=checked]:bg-[var(--brand-gradient)]"
+                />
+              </div>
             </div>
             
-            <DialogFooter className="flex items-center justify-end gap-2 pt-2 shrink-0">
+            <SheetFooter className="flex sm:flex-row items-center justify-end gap-2 pt-6 border-t border-[var(--border-default)] mt-auto shrink-0">
               <Button 
                 type="button" 
                 variant="ghost" 
                 onClick={() => setIsCreateDialogOpen(false)}
-                className="rounded-full h-9 text-[12px] text-[var(--text-secondary)] hover:bg-[var(--bg-card-hover)]"
+                className="rounded-full h-11 text-[12px] text-[var(--text-secondary)] hover:bg-[var(--bg-card-hover)] flex-1 sm:flex-none"
               >
                 Cancel
               </Button>
               <Button 
                 type="submit" 
                 disabled={creating || !newNoteTitle.trim()} 
-                className="rounded-full h-9 bg-[var(--brand-gradient)] text-white hover:brightness-105 shadow-sm text-[12px] font-semibold px-5 min-w-[100px]"
+                className="rounded-full h-11 bg-[var(--brand-gradient)] text-white hover:brightness-105 shadow-sm text-[12px] font-semibold px-5 min-w-[100px] flex-1 sm:flex-none disabled:opacity-50 disabled:text-white/60 disabled:cursor-not-allowed"
               >
                 {creating && <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />}
                 Create
               </Button>
-            </DialogFooter>
+            </SheetFooter>
           </form>
-        </DialogContent>
-      </Dialog>
+        </SheetContent>
+      </Sheet>
 
       {/* Join Dialog */}
       <JoinNoteDialog 

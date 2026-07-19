@@ -67,7 +67,11 @@ const AppSidebar = ({ mobileMenuOpen, onClose, collapsed, setCollapsed }: AppSid
       >
         {/* Logo Header */}
         <div className="h-[56px] flex items-center px-4 border-b border-[var(--border-default)] justify-between shrink-0">
-          <div className="flex items-center gap-3 overflow-hidden">
+          <div 
+            className="flex items-center gap-3 overflow-hidden cursor-pointer"
+            onClick={() => navigate('/')}
+            title="Go to Home"
+          >
             <motion.img 
               src={logoImg} 
               alt="Logo" 
@@ -82,7 +86,7 @@ const AppSidebar = ({ mobileMenuOpen, onClose, collapsed, setCollapsed }: AppSid
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: -8 }}
                   transition={{ duration: 0.18 }}
-                  className="font-extrabold text-base tracking-tighter text-[var(--text-primary)] whitespace-nowrap"
+                  className="font-extrabold text-base tracking-tighter text-[var(--text-primary)] whitespace-nowrap hover:text-[var(--brand-pink)] transition-colors"
                 >
                   TASK<span className="text-[var(--brand-pink)]">MATE</span>
                 </motion.span>

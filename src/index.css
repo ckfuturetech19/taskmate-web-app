@@ -660,6 +660,7 @@ All colors MUST be HSL.
   }
 
   .dark, [data-theme="dark"] {
+    color-scheme: dark;
     --bg-base: #0D0B14;
     --bg-card: #16131F;
     --bg-card-hover: #1C1828;
@@ -668,7 +669,7 @@ All colors MUST be HSL.
 
     --text-primary: #F0EEF8;
     --text-secondary: #9896A8;
-    --text-muted: #5A586B;
+    --text-muted: #807D96;
 
     --border-default: rgba(123, 47, 190, 0.15);
     --border-strong: rgba(123, 47, 190, 0.3);
@@ -783,6 +784,10 @@ html {
   color: #ffffff !important;
 }
 
+[data-state="checked"][class*="bg-[var(--brand-gradient)]"] {
+  background: linear-gradient(135deg, #FF3CAC 0%, #7B2FBE 100%) !important;
+}
+
 /* ==========================================
    Light Mode Global Fixes
    ========================================== */
@@ -799,6 +804,11 @@ html {
 :root:not(.dark) input::placeholder,
 :root:not(.dark) textarea::placeholder {
   color: #7A7892 !important;
+}
+
+.dark input::placeholder,
+.dark textarea::placeholder {
+  color: #807D96 !important;
 }
 
 /* Dialog/Sheet content in light mode */
@@ -1336,4 +1346,93 @@ select,
 circle {
   border-radius: 9999px !important;
 }
-
+
+/* ==========================================
+   TIPTAP TASK LIST (CHECKLIST) STYLES
+   Fixes the empty space above checkboxes
+   ========================================== */
+
+/* Remove native list bullet from task lists */
+.ProseMirror ul[data-type="taskList"] {
+  list-style: none !important;
+  padding-left: 0 !important;
+  margin: 0 !important;
+}
+
+/* Each task item: flex row so checkbox + label sit side by side */
+.ProseMirror ul[data-type="taskList"] li[data-type="taskItem"] {
+  display: flex !important;
+  align-items: flex-start !important;
+  gap: 8px !important;
+  padding: 2px 0 !important;
+  margin: 0 !important;
+  list-style: none !important;
+}
+
+/* Remove any ::before / ::after pseudo-elements that may add bullet space */
+.ProseMirror ul[data-type="taskList"] li[data-type="taskItem"]::before,
+.ProseMirror ul[data-type="taskList"] li[data-type="taskItem"]::after {
+  display: none !important;
+  content: none !important;
+}
+
+/* The checkbox wrapper div inside the task item */
+.ProseMirror ul[data-type="taskList"] li[data-type="taskItem"] > label {
+  display: flex !important;
+  align-items: center !important;
+  margin-top: 3px !important;
+  flex-shrink: 0;
+  cursor: pointer;
+}
+
+/* The actual checkbox input */
+.ProseMirror ul[data-type="taskList"] li[data-type="taskItem"] > label input[type="checkbox"] {
+  width: 16px !important;
+  height: 16px !important;
+  appearance: none !important;
+  -webkit-appearance: none !important;
+  border: 2px solid var(--brand-pink) !important;
+  border-radius: 4px !important;
+  background: transparent !important;
+  cursor: pointer !important;
+  position: relative !important;
+  flex-shrink: 0;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.ProseMirror ul[data-type="taskList"] li[data-type="taskItem"] > label input[type="checkbox"]:checked {
+  background: var(--brand-pink) !important;
+  border-color: var(--brand-pink) !important;
+}
+
+.ProseMirror ul[data-type="taskList"] li[data-type="taskItem"] > label input[type="checkbox"]:checked::after {
+  content: '' !important;
+  display: block !important;
+  position: absolute !important;
+  left: 3px !important;
+  top: 0px !important;
+  width: 5px !important;
+  height: 9px !important;
+  border: 2px solid #fff !important;
+  border-top: none !important;
+  border-left: none !important;
+  transform: rotate(45deg) !important;
+}
+
+/* The text div inside the task item */
+.ProseMirror ul[data-type="taskList"] li[data-type="taskItem"] > div {
+  flex: 1 !important;
+  min-width: 0 !important;
+}
+
+/* Checked item: strike through the text */
+.ProseMirror ul[data-type="taskList"] li[data-type="taskItem"][data-checked="true"] > div {
+  text-decoration: line-through !important;
+  opacity: 0.6 !important;
+}
+
+/* Compact spacing between task items */
+.ProseMirror ul[data-type="taskList"] li[data-type="taskItem"] p {
+  margin: 0 !important;
+  padding: 0 !important;
+}
