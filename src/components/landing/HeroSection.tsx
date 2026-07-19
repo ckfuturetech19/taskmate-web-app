@@ -250,6 +250,13 @@ const HeroSection = () => {
           >
             <span className="text-lg">🤖</span> Android Live
           </a>
+          <a 
+            href="https://downloads.taskmateapp.site/TaskMate%20Setup%201.0.0.exe"
+            download
+            className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest hover:text-[#8B65C8] transition-colors cursor-pointer"
+          >
+            <span className="text-lg">💻</span> Windows Desktop
+          </a>
           <div className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest opacity-40">
             <span className="text-lg">🍎</span> iOS Soon
           </div>

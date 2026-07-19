@@ -48,44 +48,53 @@ export function MobileAppDialog({ isAuthenticated }: MobileAppDialogProps) {
             <div className="p-2 bg-primary/10 rounded-full">
               <Smartphone className="w-6 h-6 text-primary" />
             </div>
-            <DialogTitle>TaskMate Mobile App Available</DialogTitle>
+            <DialogTitle>TaskMate Apps Available</DialogTitle>
           </div>
           <DialogDescription className="text-base pt-2">
-            Manage your tasks on the go with real-time sync using the mobile app.
+            Manage your tasks seamlessly on any device with native apps for Android and Windows.
           </DialogDescription>
         </DialogHeader>
         
         <div className="flex flex-col gap-2 py-4">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
-            <span>Real-time synchronization</span>
+            <span>Real-time synchronization across web, mobile, & desktop</span>
           </div>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
-            <span>Push notifications for reminders</span>
+            <span>Native desktop tray and background notifications</span>
           </div>
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
-            <span>Offline support</span>
+            <span>Offline support and automatic sync</span>
           </div>
         </div>
 
-        <DialogFooter className="flex-row gap-2">
+        <DialogFooter className="flex flex-col sm:flex-row gap-2">
           <Button
             variant="outline"
             onClick={() => setIsOpen(false)}
-            className="flex-1"
+            className="w-full sm:flex-1"
           >
             Maybe Later
+          </Button>
+          <Button
+            onClick={() => {
+              window.open('https://downloads.taskmateapp.site/TaskMate%20Setup%201.0.0.exe', '_blank');
+              setIsOpen(false);
+            }}
+            className="w-full sm:flex-1 bg-gradient-to-r from-[#F0607A] to-[#8B65C8] hover:opacity-90 text-white"
+          >
+            💻 Windows App
           </Button>
           <Button
             onClick={() => {
               window.open(PLAY_STORE_URL, '_blank');
               setIsOpen(false);
             }}
-            className="flex-1"
+            className="w-full sm:flex-1"
           >
-            Download Android App
+            🤖 Android App
           </Button>
         </DialogFooter>
       </DialogContent>

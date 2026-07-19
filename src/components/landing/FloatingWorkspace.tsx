@@ -491,6 +491,13 @@ export const FloatingWorkspace: React.FC = () => {
             >
               <span>🤖</span> Download Free on Play Store
             </a>
+            <a 
+              href="https://downloads.taskmateapp.site/TaskMate%20Setup%201.0.0.exe"
+              download
+              className="px-6 py-3 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-700 dark:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-800 text-[10px] font-bold uppercase tracking-wider rounded-xl transition-all cursor-pointer shadow-md flex items-center gap-2"
+            >
+              <span>💻</span> Download for Windows
+            </a>
             <div className="px-6 py-3 bg-slate-100 dark:bg-slate-900 border border-slate-200 dark:border-white/10 text-slate-500 dark:text-slate-400 text-[10px] font-bold uppercase tracking-wider rounded-xl flex items-center gap-2 select-none opacity-60">
               <span>🍎</span> iOS App Coming Soon
             </div>
