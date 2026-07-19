@@ -15,7 +15,7 @@ interface User {
 interface AuthContextType {
   user: User | null;
   loading: boolean;
-  signInWithGoogle: () => Promise<void>;
+  signInWithGoogle: (idToken: string) => Promise<void>;
   signInWithEmail: (email: string, password: string) => Promise<void>;
   signUpWithEmail: (email: string, password: string, name: string) => Promise<void>;
   sendOTP: (email: string) => Promise<void>;
@@ -89,16 +89,23 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
-  const signInWithGoogle = async () => {
-    // Google Sign-in requires backend support at /auth/google-signin endpoint
-    // Backend should implement:
-    // POST /auth/google-signin with { email, name, photoURL } 
-    // and return { token, user }
-    
-    throw new Error(
-      'Google Sign-in backend endpoint not yet configured. ' +
-      'Please contact support or use Email/OTP sign-in.'
-    );
+  const signInWithGoogle = async (idToken: string) => {
+    try {
+      const response = await api.post('/auth/google', { idToken });
+      const { token, user } = response.data;
+      
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(user));
+      setUser(user);
+
+      // Initialize FCM
+      fcmService.initialize().then(() => {
+        fcmService.requestPermissionAndSaveToken(user.id);
+      });
+    } catch (error: any) {
+      console.error('Error signing in with Google:', error);
+      throw new Error(error.response?.data?.error || 'Failed to sign in with Google');
+    }
   };
 
   const signInWithEmail = async (email: string, password: string) => {

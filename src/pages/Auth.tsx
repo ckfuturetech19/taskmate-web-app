@@ -42,16 +42,54 @@ const Auth = () => {
     }
   }, [user, navigate]);
 
-  const handleGoogleSignIn = async () => {
-    try {
-      setGoogleLoading(true);
-      await signInWithGoogle();
-    } catch (error: any) {
-      toast({ title: 'Sign in failed', description: error.message, variant: 'destructive' });
-    } finally {
-      setGoogleLoading(false);
-    }
-  };
+  useEffect(() => {
+    const initGoogle = () => {
+      const google = (window as any).google;
+      if (google && google.accounts) {
+        google.accounts.id.initialize({
+          client_id: "1059926157224-48odqe0acm6f1u9hfeti1rdohutftu6o.apps.googleusercontent.com",
+          callback: async (response: any) => {
+            try {
+              setGoogleLoading(true);
+              await signInWithGoogle(response.credential);
+            } catch (error: any) {
+              toast({ 
+                title: 'Sign in failed', 
+                description: error.message, 
+                variant: 'destructive' 
+              });
+            } finally {
+              setGoogleLoading(false);
+            }
+          }
+        });
+
+        const btnElement = document.getElementById("google-signin-button");
+        if (btnElement) {
+          google.accounts.id.renderButton(
+            btnElement,
+            { 
+              theme: theme === 'dark' ? "filled_black" : "outline", 
+              size: "large", 
+              width: btnElement.clientWidth || 340,
+              text: "continue_with",
+              shape: "rectangular"
+            }
+          );
+        }
+      }
+    };
+
+    const checkGoogle = setInterval(() => {
+      const google = (window as any).google;
+      if (google && google.accounts) {
+        initGoogle();
+        clearInterval(checkGoogle);
+      }
+    }, 100);
+
+    return () => clearInterval(checkGoogle);
+  }, [theme]);
 
   const handleEmailSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -363,26 +401,13 @@ const Auth = () => {
                   </div>
                 </div>
 
-                <Button 
-                  type="button" 
-                  onClick={handleGoogleSignIn}
-                  disabled={googleLoading}
-                  className={cn(
-                    "w-full h-14 rounded-2xl border font-bold hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center backdrop-blur-md",
-                    theme === 'dark' 
-                      ? "bg-white/5 border-white/10 text-white hover:bg-white/10" 
-                      : "bg-white/40 border-black/10 text-black hover:bg-white/60 shadow-xs"
-                  )}
-                >
-                  {googleLoading ? (
-                    <Loader2 className="animate-spin h-5 w-5" />
-                  ) : (
-                    <>
-                      <GoogleIcon />
-                      Google Identity
-                    </>
-                  )}
-                </Button>
+                <div className="w-full flex justify-center">
+                  <div 
+                    id="google-signin-button" 
+                    className="w-full max-w-sm flex justify-center"
+                    style={{ minHeight: '44px' }}
+                  ></div>
+                </div>
               </div>
 
             </CardContent>
