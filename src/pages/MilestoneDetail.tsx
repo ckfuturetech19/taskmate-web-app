@@ -7,6 +7,7 @@ import { Milestone, MilestoneService, MilestoneTimelineItem } from '@/services/m
 import { ArrowLeft, Calendar, Clock, Bell, BellOff, Trash2, Sparkles, Loader2, Edit, X } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import { format } from 'date-fns';
+import { calculateDetailedElapsed } from '@/lib/dateUtils';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle, SheetFooter } from '@/components/ui/sheet';
 import { Label } from '@/components/ui/label';
@@ -110,6 +111,13 @@ const MilestoneDetail = () => {
       setTimeline(data.timeline);
     } else if (data && typeof data === 'object' && Array.isArray(data.data)) {
       setTimeline(data.data);
+    } else if (data && typeof data === 'object' && Array.isArray(data.completedMilestones)) {
+      setTimeline(data.completedMilestones.map((m: any, idx: number) => ({
+        id: m.id || `${m.intervalValue}-${idx}`,
+        milestoneId: id || '',
+        intervalValue: m.intervalValue,
+        triggeredAt: m.notifiedAt || m.triggeredAt || new Date().toISOString()
+      })));
     } else {
       setTimeline([]);
     }
@@ -119,12 +127,18 @@ const MilestoneDetail = () => {
     if (!id) return;
     try {
       setLoading(true);
-      const [milestoneRes, timelineRes] = await Promise.all([
-        MilestoneService.getMilestone(id),
-        MilestoneService.getMilestoneTimeline(id)
-      ]);
+      // Fetch milestone details first
+      const milestoneRes = await MilestoneService.getMilestone(id);
       setMilestone(milestoneRes.data);
-      setTimelineSafely(timelineRes.data);
+
+      // Fetch timeline separately so timeline issues don't break milestone viewing
+      try {
+        const timelineRes = await MilestoneService.getMilestoneTimeline(id);
+        setTimelineSafely(timelineRes.data);
+      } catch (timelineErr) {
+        console.warn('Could not load milestone timeline:', timelineErr);
+        setTimeline([]);
+      }
     } catch (error) {
       console.error('Error fetching milestone details:', error);
       toast({
@@ -220,10 +234,13 @@ const MilestoneDetail = () => {
 
   const formattedStartDate = format(new Date(milestone.startDate), 'MMMM dd, yyyy');
   const formattedEndDate = milestone.endDate ? format(new Date(milestone.endDate), 'MMMM dd, yyyy') : null;
-  const elapsedString = `${milestone.yearsCompleted ? `${milestone.yearsCompleted} years ` : ''}${milestone.monthsCompleted ? `${milestone.monthsCompleted} months ` : ''}${(milestone.daysCompleted || 0) % 30} days`;
+  const elapsed = calculateDetailedElapsed(milestone.startDate, milestone.endDate);
+  const elapsedString = elapsed.formattedLong;
+  const remainingDays = elapsed.remainingDays !== null ? elapsed.remainingDays : milestone.remainingDays;
+  const progressPercentage = elapsed.progressPercentage !== null ? elapsed.progressPercentage : milestone.progressPercentage;
   
-  const isOverdue = milestone.remainingDays !== null && milestone.remainingDays !== undefined && milestone.remainingDays < 0;
-  const isClose = milestone.remainingDays !== null && milestone.remainingDays !== undefined && milestone.remainingDays >= 0 && milestone.remainingDays < 30;
+  const isOverdue = remainingDays !== null && remainingDays !== undefined && remainingDays < 0;
+  const isClose = remainingDays !== null && remainingDays !== undefined && remainingDays >= 0 && remainingDays < 30;
 
   return (
     <AppLayout title={milestone.title}>
@@ -286,26 +303,26 @@ const MilestoneDetail = () => {
                     <div>
                       <p className="text-[11px] font-semibold text-[var(--text-muted)] uppercase tracking-wider">Elapsed Time</p>
                       <p className="text-[13px] font-bold text-[var(--text-primary)]">{elapsedString || '0 days'}</p>
-                      <p className="text-[11px] text-[var(--text-muted)] font-medium">({milestone.daysCompleted || 0} total calendar days completed)</p>
+                      <p className="text-[11px] text-[var(--text-muted)] font-medium">({elapsed.totalDays} total calendar days completed)</p>
                     </div>
                   </div>
                 </div>
 
                 {/* Progress Bar (taller 8px) */}
-                {milestone.endDate && milestone.progressPercentage !== null && milestone.progressPercentage !== undefined && (
+                {milestone.endDate && progressPercentage !== null && progressPercentage !== undefined && (
                   <div className="space-y-2.5 p-4 rounded-[12px] bg-[var(--bg-base)] border border-[var(--border-default)]">
                     <div className="flex justify-between items-center text-[12px] font-semibold">
                       <span className="text-[var(--text-secondary)]">Target Progress</span>
-                      <span className="text-[var(--text-primary)]">{milestone.progressPercentage}%</span>
+                      <span className="text-[var(--text-primary)]">{progressPercentage}%</span>
                     </div>
                     {/* Taller 8px progress bar */}
                     <div className="h-2 w-full bg-[var(--border-default)] rounded-full overflow-hidden">
                       <div 
                         className="h-full bg-[var(--brand-gradient)] rounded-full transition-all duration-500" 
-                        style={{ width: `${milestone.progressPercentage}%` }}
+                        style={{ width: `${progressPercentage}%` }}
                       />
                     </div>
-                    {milestone.remainingDays !== null && (
+                    {remainingDays !== null && (
                       <div className="flex justify-end pt-1">
                         {/* Remaining days pill badge */}
                         <span className={cn(
@@ -317,8 +334,8 @@ const MilestoneDetail = () => {
                             : "bg-emerald-500/10 text-[var(--status-success)]"
                         )}>
                           {isOverdue 
-                            ? `${Math.abs(milestone.remainingDays)} days overdue` 
-                            : `${milestone.remainingDays} days remaining`}
+                            ? `${Math.abs(remainingDays)} days overdue` 
+                            : `${remainingDays} days remaining`}
                         </span>
                       </div>
                     )}

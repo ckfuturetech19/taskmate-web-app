@@ -22,8 +22,10 @@ const Groups = () => {
   const [joinDialogOpen, setJoinDialogOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('groups');
 
-  const userGroups = groups;
-  const groupTasks = tasks.filter(task => task.groupId && userGroups.some(g => g.id === task.groupId));
+  const userGroups = Array.isArray(groups) ? groups : [];
+  const groupTasks = Array.isArray(tasks)
+    ? tasks.filter(task => task?.groupId && userGroups.some(g => g?.id === task.groupId))
+    : [];
 
   const handleEdit = (task: Task) => {
     // Navigate to task detail or open edit dialog

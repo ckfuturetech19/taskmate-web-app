@@ -23,8 +23,18 @@ const Tasks = () => {
   const [showCompleted, setShowCompleted] = useState<boolean>(false);
 
   const personalTasks = getPersonalTasks();
-  const userGroups = groups.filter(g => user && g.members.some(m => m.id === user.id));
-  const groupTasks = tasks.filter(task => task.groupId && userGroups.some(g => g.id === task.groupId));
+  const userGroups = Array.isArray(groups)
+    ? groups.filter(g => {
+        if (!user) return false;
+        if (!Array.isArray(g.members)) return true;
+        return g.members.some((m: any) =>
+          typeof m === 'string' ? m === user.id : (m?.id === user.id || m?.userId === user.id)
+        );
+      })
+    : [];
+  const groupTasks = Array.isArray(tasks)
+    ? tasks.filter(task => task?.groupId && userGroups.some(g => g?.id === task.groupId))
+    : [];
 
   const totalPendingCount = personalTasks.filter(t => !t.isCompleted).length;
   const totalCompletedCount = personalTasks.filter(t => t.isCompleted).length;

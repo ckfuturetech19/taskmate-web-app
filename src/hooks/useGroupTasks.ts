@@ -9,7 +9,7 @@ export const useGroupTasks = (userId: string | null, groups: Group[]) => {
   const [error, setError] = useState<Error | null>(null);
 
   const fetchAllGroupTasks = useCallback(async () => {
-    if (!userId || groups.length === 0) {
+    if (!userId || !Array.isArray(groups) || groups.length === 0) {
       setGroupTasks([]);
       setIsLoading(false);
       return;
@@ -46,7 +46,7 @@ export const useGroupTasks = (userId: string | null, groups: Group[]) => {
   useEffect(() => {
     fetchAllGroupTasks();
 
-    if (userId && groups.length > 0) {
+    if (userId && Array.isArray(groups) && groups.length > 0) {
       // 1. Join each group's Socket.io room
       groups.forEach(group => {
         socketService.joinGroupRoom(group.id);

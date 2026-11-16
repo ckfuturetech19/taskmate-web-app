@@ -17,6 +17,7 @@ import { usePremium } from '@/contexts/PremiumContext';
 import { UpgradePromptDialog } from '@/components/premium/UpgradePromptDialog';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { calculateDetailedElapsed } from '@/lib/dateUtils';
 
 const MILESTONE_TYPES = [
   { value: 'custom', label: 'Custom' },
@@ -249,8 +250,11 @@ const Milestones = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {filteredMilestones.map(m => {
               const formattedStartDate = format(new Date(m.startDate), 'MMM dd, yyyy');
-              const elapsedString = `${m.yearsCompleted ? `${m.yearsCompleted}y ` : ''}${m.monthsCompleted ? `${m.monthsCompleted}m ` : ''}${(m.daysCompleted || 0) % 30}d`;
-              const isOverdue = m.remainingDays !== null && m.remainingDays !== undefined && m.remainingDays < 0;
+              const elapsed = calculateDetailedElapsed(m.startDate, m.endDate);
+              const elapsedString = elapsed.formattedShort;
+              const remainingDays = elapsed.remainingDays !== null ? elapsed.remainingDays : m.remainingDays;
+              const progressPercentage = elapsed.progressPercentage !== null ? elapsed.progressPercentage : m.progressPercentage;
+              const isOverdue = remainingDays !== null && remainingDays !== undefined && remainingDays < 0;
 
               return (
                 <Card 
@@ -309,25 +313,25 @@ const Milestones = () => {
                     </div>
 
                     {/* Progress Bar (if endDate is set) */}
-                    {m.endDate && m.progressPercentage !== null && m.progressPercentage !== undefined && (
+                    {m.endDate && progressPercentage !== null && progressPercentage !== undefined && (
                       <div className="space-y-1.5 pt-1">
                         <div className="flex justify-between text-[11px] font-semibold text-[var(--text-muted)]">
                           <span>Progress</span>
-                          <span>{m.progressPercentage}%</span>
+                          <span>{progressPercentage}%</span>
                         </div>
                         {/* 6px height track, brand-gradient fill */}
                         <div className="h-[6px] w-full bg-[var(--border-default)] rounded-full overflow-hidden">
                           <div 
                             className="h-full bg-[var(--brand-gradient)] rounded-full transition-all duration-500" 
-                            style={{ width: `${m.progressPercentage}%` }}
+                            style={{ width: `${progressPercentage}%` }}
                           />
                         </div>
-                        {m.remainingDays !== null && m.remainingDays !== undefined && (
+                        {remainingDays !== null && remainingDays !== undefined && (
                           <p className={cn(
                             "text-[11px] font-semibold text-right",
                             isOverdue ? "text-[var(--brand-pink)] font-bold" : "text-[var(--text-muted)]"
                           )}>
-                            {isOverdue ? `${Math.abs(m.remainingDays)} days overdue` : `${m.remainingDays} days remaining`}
+                            {isOverdue ? `${Math.abs(remainingDays)} days overdue` : `${remainingDays} days remaining`}
                           </p>
                         )}
                       </div>

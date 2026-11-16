@@ -63,9 +63,18 @@ export const TaskProvider = ({ children }: { children: ReactNode }) => {
     if (!user) return;
     try {
       const response = await api.get('/groups');
-      setGroups(response.data);
+      const data = response.data;
+      const groupsList = Array.isArray(data)
+        ? data
+        : (data && typeof data === 'object' && 'groups' in data && Array.isArray((data as any).groups))
+          ? (data as any).groups
+          : (data && typeof data === 'object' && 'data' in data && Array.isArray((data as any).data))
+            ? (data as any).data
+            : [];
+      setGroups(groupsList);
     } catch (error) {
       console.error('Error fetching groups:', error);
+      setGroups([]);
     }
   }, [user]);
 
