@@ -47,7 +47,7 @@ const Auth = () => {
       const google = (window as any).google;
       if (google && google.accounts) {
         google.accounts.id.initialize({
-          client_id: "1059926157224-48odqe0acm6f1u9hfeti1rdohutftu6o.apps.googleusercontent.com",
+          client_id: import.meta.env.VITE_GOOGLE_CLIENT_ID || "425325230785-7lbi1ed5jm2ei5v6vudsp080911u7vru.apps.googleusercontent.com",
           callback: async (response: any) => {
             try {
               setGoogleLoading(true);

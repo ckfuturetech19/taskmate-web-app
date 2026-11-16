@@ -11,7 +11,7 @@ const firebaseConfig = {
   projectId: "taskmate-e7cc9",
   storageBucket: "taskmate-e7cc9.firebasestorage.app",
   messagingSenderId: "425325230785",
-  appId: "1:425325230785:web:5471398c240d7d8d46b240",
-  measurementId: "G-0921EG4E7W"
+  appId: "1:425325230785:web:68180d6b8fb60e4646b240",
+  measurementId: "G-7FJP1FSEML"
 };
 

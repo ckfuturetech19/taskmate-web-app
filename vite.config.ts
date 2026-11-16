@@ -21,8 +21,8 @@ const injectFirebaseConfig = () => {
         projectId: env.VITE_FIREBASE_PROJECT_ID || "taskmate-e7cc9",
         storageBucket: env.VITE_FIREBASE_STORAGE_BUCKET || "taskmate-e7cc9.firebasestorage.app",
         messagingSenderId: env.VITE_FIREBASE_MESSAGING_SENDER_ID || "425325230785",
-        appId: env.VITE_FIREBASE_APP_ID || "1:425325230785:web:5471398c240d7d8d46b240",
-        measurementId: env.VITE_FIREBASE_MEASUREMENT_ID || "G-0921EG4E7W",
+        appId: env.VITE_FIREBASE_APP_ID || "1:425325230785:web:68180d6b8fb60e4646b240",
+        measurementId: env.VITE_FIREBASE_MEASUREMENT_ID || "G-7FJP1FSEML",
       };
 
       // Replace values in the config file
